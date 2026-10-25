@@ -1,0 +1,53 @@
+name: CI
+
+# Проверяет каждый pull request в main и каждый коммит в main.
+# Само развёртывание делает Cloudflare Pages (Git-интеграция), а этот workflow —
+# обязательная проверка: без зелёного статуса «check» слить PR в main нельзя
+# (включается в Settings → Rules, см. DEPLOYMENT.md).
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Установка зависимостей
+        run: npm ci
+
+      - name: Линтер (ESLint)
+        run: npm run lint
+
+      - name: Проверка типов (TypeScript)
+        run: npm run typecheck
+
+      - name: Тесты (Vitest)
+        run: npm test
+
+      - name: Сборка
+        run: npm run build
+
+      - name: Проверка сборки (пути, заголовки, ресурсы)
+        run: npm run verify:dist
+
+      - name: Аудит зависимостей сайта
+        run: npm audit --omit=dev --audit-level=high

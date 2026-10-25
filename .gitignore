@@ -1,0 +1,26 @@
+# Зависимости
+node_modules/
+
+# Результаты сборки (собираются в CI и на Cloudflare Pages)
+dist/
+dist-single/
+coverage/
+*.tsbuildinfo
+
+# Локальные переменные окружения — никогда не коммитим
+.env
+.env.*
+!.env.example
+
+# Wrangler / Cloudflare (локальный кэш)
+.wrangler/
+.dev.vars
+
+# Логи и системные файлы
+npm-debug.log*
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
