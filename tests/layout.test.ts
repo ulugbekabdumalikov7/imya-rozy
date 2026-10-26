@@ -18,6 +18,11 @@ describe('вёрстка для телефона', () => {
     expect(mobile).toMatch(/\.route-bar \{[^}]*position: static/);
   });
 
+  it('дни на карте — одна ровная строка равных ячеек, без переноса рядами', () => {
+    expect(css).toMatch(/\.seg-wrap \{ display: grid;[^}]*grid-auto-flow: column;/);
+    expect(css).toMatch(/\.seg-wrap \{[^}]*grid-auto-columns: minmax\(0, 1fr\)/);
+  });
+
   it('у меню есть затухающий край, когда вкладки не помещаются', () => {
     expect(css).toMatch(/\.mainnav\.has-more-end \{[^}]*mask-image/);
   });
