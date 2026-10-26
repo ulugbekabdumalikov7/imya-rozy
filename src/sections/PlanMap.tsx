@@ -100,7 +100,7 @@ export function PlanMap(p: Props) {
     const mobileSheet = isMobile() && p.panelOpen;
     // на компьютере полоса «Час за часом» закрывает низ карты — место момента поднимаем выше центра
     const momentBar = !!p.moment && !p.panelOpen && !isMobile();
-    const oy = mobileSheet ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.36 : momentBar ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.14 : 0;
+    const oy = mobileSheet ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.36 : momentBar ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.22 : 0;
     const go = () => {
       if (p.focusReason === 'event') pz.focus(a[0], a[1], 2, 950, false, oy);
       else if (p.focusReason === 'step') pz.focus(a[0], a[1], 1.5, 800, false, oy);
@@ -357,16 +357,18 @@ export function PlanMap(p: Props) {
                 <RouteLines key={routeKey} steps={visibleSteps} view={p.view} unit={unit} cls={routeStyle} animate={!reducedMotion()} segMs={segMs} current={p.routeStep} startDelay={settleDelay} />
               )}
 
-              {p.moment && (
-                <MomentLayer view={p.view} unit={unit} moment={p.moment} thread={p.momentThread ?? [p.moment]} label={p.momentLabel ?? ''}
-                  title={(e) => eventTitle(e, spoiler)} isVisibleCharacter={(id) => visible(characterById.get(id)!)}
-                  onPick={(id) => p.onPickEvent(id)} />
-              )}
 
               {meetingSelected && scenePlaying && <MeetingScene key={sceneKey} uid={String(sceneKey)} unit={unit} width={W} height={H} />}
               {meetingShown && (
                 <MeetingMarker unit={unit} selected={meetingSelected}
                   onPick={click(() => p.onPickEvent(MEETING_EVENT_ID))} onActivate={() => p.onPickEvent(MEETING_EVENT_ID)} />
+              )}
+
+              {/* момент — поверх розы: имена участников не должны прятаться под знаком */}
+              {p.moment && (
+                <MomentLayer view={p.view} unit={unit} moment={p.moment} thread={p.momentThread ?? [p.moment]} label={p.momentLabel ?? ''}
+                  title={(e) => eventTitle(e, spoiler)} isVisibleCharacter={(id) => visible(characterById.get(id)!)}
+                  onPick={(id) => p.onPickEvent(id)} />
               )}
             </g>
 

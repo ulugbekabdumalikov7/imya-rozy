@@ -1,4 +1,4 @@
-import { anchorIn, characterById } from '../data';
+import { anchorIn, characterById, plans } from '../data';
 import type { MapView, StoryEvent } from '../data/types';
 
 interface Props {
@@ -30,6 +30,11 @@ export function MomentLayer({ view, unit, moment, thread, title, label, isVisibl
   const cur = moment.locationId ? anchorIn(view, moment.locationId) : null;
   const people = moment.characterIds.filter(isVisibleCharacter).map((id) => characterById.get(id)!);
   const R = 15 * unit;
+  const rows = nameRows(people.map((c) => ({ id: c.id, name: c.short, lead: c.group === 'investigators' })));
+  // У нижнего края плана камера не может поднять место выше полосы времени — там имена ставим над подписью.
+  const above = !!cur && cur[1] > plans[view].height * 0.66;
+  const labelTop = -(R + 12 * unit);
+  const namesY = above ? labelTop - 14 * unit - rows.length * 15 * unit : R + 18 * unit;
 
   return (
     <g className="layer-moment">
@@ -51,29 +56,52 @@ export function MomentLayer({ view, unit, moment, thread, title, label, isVisibl
           <circle r={R} className="moment-pulse" style={{ strokeWidth: 1.4 * unit }} />
           <circle r={R} className="moment-ring" style={{ strokeWidth: 1.6 * unit }} />
           <circle r={4.5 * unit} className="moment-core" />
-          <g className="moment-label" transform={`translate(0 ${-(R + 12 * unit)})`}>
+          <g className="moment-label" transform={`translate(0 ${labelTop})`}>
             <text textAnchor="middle" style={{ fontSize: 10.5 * unit }} className="moment-when">{label}</text>
             <text textAnchor="middle" y={15 * unit} style={{ fontSize: 13.5 * unit }} className="moment-title">{title(moment)}</text>
           </g>
           {people.length > 0 && (
-            <g className="moment-people" transform={`translate(${-((Math.min(people.length, 8) - 1) * 21 * unit) / 2} ${R + 16 * unit})`}>
-              {people.slice(0, 8).map((c, i) => (
-                // положение — атрибутом внешней группы, анимация появления — у внутренней (CSS-transform заменил бы атрибут)
-                <g key={c.id} transform={`translate(${i * 21 * unit} 0)`}>
-                  <g className={`moment-person gnode-${c.group}`} style={{ ['--i' as string]: i }}>
-                    <title>{c.short}</title>
-                    <circle r={9 * unit} style={{ strokeWidth: unit }} />
-                    <text textAnchor="middle" dominantBaseline="central" style={{ fontSize: 10 * unit }}>{c.short.charAt(0)}</text>
-                  </g>
-                </g>
-              ))}
-              {people.length > 8 && (
-                <text x={8 * 21 * unit - 6 * unit} dominantBaseline="central" style={{ fontSize: 10 * unit }} className="moment-more">+{people.length - 8}</text>
-              )}
+            // положение — атрибутом внешней группы, анимация появления — у внутренней (CSS-transform заменил бы атрибут)
+            <g transform={`translate(0 ${namesY})`}>
+              <g className="moment-people" aria-label={`Участники: ${people.map((c) => c.short).join(', ')}`}>
+                {rows.map((row, ri) => (
+                  <text key={ri} textAnchor="middle" y={ri * 15 * unit} style={{ fontSize: 11.5 * unit }} className="moment-names">
+                    {row.map((n, i) => (
+                      <tspan key={n.id}>
+                        {i > 0 && <tspan className="moment-sep"> · </tspan>}
+                        <tspan className={n.lead ? 'moment-name is-lead' : 'moment-name'}>{n.name}</tspan>
+                      </tspan>
+                    ))}
+                  </text>
+                ))}
+              </g>
             </g>
           )}
         </g>
       )}
     </g>
   );
+}
+
+type NameItem = { id: string; name: string; lead: boolean };
+const ROW_CHARS = 26; // примерно столько символов помещается в строку без перекрытия соседних зон
+const MAX_ROWS = 4;
+
+/** Имена участников строками по 3–4 имени; если не помещаются в четыре строки — остаток числом «и ещё N». */
+export function nameRows(items: NameItem[]): NameItem[][] {
+  const rows: NameItem[][] = [];
+  let cur: NameItem[] = [];
+  let len = 0;
+  for (const it of items) {
+    const add = (cur.length ? 3 : 0) + it.name.length;
+    if (cur.length && len + add > ROW_CHARS) { rows.push(cur); cur = []; len = 0; }
+    cur.push(it);
+    len += (cur.length > 1 ? 3 : 0) + it.name.length;
+  }
+  if (cur.length) rows.push(cur);
+  if (rows.length <= MAX_ROWS) return rows;
+  const kept = rows.slice(0, MAX_ROWS);
+  const shown = kept.reduce((n, r) => n + r.length, 0);
+  kept[MAX_ROWS - 1] = [...kept[MAX_ROWS - 1]!, { id: '__more', name: `и ещё ${items.length - shown}`, lead: false }];
+  return kept;
 }
