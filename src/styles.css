@@ -302,7 +302,11 @@ main { outline: none; }
 .seg-vertical { display: flex; flex-direction: column; width: 100%; }
 .seg-vertical button { border-right: 0; border-bottom: 1px solid var(--rule); justify-content: flex-start; }
 .seg-vertical button:last-child { border-bottom: 0; }
-.seg-wrap button { min-width: 38px; justify-content: center; }
+/* дни на карте: одна ровная строка на всю ширину; «Все» по ширине слова, дни — равными ячейками.
+   Кнопок от 2 до 8 (зависит от режима чтения), поэтому строка, а не перенос рядами с дырой в конце */
+.seg-wrap { display: grid; grid-template-columns: max-content; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; width: 100%; }
+.seg-wrap button { min-width: 0; justify-content: center; padding-inline: 4px; }
+.seg-wrap button:first-child { padding-inline: 12px; }
 .seg-compact button { padding: 6px 9px; font-size: 0.8rem; }
 /* очень узкий телефон: заголовок, тема и режим не помещаются в строку — у кнопки режима остаётся значок
    (подпись скрыта только визуально: экранные дикторы её читают) */
