@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Lock, MapPin, Skull } from 'lucide-react';
+import { Clock3, Lock, MapPin, Skull } from 'lucide-react';
 import { useSwap, DURATION, reducedMotion } from '../lib/motion';
 import { days, descendantsOf, eventById, eventsSorted, hourLabels, hourOrder, locationById } from '../data';
 import type { StoryEvent } from '../data/types';
 import { horizon } from '../lib/spoilers';
-import { patchParams, type Route as AppRoute } from '../lib/router';
+import { href, patchParams, type Route as AppRoute } from '../lib/router';
+import { firstMomentOfDay, momentSteps } from '../lib/moments';
 import { eventTitle, visibleTexts } from '../lib/visible';
 import { useSpoiler } from '../state/spoiler';
 import { EventCard } from '../components/cards';
@@ -93,6 +94,17 @@ export function TimelineSection({ route }: { route: AppRoute }) {
             : <span key={d.day} className="is-locked" title="Откроется позже"><Lock size={12} aria-hidden="true" /> {d.day === 8 ? 'Эп.' : d.day}</span>;
         })}
       </div>
+
+      {(() => {
+        // «Час за часом» на карте — с начала выбранного дня (или с начала романа)
+        const moments = momentSteps(spoiler);
+        const start = (dayFilter !== null ? firstMomentOfDay(dayFilter, moments) : undefined) ?? moments[0];
+        return start ? (
+          <p className="tl-to-map">
+            <a href={href('map', { at: start.id })}><Clock3 size={14} aria-hidden="true" /> {dayFilter !== null ? 'Этот день на карте час за часом' : 'Весь роман на карте час за часом'}</a>
+          </p>
+        ) : null;
+      })()}
 
       <div className="timeline-layout">
         <div className={`timeline tl-swap${phase === 'out' ? ' is-out' : ''}`} key={shownKey}>

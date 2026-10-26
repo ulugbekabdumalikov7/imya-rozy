@@ -5,11 +5,14 @@ import {
 } from '../data';
 import { LIBRARY_PASSAGE_MARK, LIBRARY_RED_GLYPHS } from '../data/planGeometry';
 import type { PlanHotspot } from '../data/plans';
-import type { MapView, Route, RouteStep } from '../data/types';
+import type { MapView, Route, RouteStep, StoryEvent } from '../data/types';
 import { usePanZoom } from '../lib/usePanZoom';
 import { firstTimeThisSession, reducedMotion } from '../lib/motion';
 import { deathView, type DeathView } from '../lib/visible';
 import { useSpoiler } from '../state/spoiler';
+import { happenedBy } from '../lib/moments';
+import { eventTitle } from '../lib/visible';
+import { MomentLayer } from './MomentLayer';
 import { MEETING_EVENT_ID, MEETING_SCENE_DELAY_MS, MEETING_SCENE_MS, MeetingMarker, MeetingScene } from './MeetingRose';
 import abbeyPlanUrl from '../assets/abbey-plan.webp';
 import { FOOT_PATH, footprints, type Footprint } from '../lib/footsteps';
@@ -38,6 +41,10 @@ interface Props {
   /** Точка, к которой подвести камеру (место выбранного события, шага маршрута и т. п.). */
   focusLocationId?: string;
   panelOpen: boolean;
+  /** «Час за часом»: текущий момент — на плане только то, что к нему уже произошло. */
+  moment?: StoryEvent;
+  momentThread?: StoryEvent[];
+  momentLabel?: string;
 }
 
 const isMobile = () => { try { return window.matchMedia('(max-width: 900px)').matches; } catch { return false; } };
@@ -61,7 +68,8 @@ export function PlanMap(p: Props) {
 
   // Встреча Адсона и девушки: знак-роза на плане аббатства и короткая сцена при её открытии.
   const meetingEvent = eventById.get(MEETING_EVENT_ID);
-  const meetingShown = p.view === 'abbey' && !!meetingEvent && visible(meetingEvent);
+  // в «Час за часом» роза появляется только после самой встречи
+  const meetingShown = p.view === 'abbey' && !!meetingEvent && visible(meetingEvent) && (!p.moment || meetingEvent.sequence <= p.moment.sequence);
   const meetingSelected = meetingShown && p.selectedEventId === MEETING_EVENT_ID;
   const [sceneKey, setSceneKey] = useState(0);
   const [scenePlaying, setScenePlaying] = useState(false);
@@ -76,7 +84,13 @@ export function PlanMap(p: Props) {
   const hotspots = useMemo(() => [...plan.hotspots].sort((a, b) => LAYER_ORDER[a.kind] - LAYER_ORDER[b.kind]), [plan]);
   const selected = p.selectedSpot ? hotspots.find((h) => h.id === p.selectedSpot) : undefined;
   const hovered = hoverId ? hotspots.find((h) => h.id === hoverId) : undefined;
-  const visibleSteps = p.route ? p.route.steps.filter((s) => visible(s)) : [];
+  // «Час за часом»: следы маршрута — только до текущего момента (шаг со ссылкой на событие — по его порядку, иначе — по дню)
+  const stepHappened = (st: RouteStep) => {
+    if (!p.moment) return true;
+    const ev = st.eventId ? eventById.get(st.eventId) : undefined;
+    return ev ? ev.sequence <= p.moment.sequence : st.day <= p.moment.day;
+  };
+  const visibleSteps = p.route ? p.route.steps.filter((s) => visible(s) && stepHappened(s)) : [];
 
   // Камера: событие — подлёт с приближением; шаг маршрута — перевод; зона — если план уже приближен.
   const firstFocus = useRef(true);
@@ -84,7 +98,9 @@ export function PlanMap(p: Props) {
     const a = p.focusLocationId ? anchorIn(p.view, p.focusLocationId) : selected ? hotspotAnchor(selected) : null;
     if (!a) { firstFocus.current = false; return; }
     const mobileSheet = isMobile() && p.panelOpen;
-    const oy = mobileSheet ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.36 : 0;
+    // на компьютере полоса «Час за часом» закрывает низ карты — место момента поднимаем выше центра
+    const momentBar = !!p.moment && !p.panelOpen && !isMobile();
+    const oy = mobileSheet ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.36 : momentBar ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.14 : 0;
     const go = () => {
       if (p.focusReason === 'event') pz.focus(a[0], a[1], 2, 950, false, oy);
       else if (p.focusReason === 'step') pz.focus(a[0], a[1], 1.5, 800, false, oy);
@@ -101,13 +117,15 @@ export function PlanMap(p: Props) {
   }, [p.focusKey]);
 
   const dayOk = (d: number) => p.dayFilter === null || d === p.dayFilter;
+  const timeOk = happenedBy(p.moment);
+  const momentKey = p.moment?.id ?? '';
 
   const deathViews = useMemo(() => deaths.map((d) => deathView(d, spoiler)).filter((v): v is DeathView => !!v), [spoiler]);
 
   const peopleAt = useMemo(() => {
     const m = new Map<string, Set<string>>();
     for (const e of events) {
-      if (!visible(e) || !e.locationId || !dayOk(e.day)) continue;
+      if (!visible(e) || !e.locationId || !dayOk(e.day) || !timeOk(e.sequence)) continue;
       const h = hotspotIn(p.view, e.locationId);
       if (!h) continue;
       const set = m.get(h.id) ?? new Set<string>();
@@ -116,26 +134,28 @@ export function PlanMap(p: Props) {
     }
     return m;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spoiler, p.view, p.dayFilter]);
+  }, [spoiler, p.view, p.dayFilter, momentKey]);
 
   const cluesAt = useMemo(() => {
     const m = new Map<string, number>();
     for (const c of clues) {
       if (!visible(c) || !c.locationId) continue;
       const ev = events.find((e) => e.id === c.eventId);
-      if (ev && !dayOk(ev.day)) continue;
+      if (ev && (!dayOk(ev.day) || !timeOk(ev.sequence))) continue;
       const h = hotspotIn(p.view, c.locationId);
       if (h) m.set(h.id, (m.get(h.id) ?? 0) + 1);
     }
     return m;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spoiler, p.view, p.dayFilter]);
+  }, [spoiler, p.view, p.dayFilter, momentKey]);
 
   const deathMarkers = useMemo(() => {
     const out: { v: DeathView; x: number; y: number; site?: { x: number; y: number } }[] = [];
     const counter = new Map<string, number>();
     for (const v of deathViews) {
       if (!dayOk(v.death.day)) continue;
+      const found = eventById.get(v.death.eventId);
+      if (found && !timeOk(found.sequence)) continue; // тело ещё не нашли
       const a = anchorIn(p.view, v.death.foundLocationId);
       const site = v.deathLocation ? anchorIn(p.view, v.deathLocation.locationId) : null;
       if (!a && !site) continue;
@@ -152,7 +172,7 @@ export function PlanMap(p: Props) {
     }
     return out.sort((a, b) => a.v.death.day - b.v.death.day);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deathViews, p.view, p.dayFilter, unit]);
+  }, [deathViews, p.view, p.dayFilter, unit, momentKey]);
 
   const routeStyle = p.route?.characterId === 'william' ? 'route-lead' : p.route?.characterId === 'adso' ? 'route-follower' : 'route-default';
   const ghost = p.route?.characterId === 'adso' ? routeByCharacter.get('william') : undefined;
@@ -335,6 +355,12 @@ export function PlanMap(p: Props) {
               {p.layers.has('route') && ghost && <RouteLines key={`ghost-${routeKey}`} steps={ghost.steps.filter((s) => visible(s))} view={p.view} unit={unit} cls="route-ghost" animate={false} segMs={0} current={null} />}
               {p.layers.has('route') && p.route && (
                 <RouteLines key={routeKey} steps={visibleSteps} view={p.view} unit={unit} cls={routeStyle} animate={!reducedMotion()} segMs={segMs} current={p.routeStep} startDelay={settleDelay} />
+              )}
+
+              {p.moment && (
+                <MomentLayer view={p.view} unit={unit} moment={p.moment} thread={p.momentThread ?? [p.moment]} label={p.momentLabel ?? ''}
+                  title={(e) => eventTitle(e, spoiler)} isVisibleCharacter={(id) => visible(characterById.get(id)!)}
+                  onPick={(id) => p.onPickEvent(id)} />
               )}
 
               {meetingSelected && scenePlaying && <MeetingScene key={sceneKey} uid={String(sceneKey)} unit={unit} width={W} height={H} />}

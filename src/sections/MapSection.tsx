@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Footprints, Layers, ScanLine, X } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Clock3, Footprints, Layers, Pause, Play, ScanLine, X } from 'lucide-react';
 import {
   anchorIn, characterById, dayLabel, eventById, hotspotById, hotspotIn, isOnPlan, locationById, locations, preferredView,
   routes, routeByCharacter, viewLabels,
@@ -8,7 +8,10 @@ import type { PlanHotspot } from '../data/plans';
 import type { MapView } from '../data/types';
 import { horizon } from '../lib/spoilers';
 import { count, EPISODES } from '../lib/ru';
-import { patchParams, type Route as AppRoute } from '../lib/router';
+import { href, patchParams, type Route as AppRoute } from '../lib/router';
+import { dayMarks, dayThread, firstMomentOfDay, momentLabel, momentSteps, resolveMoment } from '../lib/moments';
+import { eventTitle } from '../lib/visible';
+import { reducedMotion } from '../lib/motion';
 import { useSpoiler } from '../state/spoiler';
 import { useTheme, type Theme } from '../lib/theme';
 import { PlanMap, type FocusReason, type LayerKey } from './PlanMap';
@@ -25,6 +28,9 @@ const LAYERS: { key: LayerKey; label: string; hint: string }[] = [
   { key: 'investigation', label: 'Режим расследования', hint: 'Нить смертей по порядку' },
 ];
 const DEFAULT_LAYERS = 'arch,people,deaths';
+/** «Час за часом»: пауза между моментами при воспроизведении. */
+const PLAY_MS = 2600;
+const dayShort = (d: number) => (d === 0 ? 'Пролог' : d === 8 ? 'Эп.' : String(d));
 const VIEWS: MapView[] = ['abbey', 'library'];
 const TONE_KEY = 'rose-atlas:plan-tone';
 type Tone = 'night' | 'scan';
@@ -66,6 +72,14 @@ export function MapSection({ route }: { route: AppRoute }) {
   const stepRaw = prm.get('step');
   const step = stepRaw !== null && steps.length ? Math.min(steps.length - 1, Math.max(0, Number(stepRaw))) : null;
 
+  // «Час за часом»: текущий момент в адресе (?at=событие), шаги — события в порядке романа.
+  const moments = useMemo(() => momentSteps(spoiler), [spoiler]);
+  const atId = prm.get('at');
+  const now = resolveMoment(atId, moments);
+  const moment = now?.event;
+  const thread = moment ? dayThread(moment, moments) : undefined;
+  const [playing, setPlaying] = useState(false);
+
   const set = (patch: Record<string, string | number | null | undefined>) => patchParams(route, patch);
   const toggleLayer = (k: LayerKey) => {
     const next = new Set(layers);
@@ -106,22 +120,49 @@ export function MapSection({ route }: { route: AppRoute }) {
   };
   const openPlan = (v: MapView) => set({ view: v, loc: null, spot: null, event: null });
 
+  const goMoment = (i: number) => {
+    const e = moments[i];
+    if (!e) return;
+    const lid = e.locationId;
+    set({ at: e.id, day: null, loc: null, spot: null, event: null, view: lid && !anchorIn(view, lid) ? viewFor(lid) : undefined });
+  };
+  const startMoments = () => {
+    const first = (dayFilter !== null ? firstMomentOfDay(dayFilter, moments) : undefined) ?? moments[0];
+    if (!first) return;
+    set({ at: first.id, day: null, loc: null, spot: null, event: null });
+    setControlsOpen(false);
+  };
+  const stopMoments = () => { setPlaying(false); set({ at: null }); };
+
+  // Воспроизведение: шаг за шагом до конца прочитанного, затем остановка.
+  useEffect(() => {
+    if (!playing || !now) return;
+    if (now.index >= moments.length - 1) { setPlaying(false); return; }
+    const t = window.setTimeout(() => goMoment(now.index + 1), reducedMotion() ? PLAY_MS + 800 : PLAY_MS);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playing, now?.index, moments.length]);
+  useEffect(() => { if (!moment) setPlaying(false); }, [moment]);
+
   // Что изменилось последним — от этого зависит движение камеры.
-  const prev = useRef({ locId, eventId, step, spotId });
+  const prev = useRef({ locId, eventId, step, spotId, at: moment?.id });
   let focusReason: FocusReason = 'none';
-  if (prev.current.step !== step && step !== null) focusReason = 'step';
+  if (prev.current.at !== moment?.id && moment && !eventId && !locId) focusReason = 'step';
+  else if (prev.current.step !== step && step !== null) focusReason = 'step';
   else if (prev.current.eventId !== eventId && eventId) focusReason = 'event';
   else if ((prev.current.locId !== locId && locId) || (prev.current.spotId !== spotId && spotId)) focusReason = 'location';
   else if (eventId) focusReason = 'event';
   else if (step !== null) focusReason = 'step';
   // Запоминаем выбор после фиксации рендера, а не во время него: иначе двойной рендер StrictMode
   // видит уже обновлённое значение и неверно определяет причину движения камеры.
-  useEffect(() => { prev.current = { locId, eventId, step, spotId }; });
+  useEffect(() => { prev.current = { locId, eventId, step, spotId, at: moment?.id }; });
 
   const event = eventId ? eventById.get(eventId) : undefined;
-  const focusLocationId = step !== null ? steps[step]?.locationId : locId ?? event?.locationId;
+  // Выбранное место подсвечивается зоной плана; момент «Час за часом» — только ведёт камеру (у него своё кольцо и подпись).
+  const selectedLocationId = step !== null ? steps[step]?.locationId : locId ?? event?.locationId;
+  const focusLocationId = selectedLocationId ?? moment?.locationId;
   const spot = spotId ? hotspotById.get(spotId) : undefined;
-  const selectedHotspot = spot?.plan === view ? spot : focusLocationId ? hotspotIn(view, focusLocationId) ?? undefined : undefined;
+  const selectedHotspot = spot?.plan === view ? spot : selectedLocationId ? hotspotIn(view, selectedLocationId) ?? undefined : undefined;
 
   const availableRoutes = useMemo(() => routes.filter((r) => visible(characterById.get(r.characterId)!) && r.steps.some((s) => visible(s))), [visible]);
   const panelOpen = !!(locId || eventId || spot);
@@ -214,7 +255,11 @@ export function MapSection({ route }: { route: AppRoute }) {
           <button type="button" className={`icon-btn tone-btn only-desktop${tone === 'scan' ? ' is-on' : ''}`} onClick={() => setTone(tone === 'scan' ? 'night' : 'scan')} aria-pressed={tone === 'scan'} title="Исходный скан / ночная гамма" aria-label="Исходный скан">
             <ScanLine size={16} />
           </button>
-          <p className="map-view-title only-desktop">{dayFilter ? dayLabel(dayFilter) : ''}</p>
+          <button type="button" className={`btn btn-small moment-toggle${moment ? ' is-on' : ''}`} onClick={() => (moment ? stopMoments() : startMoments())}
+            aria-pressed={!!moment} title="Пройти роман по часам: что где происходит и что уже случилось к этому моменту">
+            <Clock3 size={15} aria-hidden="true" /> <span className="only-desktop">Час за часом</span><span className="only-mobile">Часы</span>
+          </button>
+          <p className="map-view-title only-desktop">{dayFilter && !moment ? dayLabel(dayFilter) : ''}</p>
         </div>
 
         <PlanMap
@@ -222,19 +267,61 @@ export function MapSection({ route }: { route: AppRoute }) {
           layers={layers}
           selectedSpot={selectedHotspot?.id}
           selectedEventId={eventId}
-          dayFilter={dayFilter}
+          dayFilter={moment ? null : dayFilter}
           route={layers.has('route') ? routeVisible : undefined}
           routeStep={step}
           tone={tone}
           onPickHotspot={pickHotspot}
           onPickEvent={pickEvent}
-          focusKey={`${locId}|${spotId}|${eventId}|${step}|${view}`}
+          focusKey={`${locId}|${spotId}|${eventId}|${step}|${view}|${moment?.id ?? ''}`}
           focusReason={focusReason}
           focusLocationId={focusLocationId}
           panelOpen={panelOpen}
+          moment={moment}
+          momentThread={thread}
+          momentLabel={moment ? momentLabel(moment) : undefined}
         />
 
-        {routeVisible && layers.has('route') && (
+        {moment && now && (
+          <div className="time-bar" role="region" aria-label="Час за часом">
+            <div className="time-row">
+              <button type="button" className="icon-btn time-play" onClick={() => setPlaying((v) => !v)} disabled={!playing && now.index >= moments.length - 1}
+                aria-label={playing ? 'Пауза' : 'Воспроизвести по часам'} aria-pressed={playing}>
+                {playing ? <Pause size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}
+              </button>
+              <button type="button" className="icon-btn" disabled={now.index === 0} onClick={() => { setPlaying(false); goMoment(now.index - 1); }} aria-label="Предыдущий момент"><ChevronLeft size={18} /></button>
+              <button type="button" className="icon-btn" disabled={now.index >= moments.length - 1} onClick={() => { setPlaying(false); goMoment(now.index + 1); }} aria-label="Следующий момент"><ChevronRight size={18} /></button>
+              <div className="time-text" aria-live="polite">
+                <span className="time-when">{momentLabel(moment)}{moment.locationId ? ` · ${locationById.get(moment.locationId)!.name}` : ''} · {now.index + 1} / {moments.length}</span>
+                <strong className="time-title">{eventTitle(moment, spoiler)}</strong>
+              </div>
+              <button type="button" className="icon-btn" onClick={stopMoments} aria-label="Закрыть «Час за часом»"><X size={16} /></button>
+            </div>
+            <div className="time-scale">
+              <input type="range" className="time-range" min={0} max={Math.max(0, moments.length - 1)} step={1} value={now.index}
+                onChange={(e) => { setPlaying(false); goMoment(Number(e.target.value)); }}
+                aria-label="Момент романа" aria-valuetext={`${momentLabel(moment)}: ${eventTitle(moment, spoiler)}`}
+                style={{ ['--p' as string]: `${moments.length > 1 ? (now.index / (moments.length - 1)) * 100 : 0}%` }} />
+              <div className="time-days" aria-hidden="true">
+                {dayMarks(moments).map((m) => (
+                  <button key={m.day} type="button" tabIndex={-1} className={moment.day === m.day ? 'is-current' : ''}
+                    style={{ left: `${moments.length > 1 ? (m.index / (moments.length - 1)) * 100 : 0}%` }}
+                    onClick={() => { setPlaying(false); goMoment(m.index); }}>{dayShort(m.day)}</button>
+                ))}
+              </div>
+            </div>
+            <div className="time-meta">
+              <span className="time-desc">{moment.description}</span>
+              <span className="time-links">
+                <button type="button" className="link-btn" onClick={() => { setPlaying(false); pickEvent(moment.id); }}>Подробнее</button>
+                <a href={href('timeline', { d: moment.day, event: moment.id })}>В хронологии</a>
+                {moment.day >= 1 && moment.day <= 7 && <a href={href('relations', { upto: moment.day })}>Связи к этому дню</a>}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {routeVisible && layers.has('route') && !moment && (
           <div className="route-bar" role="region" aria-label={`Маршрут: ${characterById.get(routeVisible.characterId)!.short}`}>
             <Footprints size={16} aria-hidden="true" />
             <button type="button" className="icon-btn" disabled={!step} onClick={() => goStep((step ?? 0) - 1)} aria-label="Предыдущий эпизод"><ChevronLeft size={18} /></button>
