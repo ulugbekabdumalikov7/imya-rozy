@@ -58,26 +58,31 @@ export function seenBefore(key: string): boolean {
 /**
  * Смена содержимого с уходом старого: при смене ключа старое значение держится ms миллисекунд
  * в фазе 'out', затем подставляется новое в фазе 'in'.
+ *
+ * Смена определяется только ключом. Значение может быть новым массивом на каждой отрисовке
+ * (отфильтрованный список) — это не перезапускает переход. Раньше эффект зависел от самого значения:
+ * каждая отрисовка сбрасывала таймер, фаза 'out' не заканчивалась, и список оставался невидимым.
  */
 export function useSwap<T>(value: T, key: string, ms: number = DURATION.fast): { shown: T; phase: 'in' | 'out'; shownKey: string } {
-  const [state, setState] = useState({ shown: value, shownKey: key, phase: 'in' as 'in' | 'out' });
-  const latest = useRef({ value, key });
-  latest.current = { value, key };
+  const [state, setState] = useState<{ shownKey: string; phase: 'in' | 'out' }>({ shownKey: key, phase: 'in' });
+  const settled = state.phase === 'in' && state.shownKey === key;
+  // Последнее значение показанного ключа: его держим на экране, пока старое содержимое уходит.
+  const lastShown = useRef(value);
+  if (settled) lastShown.current = value;
+  const latestKey = useRef(key);
+  latestKey.current = key;
+
   useEffect(() => {
-    if (key === state.shownKey) {
-      if (state.shown !== value) setState((s) => ({ ...s, shown: value }));
-      return;
-    }
-    if (reducedMotion()) {
-      setState({ shown: value, shownKey: key, phase: 'in' });
-      return;
-    }
-    setState((s) => ({ ...s, phase: 'out' }));
-    const t = window.setTimeout(() => setState({ shown: latest.current.value, shownKey: latest.current.key, phase: 'in' }), ms);
+    if (key === state.shownKey && state.phase === 'in') return;
+    if (reducedMotion()) { setState({ shownKey: key, phase: 'in' }); return; }
+    setState((s) => (s.phase === 'out' ? s : { ...s, phase: 'out' }));
+    // Повторная смена ключа во время ухода переносит появление — показывается последний выбор.
+    // Это же завершает уход, если ключ успел вернуться к прежнему (быстрые клики туда и обратно).
+    const t = window.setTimeout(() => setState({ shownKey: latestKey.current, phase: 'in' }), ms);
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, value]);
-  return state;
+  }, [key, state.shownKey, state.phase, ms]);
+
+  return { shown: settled ? value : lastShown.current, phase: state.phase, shownKey: state.shownKey };
 }
 
 /** Плавная функция для перемещения камеры. */
