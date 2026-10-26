@@ -168,7 +168,7 @@ export function MapSection({ route }: { route: AppRoute }) {
             <option value="">— не показывать —</option>
             {availableRoutes.map((r) => <option key={r.id} value={r.characterId}>{characterById.get(r.characterId)!.name}</option>)}
           </select>
-          <p className="small muted">Сплошная линия — по тексту, пунктир — реконструкция, «?» — где герой был, неизвестно. Эпизоды внутри Эдифиция на плане аббатства сходятся в одну точку.</p>
+          <p className="small muted">Отпечатки следов — путь по тексту, контуры следов — реконструкция, «?» — где герой был, неизвестно. Эпизоды внутри Эдифиция на плане аббатства сходятся в одну точку.</p>
         </fieldset>
 
         <div className="legend" aria-label="Обозначения смертей">

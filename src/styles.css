@@ -362,7 +362,7 @@ select { padding-right: 28px; }
 .intro.is-playing .intro-skip { animation: fade-blur 0.4s var(--ease) both 0.3s; }
 .intro.is-rest .intro-route { opacity: 0; }
 @keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-.intro-arch, .sketch, .board-lines path, .route-mask-path { stroke-dasharray: 1 2; }
+.intro-arch, .sketch, .board-lines path { stroke-dasharray: 1 2; }
 @keyframes route-draw { 0% { stroke-dashoffset: 1; opacity: 0; } 4% { opacity: 0.9; } 70% { stroke-dashoffset: 0; opacity: 0.9; } 100% { stroke-dashoffset: 0; opacity: 0; } }
 @keyframes fade-blur { from { opacity: 0; filter: blur(6px); transform: translateY(6px); } to { opacity: 1; filter: none; transform: none; } }
 @keyframes dot-in { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
@@ -499,13 +499,24 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .investigation-thread { fill: none; stroke: var(--blood-lit); opacity: 0.55; }
 
 /* маршрут: линия рисуется отрезок за отрезком, точка появляется после линии */
-.route-seg { fill: none; stroke-linecap: round; }
-.route-lead .route-seg { stroke: var(--blood-lit); }
-.route-follower .route-seg { stroke: var(--bone); opacity: 0.85; }
-.route-default .route-seg { stroke: var(--blood-lit); opacity: 0.85; }
-.route-ghost .route-seg { stroke: var(--ash); opacity: 0.35; }
-.route-mask-path { fill: none; stroke: #fff; stroke-linecap: round; stroke-dasharray: 1 2; stroke-dashoffset: 0; }
-.is-route-drawing .route-mask-path { animation: draw var(--seg-ms, 420ms) var(--ease-in-out) both; animation-delay: var(--seg-delay, 0ms); }
+.footprint { fill: var(--blood-lit); opacity: 0.9; }
+.route-follower .footprint { fill: var(--bone); opacity: 0.75; }
+.route-default .footprint { opacity: 0.8; }
+.route-ghost .footprint { fill: var(--ash); opacity: 0.3; }
+/* восстановленный по тексту участок: следы-контуры, а не оттиски */
+.footprint.is-faint { fill: none; stroke: var(--blood-lit); stroke-width: 0.6; opacity: 0.75; }
+.route-follower .footprint.is-faint { stroke: var(--bone); }
+.route-ghost .footprint.is-faint { stroke: var(--ash); opacity: 0.3; }
+/* шаг: след «впечатывается» — проявляется с лёгкой осадкой и чуть темнеет, как свежий оттиск */
+.is-route-drawing .footprint { animation: step-in 520ms var(--ease-out) both; animation-delay: var(--step-delay, 0ms); }
+@keyframes step-in {
+  0% { opacity: 0; }
+  35% { opacity: 1; }
+  100% { opacity: var(--step-rest, 0.9); }
+}
+.route-follower .footprint { --step-rest: 0.75; }
+.route-default .footprint { --step-rest: 0.8; }
+.footprint.is-faint { --step-rest: 0.75; }
 .route-dot circle { fill: #0e0d0b; stroke: var(--bone-2); }
 .route-lead .route-dot circle, .route-default .route-dot circle { stroke: var(--blood-lit); }
 .route-dot text { fill: var(--bone); font-family: var(--f-ui); font-weight: 500; }
@@ -538,7 +549,10 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .swatch-people { background: var(--night-4); border: 1px solid var(--ash); border-radius: 50%; }
 .swatch-deaths { background: var(--blood-lit); border-radius: 50%; transform: scale(0.75); }
 .swatch-clues { border: 1px solid var(--bone-2); transform: rotate(45deg) scale(0.75); }
-.swatch-route { background: linear-gradient(90deg, var(--blood-lit) 55%, transparent 55%); background-size: 6px 2px; background-repeat: repeat-x; background-position: 0 50%; }
+.swatch-route { background: none; position: relative; }
+.swatch-route::before, .swatch-route::after { content: ''; position: absolute; width: 5px; height: 2.6px; border-radius: 50% 60% 60% 50%; background: var(--blood-lit); }
+.swatch-route::before { left: 0; top: calc(50% - 3px); }
+.swatch-route::after { left: 8px; top: calc(50% + 0.5px); }
 .swatch-investigation { border: 1px dashed var(--blood-lit); }
 .map-hint { padding: 26px 22px; border-left: 1px solid var(--rule); font-size: 0.98rem; color: var(--bone-2); }
 .map-hint p { max-width: 34ch; }

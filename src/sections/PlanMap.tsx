@@ -11,6 +11,7 @@ import { firstTimeThisSession, reducedMotion } from '../lib/motion';
 import { deathView, type DeathView } from '../lib/visible';
 import { useSpoiler } from '../state/spoiler';
 import abbeyPlanUrl from '../assets/abbey-plan.webp';
+import { FOOT_PATH, footprints, type Footprint } from '../lib/footsteps';
 import libraryPlanUrl from '../assets/library-plan.webp';
 
 const IMAGES: Record<MapView, string> = { abbey: abbeyPlanUrl, library: libraryPlanUrl };
@@ -347,40 +348,56 @@ export function PlanMap(p: Props) {
   );
 }
 
-/** Маршрут: отрезки прорисовываются по очереди, точка эпизода появляется после линии к ней. */
+/**
+ * Маршрут: следы героя идут по той же кривой, что связывала эпизоды, шаг за шагом;
+ * кружок эпизода появляется, когда к нему подходят следы.
+ */
 function RouteLines({ steps, view, unit, cls, animate, segMs, current, startDelay = 0 }: {
   steps: RouteStep[]; view: MapView; unit: number; cls: string; animate: boolean; segMs: number; current: number | null; startDelay?: number;
 }) {
   const ptsList = steps.map((s) => { const a = anchorIn(view, s.locationId); return a ? { ...s, x: a[0], y: a[1] } : null; });
-  const uid = useMemo(() => Math.random().toString(36).slice(2, 8), []);
   const ghost = cls === 'route-ghost';
+  // Размер следа задан в экранных пикселях; масштаб округляется до ступеней √2, чтобы следы не перестраивались при каждом движении колёсика.
+  const u = Math.pow(2, Math.round(Math.log2(unit) * 2) / 2);
+  const size = ghost ? 0.8 : cls === 'route-follower' ? 0.9 : 1;
+  // Время отсчитывается от первого показа: следы, появившиеся позже (после масштабирования), не проигрывают анимацию заново.
+  const born = useRef(performance.now());
+  const elapsed = performance.now() - born.current;
+
+  const stepsKey = steps.map((st) => `${st.locationId}:${st.kind}`).join('|');
+  const prints = useMemo(() => {
+    const out: (Footprint & { seg: number; faint: boolean })[] = [];
+    let side: 'l' | 'r' = 'l';
+    ptsList.forEach((b, i) => {
+      if (i === 0) return;
+      const a = ptsList[i - 1];
+      const sa = steps[i - 1]!;
+      const sb = steps[i]!;
+      if (!a || !b) return;
+      if (sa.kind === 'gap' || sb.kind === 'gap') return; // пропуск в тексте: следов нет
+      if (a.x === b.x && a.y === b.y) return;
+      const faint = sa.kind === 'reconstructed' || sb.kind === 'reconstructed';
+      const fp = footprints(a, b, 15 * u * size, 3.2 * u * size, (ghost ? 4 : 11) * u, side);
+      for (const f of fp) out.push({ ...f, seg: i - 1, faint });
+      if (fp.length) side = fp[fp.length - 1]!.side === 'l' ? 'r' : 'l';
+    });
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepsKey, view, u, size, ghost]);
+
   return (
     <g className={`layer-route ${cls}${animate ? ' is-route-drawing' : ''}`} aria-hidden={ghost || undefined}>
-      {ptsList.slice(1).map((b, i) => {
-        const a = ptsList[i];
-        const sa = steps[i]!;
-        const sb = steps[i + 1]!;
-        if (!a || !b) return null;
-        if (sa.kind === 'gap' || sb.kind === 'gap') return null; // пропуск в тексте: линию не проводим
-        if (a.x === b.x && a.y === b.y) return null;
-        const dashed = sa.kind === 'reconstructed' || sb.kind === 'reconstructed';
-        const mx = (a.x + b.x) / 2 + (b.y - a.y) * 0.12;
-        const my = (a.y + b.y) / 2 - (b.x - a.x) * 0.12;
-        const d = `M${a.x},${a.y} Q${mx},${my} ${b.x},${b.y}`;
-        const w = (ghost ? 1 : cls === 'route-follower' ? 1.6 : 2.2) * unit;
-        const id = `rm-${uid}-${i}`;
-        return (
-          <g key={i}>
-            {animate && (
-              <mask id={id} maskUnits="userSpaceOnUse" x="-2000" y="-2000" width={6000} height={6000}>
-                <path d={d} pathLength={1} className="route-mask-path" style={{ strokeWidth: w + 6 * unit, ['--seg-delay' as string]: `${startDelay + i * segMs}ms`, ['--seg-ms' as string]: `${segMs}ms` }} />
-              </mask>
-            )}
-            <path d={d} className="route-seg" mask={animate ? `url(#${id})` : undefined}
-              style={{ strokeWidth: w, strokeDasharray: dashed ? `${6 * unit} ${5 * unit}` : undefined }} />
-          </g>
-        );
-      })}
+      <g className="route-steps">
+        {prints.map((f, k) => {
+          const delay = startDelay + (f.seg + f.at) * segMs - elapsed;
+          const sx = 1.45 * u * size;
+          return (
+            <path key={k} d={FOOT_PATH} className={`footprint${f.faint ? ' is-faint' : ''}`}
+              transform={`translate(${f.x} ${f.y}) rotate(${f.angle}) scale(${sx} ${f.side === 'l' ? sx : -sx})`}
+              style={animate ? { ['--step-delay' as string]: `${delay}ms` } : undefined} />
+          );
+        })}
+      </g>
       {!ghost && ptsList.map((pt, i) => {
         if (!pt) return null;
         const same = ptsList.slice(0, i).filter((q) => q && q.x === pt.x && q.y === pt.y).length;
