@@ -70,6 +70,20 @@ I can't create accounts, repositories or Cloudflare projects for you. Steps 1–
    - **Environment variables:** none. (Optional: `NODE_VERSION` = `22`.)
 5. Click **Save and Deploy**. The first build takes about 1–2 minutes.
 
+### 2b. If you created a **Worker** instead of a Pages project
+
+The build log then shows `npx wrangler deploy` / "Proceed with setup?". That flow works too — the repository includes `wrangler.jsonc` for it.
+In **Workers & Pages → your Worker → Settings → Build**:
+
+| Setting | Value |
+|---|---|
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+| Non-production branch deploy command | `npx wrangler versions upload` (gives each branch a preview URL) |
+| Root directory | *(empty)* |
+
+The `name` in `wrangler.jsonc` must equal the Worker's name in the dashboard (default `imya-rozy`); if yours differs, change the file. Then **Deployments → Retry build** (or push any commit). The site is at `https://imya-rozy.<your-subdomain>.workers.dev`. `_headers` (CSP, caching) works the same way; the `*.pages.dev` noindex rule simply doesn't apply.
+
 ### 3. Get the public URL
 
 When the build finishes, Cloudflare shows **Success** and the URL `https://<project>.pages.dev`. You can always find it again under **Workers & Pages → imya-rozy** (the "Domains" or "Visit site" link).

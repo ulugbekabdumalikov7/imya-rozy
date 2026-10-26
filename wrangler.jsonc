@@ -1,0 +1,15 @@
+// Cloudflare Workers (статические файлы). Нужен, если проект в Cloudflare создан как Worker
+// (Workers & Pages → Create → Workers → Import a repository). Для проекта Pages этот файл не используется.
+//
+// Сборка в Cloudflare: Build command — npm run build; Deploy command — npx wrangler deploy;
+// Non-production branch deploy command — npx wrangler versions upload (предпросмотры веток).
+{
+  // Имя должно совпадать с именем Worker в панели Cloudflare.
+  "name": "imya-rozy",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    // Неизвестный путь (/foo/bar) отдаёт index.html; разделы сайта адресуются через # и сервера не требуют.
+    "not_found_handling": "single-page-application"
+  }
+}
