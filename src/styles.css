@@ -34,6 +34,27 @@
   --raise: var(--night-3);
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
 
+  /* Поверхности и полупрозрачные слои — тоже токены, чтобы тема переключалась целиком */
+  --surface: #0e0d0b;
+  --surface-2: #0c0b0a;
+  --halo: #0e0d0b;
+  --bar-bg: rgba(12, 11, 10, 0.92);
+  --bar-bg-strong: rgba(12, 11, 10, 0.94);
+  --intro-glow: #171411;
+  --intro-veil: rgba(12, 11, 10, 0.88);
+  --intro-veil-2: rgba(12, 11, 10, 0.6);
+  --hover-veil: rgba(236, 230, 217, 0.07);
+  --linked-stroke: rgba(236, 230, 217, 0.18);
+  --hatch: rgba(236, 230, 217, 0.4);
+  --spotlight: rgba(6, 5, 4, 0.5);
+  --backdrop: rgba(5, 4, 3, 0.75);
+  --scan-frame: #2a2620;
+  /* «печати» групп героев: тёмные диски с костяным знаком в обеих темах */
+  --seal-1: #3a3631;
+  --seal-2: #4a4540;
+  --seal-3: #5d5750;
+  --seal-ink: #050504;
+
   /* Шрифты */
   --f-display: 'Cormorant Garamond', 'Cormorant', Garamond, Georgia, 'Times New Roman', serif;
   --f-text: 'Alegreya', Georgia, 'Times New Roman', serif;
@@ -81,6 +102,49 @@
   background-blend-mode: multiply;
   color: var(--ink);
 }
+
+/* ── Светлая тема: пергамент вместо ночи. Меняются только базовые цвета — компоненты не трогаем. ── */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --night: #f3eee3;
+  --night-2: #ebe4d6;
+  --night-3: #e1d8c6;
+  --night-4: #d3c8b2;
+  --bone: #1b1714;
+  --bone-2: #463f37;
+  --ash: #6c6458;
+  --ash-2: #9b9285;
+  --sheet: #fbf8f1;
+  --sheet-2: #efe8da;
+  --blood-lit: #a52b33;
+
+  --rule: rgba(27, 23, 20, 0.13);
+  --rule-2: rgba(27, 23, 20, 0.28);
+  --accent-veil: rgba(165, 43, 51, 0.1);
+  --shadow: 0 18px 44px rgba(60, 45, 30, 0.18);
+
+  --surface: #ece5d7;
+  --surface-2: #ece5d7;
+  --halo: #f3eee3;
+  --bar-bg: rgba(243, 238, 227, 0.92);
+  --bar-bg-strong: rgba(251, 248, 241, 0.96);
+  --intro-glow: #fbf8f1;
+  --intro-veil: rgba(243, 238, 227, 0.9);
+  --intro-veil-2: rgba(243, 238, 227, 0.6);
+  --hover-veil: rgba(27, 23, 20, 0.06);
+  --linked-stroke: rgba(27, 23, 20, 0.2);
+  --hatch: rgba(27, 23, 20, 0.35);
+  --spotlight: rgba(60, 45, 30, 0.22);
+  --backdrop: rgba(40, 30, 22, 0.45);
+  --scan-frame: #ece5d7;
+}
+:root[data-theme="light"] .sheet, :root[data-theme="light"] .detail-panel, :root[data-theme="light"] .dialog, :root[data-theme="light"] .spoiler-pop {
+  --field: #ffffff;
+  border-color: var(--rule-2);
+}
+/* знак на «печатях» героев остаётся светлым */
+:root[data-theme="light"] :is(.emblem-investigators, .emblem-library, .emblem-franciscans, .emblem-papal, .emblem-outside) { color: #ece6d9; }
+:root[data-theme="light"] :is(.gnode-investigators, .gnode-library, .gnode-franciscans, .gnode-papal, .gnode-outside) .gnode-initial { fill: #ece6d9; }
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -132,7 +196,7 @@ p { margin: 0.55rem 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .rubric { font-family: var(--f-ui); font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); font-weight: 500; margin: 0 0 0.35rem; }
 .latin { font-style: italic; }
-.skip-link { position: absolute; left: -999px; top: 8px; z-index: 300; background: var(--bone); color: var(--ink); padding: 8px 12px; }
+.skip-link { position: absolute; left: -999px; top: 8px; z-index: 300; background: var(--bone); color: var(--night); padding: 8px 12px; }
 .skip-link:focus { left: 12px; }
 main { outline: none; }
 
@@ -150,7 +214,7 @@ main { outline: none; }
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50;
   display: flex; align-items: center; gap: 20px; min-height: var(--header-h);
   padding-left: var(--gutter-l); padding-right: var(--gutter-r); padding-block: 8px;
-  background: rgba(12, 11, 10, 0.92); backdrop-filter: blur(6px);
+  background: var(--bar-bg); backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--rule);
 }
 .wordmark { display: flex; align-items: center; gap: 12px; color: var(--bone); flex-shrink: 0; background: none; }
@@ -174,6 +238,15 @@ main { outline: none; }
 .mainnav a.is-active::after { transform: scaleX(1); }
 
 .spoiler-control { position: relative; flex-shrink: 0; }
+.topbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.theme-toggle { width: 38px; height: 38px; display: inline-grid; place-items: center; border: 1px solid var(--rule-2); border-radius: var(--radius); background: none; color: var(--fg-2); cursor: pointer; transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease); }
+.theme-toggle:hover { border-color: var(--bone-2); color: var(--fg); }
+.theme-toggle svg { transition: transform var(--t-slow) var(--ease-out), opacity var(--t-medium) var(--ease); }
+.theme-toggle:active svg { transform: rotate(-30deg) scale(0.9); }
+/* мягкая смена темы: цвета перетекают, а не щёлкают */
+:root.theme-switching, :root.theme-switching *, :root.theme-switching *::before, :root.theme-switching *::after {
+  transition: background-color var(--t-slow) var(--ease), color var(--t-slow) var(--ease), border-color var(--t-slow) var(--ease), fill var(--t-slow) var(--ease), stroke var(--t-slow) var(--ease) !important;
+}
 .spoiler-btn {
   display: inline-flex; align-items: center; gap: 7px; font-family: var(--f-ui); font-size: 0.88rem;
   background: transparent; border: 1px solid var(--rule-2); border-radius: var(--radius); padding: 7px 12px; cursor: pointer; color: var(--bone-2);
@@ -231,6 +304,18 @@ main { outline: none; }
 .seg-vertical button:last-child { border-bottom: 0; }
 .seg-wrap button { min-width: 38px; justify-content: center; }
 .seg-compact button { padding: 6px 9px; font-size: 0.8rem; }
+/* очень узкий телефон: заголовок, тема и режим не помещаются в строку — у кнопки режима остаётся значок
+   (подпись скрыта только визуально: экранные дикторы её читают) */
+@media (max-width: 379px) {
+  .spoiler-btn { padding-inline: 9px; gap: 4px; }
+  .spoiler-btn-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+/* выбор режима спойлеров: на узком экране три режима не помещаются в строку — ставим их столбиком, а не переносом */
+@media (max-width: 560px) {
+  .spoiler-picker .seg { display: flex; flex-direction: column; width: 100%; }
+  .spoiler-picker .seg button { border-right: 0; border-bottom: 1px solid var(--rule); justify-content: flex-start; padding: 11px 14px; }
+  .spoiler-picker .seg button:last-child { border-bottom: 0; }
+}
 
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
@@ -260,9 +345,9 @@ main { outline: none; }
 .emblem-investigators { background: var(--blood-deep); color: var(--bone); }
 .emblem-library { background: var(--ink); }
 .emblem-abbey { background: var(--night-4); }
-.emblem-franciscans { background: #3a3631; }
-.emblem-papal { background: #4a4540; }
-.emblem-outside { background: #5d5750; }
+.emblem-franciscans { background: var(--seal-1); }
+.emblem-papal { background: var(--seal-2); }
+.emblem-outside { background: var(--seal-3); }
 
 input[type='search'], select {
   border: 1px solid var(--rule-2); border-radius: var(--radius); background: var(--field); padding: 8px 10px; min-height: 40px; max-width: 100%;
@@ -307,13 +392,13 @@ select { padding-right: 28px; }
 
 /* ─────────── Главная: вступление ─────────── */
 .home { padding-bottom: 64px; }
-.intro { position: relative; min-height: min(94dvh, 860px); display: grid; place-items: center; overflow: hidden; border-bottom: 1px solid var(--rule); background: radial-gradient(ellipse at 50% 42%, #171411 0%, var(--night) 62%); }
+.intro { position: relative; min-height: min(94dvh, 860px); display: grid; place-items: center; overflow: hidden; border-bottom: 1px solid var(--rule); background: radial-gradient(ellipse at 50% 42%, var(--intro-glow) 0%, var(--night) 62%); }
 .intro-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .intro-arch { fill: none; stroke: var(--bone); stroke-width: 1; opacity: 0.3; vector-effect: non-scaling-stroke; stroke-dasharray: 1 2; stroke-dashoffset: 0; }
 .intro-arch.faint { opacity: 0.16; }
 .intro-dot { fill: var(--blood-lit); }
 .intro-route { fill: none; stroke: var(--blood-lit); stroke-width: 1.4; vector-effect: non-scaling-stroke; stroke-dasharray: 1 2; stroke-dashoffset: 0; opacity: 0.85; }
-.intro-text { position: relative; z-index: 1; text-align: center; background: radial-gradient(ellipse at 50% 50%, rgba(12, 11, 10, 0.88) 0%, rgba(12, 11, 10, 0.6) 45%, transparent 72%); padding-left: var(--gutter-l); padding-right: var(--gutter-r); padding-block: 40px; max-width: 760px; }
+.intro-text { position: relative; z-index: 1; text-align: center; background: radial-gradient(ellipse at 50% 50%, var(--intro-veil) 0%, var(--intro-veil-2) 45%, transparent 72%); padding-left: var(--gutter-l); padding-right: var(--gutter-r); padding-block: 40px; max-width: 760px; }
 .intro-it { font-family: var(--f-display); font-weight: 500; font-size: clamp(1rem, 2.4vw, 1.35rem); letter-spacing: 0.5em; margin: 0 0 18px; color: var(--bone-2); padding-left: 0.5em; }
 .intro-ru { font-family: var(--f-display); font-weight: 500; font-size: var(--step-4); line-height: 0.95; letter-spacing: 0.02em; color: var(--bone); }
 .intro-ru .cap { color: var(--blood-lit); position: relative; }
@@ -415,32 +500,32 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .map-layout > * { min-height: 0; }
 .map-controls { border-right: 1px solid var(--rule); padding: 18px 16px; overflow-y: auto; background: var(--night); }
 .controls-head { display: flex; justify-content: space-between; align-items: center; }
-.map-stage { position: relative; min-width: 0; display: flex; flex-direction: column; background: #0e0d0b; }
+.map-stage { position: relative; min-width: 0; display: flex; flex-direction: column; background: var(--surface); }
 .map-toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--rule); min-height: 48px; flex-wrap: wrap; }
 .map-view-title { font-family: var(--f-display); font-size: 1.2rem; font-weight: 600; margin: 0; letter-spacing: 0.02em; }
 .map-canvas { position: relative; flex: 1; min-height: 0; }
-.graph-svg { background: #0e0d0b; width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; }
+.graph-svg { background: var(--surface); width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; }
 .graph-svg:active { cursor: grabbing; }
-.map-ground { fill: #0e0d0b; }
+.map-ground { fill: var(--surface); }
 /* ── Эталонные планы: изображение-основа + выровненный SVG-слой зон ── */
-.plan-svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; background: #0c0b0a; }
+.plan-svg { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; background: var(--surface-2); }
 .plan-svg:active { cursor: grabbing; }
-.plan-ground { fill: #0c0b0a; }
-.plan-svg.tone-scan, .plan-svg.tone-scan .plan-ground { background: #2a2620; fill: #2a2620; }
+.plan-ground { fill: var(--surface-2); }
+.plan-svg.tone-scan, .plan-svg.tone-scan .plan-ground { background: var(--scan-frame); fill: var(--scan-frame); }
 .plan-image { image-rendering: auto; }
 /* красные буквы плана библиотеки окрашиваются бордовым поверх исходных пикселей */
 .glyph-tint rect { fill: var(--blood-lit); mix-blend-mode: multiply; pointer-events: none; }
 .spot { fill: transparent; stroke: transparent; cursor: pointer; vector-effect: non-scaling-stroke; transition: stroke var(--t-medium) var(--ease), fill var(--t-medium) var(--ease); }
-.layers-arch .spot.is-linked, .layers-arch .spot-room { stroke: rgba(236, 230, 217, 0.18); }
-.spot.is-hover, .spot:focus-visible { stroke: var(--bone); fill: rgba(236, 230, 217, 0.07); outline: none; }
+.layers-arch .spot.is-linked, .layers-arch .spot-room { stroke: var(--linked-stroke); }
+.spot.is-hover, .spot:focus-visible { stroke: var(--bone); fill: var(--hover-veil); outline: none; }
 .spot.is-selected { stroke: var(--blood-lit); fill: rgba(181, 56, 63, 0.16); }
 .tone-scan .spot.is-hover, .tone-scan .spot:focus-visible { stroke: #15120f; fill: rgba(21, 18, 15, 0.08); }
 .tone-scan.layers-arch .spot.is-linked, .tone-scan.layers-arch .spot-room { stroke: rgba(21, 18, 15, 0.22); }
 .tone-scan .spot.is-selected { stroke: var(--blood); fill: rgba(139, 28, 35, 0.14); }
-.spotlight { fill: rgba(6, 5, 4, 0.5); pointer-events: none; animation: fade var(--t-slow) var(--ease) both; }
+.spotlight { fill: var(--spotlight); pointer-events: none; animation: fade var(--t-slow) var(--ease) both; }
 .tone-scan .spotlight { fill: rgba(30, 24, 18, 0.28); }
 .spot-tip { pointer-events: none; animation: fade var(--t-medium) var(--ease) both; }
-.spot-tip text { paint-order: stroke; stroke: #0c0b0a; stroke-width: 4px; stroke-linejoin: round; }
+.spot-tip text { paint-order: stroke; stroke: var(--halo); stroke-width: 4px; stroke-linejoin: round; }
 .tip-title { font-family: var(--f-display); font-weight: 600; fill: var(--bone); }
 .tip-sub { font-family: var(--f-ui); font-style: italic; fill: var(--bone-2); }
 .tone-scan .spot-tip text { stroke: #f3ecdc; }
@@ -480,7 +565,7 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .marker { cursor: pointer; }
 .marker-people circle { fill: var(--night-4); stroke: var(--ash); stroke-width: 1; }
 .marker-people text { fill: var(--bone-2); font-family: var(--f-ui); font-weight: 500; pointer-events: none; }
-.marker-clue rect { fill: #0e0d0b; stroke: var(--bone-2); stroke-width: 1; }
+.marker-clue rect { fill: var(--surface); stroke: var(--bone-2); stroke-width: 1; }
 .marker-clue text { fill: var(--bone-2); font-family: var(--f-ui); font-weight: 500; pointer-events: none; }
 
 /* знак смерти: бордовая точка и медленный круговой импульс */
@@ -489,15 +574,15 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .marker-death .death-core { transform-box: fill-box; transform-origin: center; animation: dot-in var(--t-slow) var(--ease-out) both; transition: transform var(--t-medium) var(--ease); }
 .marker-death .pulse { fill: none; stroke: var(--blood-lit); transform-box: fill-box; transform-origin: center; animation: pulse 5.5s var(--ease) infinite; animation-delay: var(--pd, 0s); pointer-events: none; }
 @keyframes pulse { 0% { transform: scale(0.6); opacity: 0.7; } 70% { transform: scale(2.2); opacity: 0; } 100% { transform: scale(2.2); opacity: 0; } }
-.marker-death .glyph-bg { fill: #0e0d0b; stroke: var(--blood-lit); }
-.marker-death.marker-murder .glyph-bg { fill: var(--blood-lit); stroke: #0e0d0b; }
+.marker-death .glyph-bg { fill: var(--surface); stroke: var(--blood-lit); }
+.marker-death.marker-murder .glyph-bg { fill: var(--blood-lit); stroke: var(--surface); }
 .marker-death.marker-other .glyph-bg { fill: var(--bone-2); stroke: var(--blood-lit); }
-.marker-death .glyph-fg { stroke: #0e0d0b; fill: none; stroke-linecap: round; }
+.marker-death .glyph-fg { stroke: var(--surface); fill: none; stroke-linecap: round; }
 .glyph-text { fill: var(--blood-lit); font-family: var(--f-display); font-weight: 700; }
 .marker-death .halo { fill: none; stroke: var(--blood-lit); opacity: 0; transition: opacity var(--t-medium) var(--ease); }
 .marker-death:hover .halo, .marker-death:focus-visible .halo, .marker-death.is-selected .halo { opacity: 0.9; }
 .marker-death:hover .death-core, .marker-death:focus-visible .death-core { transform: scale(1.25); }
-.marker-label { font-family: var(--f-ui); font-weight: 500; fill: var(--bone); paint-order: stroke; stroke: #0e0d0b; stroke-width: 3px; opacity: 0; transition: opacity var(--t-medium) var(--ease); pointer-events: none; }
+.marker-label { font-family: var(--f-ui); font-weight: 500; fill: var(--bone); paint-order: stroke; stroke: var(--halo); stroke-width: 3px; opacity: 0; transition: opacity var(--t-medium) var(--ease); pointer-events: none; }
 .marker-label .ml-day { fill: var(--blood-lit); }
 .marker-death:hover .marker-label, .marker-death:focus-visible .marker-label, .marker-death.is-selected .marker-label, .show-death-labels .marker-label { opacity: 1; }
 .marker-death-site circle { fill: none; stroke: var(--blood-lit); }
@@ -524,18 +609,18 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .route-follower .footprint { --step-rest: 0.75; }
 .route-default .footprint { --step-rest: 0.8; }
 .footprint.is-faint { --step-rest: 0.75; }
-.route-dot circle { fill: #0e0d0b; stroke: var(--bone-2); }
+.route-dot circle { fill: var(--surface); stroke: var(--bone-2); }
 .route-lead .route-dot circle, .route-default .route-dot circle { stroke: var(--blood-lit); }
 .route-dot text { fill: var(--bone); font-family: var(--f-ui); font-weight: 500; }
 .route-dot.route-gap circle { stroke-dasharray: 2 2; stroke: var(--ash); }
 .route-dot.is-current circle { fill: var(--bone); stroke: var(--blood-lit); }
-.route-dot.is-current text { fill: var(--ink); }
+.route-dot.is-current text { fill: var(--night); }
 .is-route-drawing .route-dot { animation: dot-in var(--t-medium) var(--ease-out) both; animation-delay: var(--dot-delay, 0ms); transform-box: fill-box; transform-origin: center; }
 
 .map-zoom { position: absolute; right: 12px; top: 12px; display: flex; flex-direction: column; gap: 4px; }
 .route-bar {
   position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 9px 11px;
-  background: rgba(12, 11, 10, 0.94); border: 1px solid var(--rule-2); box-shadow: var(--shadow); font-family: var(--f-ui); font-size: 0.9rem;
+  background: var(--bar-bg-strong); border: 1px solid var(--rule-2); box-shadow: var(--shadow); font-family: var(--f-ui); font-size: 0.9rem;
   animation: rise var(--t-slow) var(--ease) both;
 }
 .route-bar > svg { color: var(--blood-lit); flex-shrink: 0; }
@@ -552,7 +637,7 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .lg-other { background: var(--bone-2); color: var(--night); border-radius: 50%; box-shadow: 0 0 0 1.5px var(--blood-lit); }
 .lg-site { border: 1.5px dashed var(--blood-lit); border-radius: 50%; }
 .legend-swatch { width: 12px; height: 12px; margin-top: 6px; flex-shrink: 0; }
-.swatch-arch { border: 1px solid var(--bone-2); background: repeating-linear-gradient(45deg, rgba(236, 230, 217, 0.4) 0 1px, transparent 1px 4px); }
+.swatch-arch { border: 1px solid var(--bone-2); background: repeating-linear-gradient(45deg, var(--hatch) 0 1px, transparent 1px 4px); }
 .swatch-people { background: var(--night-4); border: 1px solid var(--ash); border-radius: 50%; }
 .swatch-deaths { background: var(--blood-lit); border-radius: 50%; transform: scale(0.75); }
 .swatch-clues { border: 1px solid var(--bone-2); transform: rotate(45deg) scale(0.75); }
@@ -669,24 +754,24 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 @keyframes node-in { from { opacity: 0; transform: scale(0.5); filter: blur(3px); } to { opacity: 1; transform: none; filter: none; } }
 .gnode-disc { fill: var(--night-3); stroke: var(--bone-2); stroke-width: 1.2; transition: fill var(--t-medium) var(--ease), stroke var(--t-medium) var(--ease), stroke-width var(--t-medium) var(--ease); }
 .gnode-investigators .gnode-disc { fill: var(--blood-deep); }
-.gnode-library .gnode-disc { fill: #050504; }
+.gnode-library .gnode-disc { fill: var(--seal-ink); }
 .gnode-abbey .gnode-disc { fill: var(--night-4); }
-.gnode-franciscans .gnode-disc { fill: #3a3631; }
-.gnode-papal .gnode-disc { fill: #4a4540; }
-.gnode-outside .gnode-disc { fill: #5d5750; }
+.gnode-franciscans .gnode-disc { fill: var(--seal-1); }
+.gnode-papal .gnode-disc { fill: var(--seal-2); }
+.gnode-outside .gnode-disc { fill: var(--seal-3); }
 .gnode-initial { fill: var(--bone); font-family: var(--f-display); font-weight: 600; font-size: 22px; pointer-events: none; }
-.gnode-label { fill: var(--bone-2); font-family: var(--f-ui); font-weight: 500; font-size: 15px; paint-order: stroke; stroke: #0e0d0b; stroke-width: 4px; pointer-events: none; transition: fill var(--t-medium) var(--ease); }
+.gnode-label { fill: var(--bone-2); font-family: var(--f-ui); font-weight: 500; font-size: 15px; paint-order: stroke; stroke: var(--halo); stroke-width: 4px; pointer-events: none; transition: fill var(--t-medium) var(--ease); }
 .gnode:hover .gnode-disc { stroke: var(--bone); stroke-width: 2; }
 .gnode.is-focus .gnode-disc { fill: var(--bone); stroke: var(--blood-lit); stroke-width: 3; }
-.gnode.is-focus .gnode-initial { fill: var(--ink); }
+.gnode.is-focus .gnode-initial { fill: var(--night); }
 .gnode.is-focus .gnode-label, .gnode.is-near .gnode-label { fill: var(--bone); }
 .gnode.is-dim { opacity: 0.18; }
 .gnode.is-second { opacity: 0.55; }
 .gnode:focus-visible { outline: none; }
 .gnode:focus-visible .gnode-disc { stroke: var(--blood-lit); stroke-width: 3; }
 .gdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: middle; border: 1px solid var(--bone-2); }
-.gdot.gnode-investigators { background: var(--blood-deep); } .gdot.gnode-library { background: #050504; } .gdot.gnode-abbey { background: var(--night-4); }
-.gdot.gnode-franciscans { background: #3a3631; } .gdot.gnode-papal { background: #4a4540; } .gdot.gnode-outside { background: #5d5750; }
+.gdot.gnode-investigators { background: var(--blood-deep); } .gdot.gnode-library { background: var(--seal-ink); } .gdot.gnode-abbey { background: var(--night-4); }
+.gdot.gnode-franciscans { background: var(--seal-1); } .gdot.gnode-papal { background: var(--seal-2); } .gdot.gnode-outside { background: var(--seal-3); }
 .edge { cursor: pointer; transition: opacity var(--t-slow) var(--ease); }
 .edge-hit { stroke: transparent; stroke-width: 14; }
 .edge-draw { transform-box: view-box; animation: edge-in 0.9s var(--ease-in-out) both; animation-delay: var(--d, 0ms); }
@@ -701,9 +786,9 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .edge.is-selected .edge-line { stroke: var(--blood-lit); }
 .edge.is-dim { opacity: 0.07; }
 .edge.is-indirect { opacity: 0.35; }
-.edge-label { fill: var(--bone); font-family: var(--f-ui); font-weight: 500; font-style: italic; paint-order: stroke; stroke: #0e0d0b; stroke-width: 4px; pointer-events: none; animation: fade var(--t-slow) var(--ease) both; }
+.edge-label { fill: var(--bone); font-family: var(--f-ui); font-weight: 500; font-style: italic; paint-order: stroke; stroke: var(--halo); stroke-width: 4px; pointer-events: none; animation: fade var(--t-slow) var(--ease) both; }
 .arrow-head { fill: var(--bone-2); }
-.graph-legend { position: absolute; left: 12px; bottom: 10px; list-style: none; margin: 0; padding: 7px 11px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--f-ui); font-size: 0.78rem; color: var(--bone-2); background: rgba(12, 11, 10, 0.9); border: 1px solid var(--rule); max-width: calc(100% - 70px); }
+.graph-legend { position: absolute; left: 12px; bottom: 10px; list-style: none; margin: 0; padding: 7px 11px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-family: var(--f-ui); font-size: 0.78rem; color: var(--bone-2); background: var(--bar-bg); border: 1px solid var(--rule); max-width: calc(100% - 70px); }
 .graph-legend .line-sample { display: inline-block; width: 22px; height: 0; border-top: 1px solid var(--bone-2); vertical-align: middle; margin-right: 4px; }
 .graph-legend .ls-dashed { border-top-style: dashed; }
 .graph-legend .ls-thin { border-top-width: 1px; opacity: 0.5; }
@@ -744,7 +829,7 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .day-strip { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 20px; font-family: var(--f-ui); }
 .day-strip button, .day-strip span { display: inline-flex; align-items: center; gap: 4px; min-width: 42px; justify-content: center; padding: 7px 11px; border: 1px solid var(--rule-2); background: none; color: var(--bone-2); cursor: pointer; transition: background-color var(--t-medium) var(--ease), color var(--t-medium) var(--ease); }
 .day-strip button:hover { color: var(--bone); border-color: var(--bone-2); }
-.day-strip button.is-active { background: var(--bone); color: var(--ink); border-color: var(--bone); }
+.day-strip button.is-active { background: var(--bone); color: var(--night); border-color: var(--bone); }
 .day-strip .is-locked { color: var(--ash-2); border-style: dashed; cursor: default; }
 .timeline-layout { display: grid; grid-template-columns: minmax(0, 1fr) 430px; gap: 0; align-items: start; }
 .timeline-layout .detail-panel { position: sticky; top: calc(var(--header-h) + 12px); max-height: calc(100dvh - var(--header-h) - 24px); border: 1px solid var(--rule-2); margin-left: 22px; }
@@ -837,7 +922,7 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .certainty-legend { list-style: none; padding: 0; display: grid; gap: 7px; }
 
 /* ─────────── Диалог ─────────── */
-.dialog-backdrop { position: fixed; inset: 0; z-index: 100; background: rgba(5, 4, 3, 0.75); display: grid; place-items: center; padding: 16px; animation: fade var(--t-medium) var(--ease) both; }
+.dialog-backdrop { position: fixed; inset: 0; z-index: 100; background: var(--backdrop); display: grid; place-items: center; padding: 16px; animation: fade var(--t-medium) var(--ease) both; }
 .dialog { border: 1px solid var(--rule-2); max-width: 470px; width: 100%; padding: 26px; box-shadow: var(--shadow); animation: unfold var(--t-slow) var(--ease-in-out) both; }
 .dialog h2 { margin-top: 0; }
 .dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 18px; }
@@ -867,7 +952,7 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
   .mainnav.has-more-start { mask-image: linear-gradient(90deg, transparent, #000 36px); -webkit-mask-image: linear-gradient(90deg, transparent, #000 36px); }
   .mainnav.has-more-start.has-more-end { mask-image: linear-gradient(90deg, transparent, #000 36px, #000 calc(100% - 36px), transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 36px, #000 calc(100% - 36px), transparent); }
   .mainnav a svg { display: none; }
-  .spoiler-control { margin-left: auto; }
+  .topbar-actions { margin-left: auto; }
   .spoiler-pop { position: fixed; left: var(--gutter-l); right: var(--gutter-r); top: calc(var(--header-h) + env(safe-area-inset-top, 0px) - 40px); width: auto; }
   .only-mobile { display: inline-flex !important; }
   .only-desktop { display: none !important; }
@@ -885,7 +970,7 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
   .section-map .page-swap { height: auto; }
   .map-layout { display: block; height: auto; position: relative; }
   .map-stage { height: auto; }
-  .map-toolbar { position: sticky; top: calc(var(--header-h) + env(safe-area-inset-top, 0px)); z-index: 6; background: #0e0d0b; }
+  .map-toolbar { position: sticky; top: calc(var(--header-h) + env(safe-area-inset-top, 0px)); z-index: 6; background: var(--surface); }
   .map-canvas { flex: none; display: flex; flex-direction: column; }
   .plan-svg { height: auto; aspect-ratio: var(--plan-ratio, 1); max-height: 78dvh; }
   .map-zoom { position: static; flex-direction: row; justify-content: flex-end; gap: 6px; padding: 8px 12px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }

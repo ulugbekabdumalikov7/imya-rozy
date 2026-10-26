@@ -47,7 +47,7 @@ export function SpoilerControl() {
   const Icon = ICONS[spoiler.mode];
   return (
     <div className="spoiler-control" ref={ref}>
-      <button type="button" className={`spoiler-btn mode-${spoiler.mode}`} aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((v) => !v)}>
+      <button type="button" className={`spoiler-btn mode-${spoiler.mode}`} aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((v) => !v)} title={`Режим раскрытия сюжета: ${modeLabels[spoiler.mode].title}`}>
         <Icon size={15} aria-hidden="true" />
         <span className="spoiler-btn-text">{modeLabels[spoiler.mode].title}{spoiler.mode === 'progress' && ` · д.${spoiler.day}`}</span>
         <ChevronDown size={14} aria-hidden="true" />

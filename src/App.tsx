@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { BookMarked, Clock3, Landmark, Map as MapIcon, Network, ScrollText, Users } from 'lucide-react';
+import { BookMarked, Clock3, Landmark, Map as MapIcon, Moon, Network, ScrollText, Sun, Users } from 'lucide-react';
 import { href, useRoute } from './lib/router';
 import { useSwap, DURATION } from './lib/motion';
 import { SpoilerProvider } from './state/spoiler';
 import { SpoilerControl } from './components/SpoilerControl';
+import { setTheme, useTheme } from './lib/theme';
 import { HomeSection } from './sections/HomeSection';
 import { MapSection } from './sections/MapSection';
 import { HeroesSection } from './sections/HeroesSection';
@@ -69,6 +70,18 @@ function useNavOverflow(activeKey: string) {
   return ref;
 }
 
+/** Переключатель темы: ночь (тёмная) ↔ пергамент (светлая). */
+function ThemeToggle() {
+  const theme = useTheme();
+  const toLight = theme === 'dark';
+  const label = toLight ? 'Включить светлую тему' : 'Включить тёмную тему';
+  return (
+    <button type="button" className="theme-toggle" onClick={() => setTheme(toLight ? 'light' : 'dark')} aria-label={label} title={label}>
+      {toLight ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}
+    </button>
+  );
+}
+
 function Shell() {
   const liveRoute = useRoute();
   const navRef = useNavOverflow(liveRoute.path[0] ?? '');
@@ -118,7 +131,10 @@ function Shell() {
             );
           })}
         </nav>
-        <SpoilerControl />
+        <div className="topbar-actions">
+          <ThemeToggle />
+          <SpoilerControl />
+        </div>
       </header>
       <main id="main" tabIndex={-1}>
         <div key={section} className={`page-swap${phase === 'out' ? ' is-out' : ''}`}>{content}</div>
