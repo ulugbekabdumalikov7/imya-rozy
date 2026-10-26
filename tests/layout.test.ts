@@ -21,4 +21,11 @@ describe('вёрстка для телефона', () => {
   it('у меню есть затухающий край, когда вкладки не помещаются', () => {
     expect(css).toMatch(/\.mainnav\.has-more-end \{[^}]*mask-image/);
   });
+
+  it('кровь на «И» стекает при каждом заходе на главную, а не только при первом', () => {
+    expect(css).toMatch(/\.drip-return \.drip-reveal-a \{ animation: drip-grow/);
+    expect(css).toMatch(/\.drip-intro \.drip-reveal-a \{ animation: drip-grow/);
+    // вид анимации не зависит от фазы вступления — смена фазы не перезапускает кровь
+    expect(css).not.toMatch(/\.intro\.is-(playing|rest) \.drip-/);
+  });
 });

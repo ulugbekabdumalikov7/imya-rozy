@@ -325,12 +325,17 @@ select { padding-right: 28px; }
 .drip-head { opacity: 0; }
 .drip-drop { opacity: 0; transform-box: fill-box; transform-origin: 50% 0; }
 /* вступление: кровь медленно стекает уже после проявления названия */
-.intro.is-playing .drip-reveal-a { animation: drip-grow 3.2s cubic-bezier(0.45, 0.05, 0.25, 1) both 2.75s; }
-.intro.is-playing .drip-head-a { animation: drip-head-a 3.2s cubic-bezier(0.45, 0.05, 0.25, 1) both 2.75s; }
-.intro.is-playing .drip-reveal-b { animation: drip-grow 2.6s cubic-bezier(0.45, 0.05, 0.25, 1) both 3.5s; }
-.intro.is-playing .drip-head-b { animation: drip-head-b 2.6s cubic-bezier(0.45, 0.05, 0.25, 1) both 3.5s; }
-.intro.is-playing .drip-drop { animation: drip-fall 11s ease-in infinite 6.4s; }
-.intro.is-rest .drip-drop { animation: drip-fall 11s ease-in infinite 3s; }
+.drip-intro .drip-reveal-a { animation: drip-grow 3.2s cubic-bezier(0.45, 0.05, 0.25, 1) both 2.75s; }
+.drip-intro .drip-head-a { animation: drip-head-a 3.2s cubic-bezier(0.45, 0.05, 0.25, 1) both 2.75s; }
+.drip-intro .drip-reveal-b { animation: drip-grow 2.6s cubic-bezier(0.45, 0.05, 0.25, 1) both 3.5s; }
+.drip-intro .drip-head-b { animation: drip-head-b 2.6s cubic-bezier(0.45, 0.05, 0.25, 1) both 3.5s; }
+.drip-intro .drip-drop { animation: drip-fall 11s ease-in infinite 6.4s; }
+/* каждый следующий заход на главную: вступление не повторяется, но кровь стекает заново — сразу после появления страницы */
+.drip-return .drip-reveal-a { animation: drip-grow 2.4s cubic-bezier(0.45, 0.05, 0.25, 1) both 0.45s; }
+.drip-return .drip-head-a { animation: drip-head-a 2.4s cubic-bezier(0.45, 0.05, 0.25, 1) both 0.45s; }
+.drip-return .drip-reveal-b { animation: drip-grow 2s cubic-bezier(0.45, 0.05, 0.25, 1) both 1.05s; }
+.drip-return .drip-head-b { animation: drip-head-b 2s cubic-bezier(0.45, 0.05, 0.25, 1) both 1.05s; }
+.drip-return .drip-drop { animation: drip-fall 11s ease-in infinite 3.2s; }
 @keyframes drip-grow { 0% { transform: scaleY(0); } 12% { transform: scaleY(0.06); } 100% { transform: scaleY(1); } }
 @keyframes drip-head-a { 0% { opacity: 0; transform: translateY(0); } 6% { opacity: 1; } 100% { opacity: 0; transform: translateY(47px); } }
 @keyframes drip-head-b { 0% { opacity: 0; transform: translateY(0); } 6% { opacity: 1; } 100% { opacity: 0; transform: translateY(33.6px); } }

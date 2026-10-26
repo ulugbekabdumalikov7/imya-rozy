@@ -8,7 +8,7 @@ const PRELOAD_FONTS = [/cormorant-garamond-cyrillic-500-normal-[\w-]+\.woff2$/, 
 
 /** Добавляет в index.html предзагрузку шрифтов и метку сборки (коммит), чтобы видеть, какая версия развёрнута. */
 function deployMeta(): Plugin {
-  const commit = (process.env.CF_PAGES_COMMIT_SHA ?? process.env.GITHUB_SHA ?? '').slice(0, 7);
+  const commit = (process.env.CF_PAGES_COMMIT_SHA ?? process.env.WORKERS_CI_COMMIT_SHA ?? process.env.GITHUB_SHA ?? '').slice(0, 7);
   return {
     name: 'deploy-meta',
     apply: 'build',
@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
   return {
     // Абсолютные пути: страница корректно грузит ресурсы с любого адреса (например, /foo/bar после SPA-отката Pages).
     base: single ? './' : '/',
-    plugins: single ? [react(), viteSingleFile()] : [react(), deployMeta()],
+    plugins: [react(), single ? viteSingleFile() : deployMeta()],
     build: {
       outDir: single ? 'dist-single' : 'dist',
       target: 'es2020',

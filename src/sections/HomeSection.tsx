@@ -87,7 +87,7 @@ export function HomeSection() {
         </svg>
         <div className="intro-text">
           <p className="intro-it" lang="it">IL NOME DELLA ROSA</p>
-          <h1 id="intro-title" className="intro-ru" aria-label="Имя розы"><span aria-hidden="true"><span className="cap">И{fontReady && <BloodDrip />}</span>мя розы</span></h1>
+          <h1 id="intro-title" className="intro-ru" aria-label="Имя розы"><span aria-hidden="true"><span className="cap">И{fontReady && <BloodDrip mode={mode === 'playing' ? 'intro' : 'return'} />}</span>мя розы</span></h1>
           <p className="intro-sub">Атлас тайн аббатства</p>
           <p className="intro-lede">
             Северная Италия, конец ноября 1327 года. В богатом бенедиктинском аббатстве накануне погиб молодой монах. У францисканца Вильгельма Баскервильского и его ученика Адсона — семь дней и библиотека, куда нельзя входить.
@@ -165,9 +165,10 @@ export function HomeSection() {
  * остаются на штрихах при любом размере заголовка. Положение штрихов измерено по шрифту
  * Cormorant Garamond 500: левый — 0.159em, правый — 0.605em, низ буквы — 0.94em от верха строки.
  */
-function BloodDrip() {
+/** Кровь на «И»: `intro` — медленно, после вступления (первый визит); `return` — сразу, при каждом возвращении на главную. */
+function BloodDrip({ mode }: { mode: 'intro' | 'return' }) {
   return (
-    <svg className="drip" viewBox="0 0 70 160" aria-hidden="true" focusable="false">
+    <svg className={`drip drip-${mode}`} viewBox="0 0 70 160" aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="blood-run" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#b5383f" />
