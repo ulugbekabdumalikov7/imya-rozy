@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Minus, Plus, RotateCcw } from 'lucide-react';
 import {
-  anchorIn, characterById, clues, dayLabel, deaths, events, hotspotAnchor, hotspotIn, locationById, plans, routeByCharacter,
+  anchorIn, characterById, clues, dayLabel, deaths, eventById, events, hotspotAnchor, hotspotIn, locationById, plans, routeByCharacter,
 } from '../data';
 import { LIBRARY_PASSAGE_MARK, LIBRARY_RED_GLYPHS } from '../data/planGeometry';
 import type { PlanHotspot } from '../data/plans';
@@ -10,6 +10,7 @@ import { usePanZoom } from '../lib/usePanZoom';
 import { firstTimeThisSession, reducedMotion } from '../lib/motion';
 import { deathView, type DeathView } from '../lib/visible';
 import { useSpoiler } from '../state/spoiler';
+import { MEETING_EVENT_ID, MEETING_SCENE_DELAY_MS, MEETING_SCENE_MS, MeetingMarker, MeetingScene } from './MeetingRose';
 import abbeyPlanUrl from '../assets/abbey-plan.webp';
 import { FOOT_PATH, footprints, type Footprint } from '../lib/footsteps';
 import libraryPlanUrl from '../assets/library-plan.webp';
@@ -57,6 +58,20 @@ export function PlanMap(p: Props) {
   // Проявление плана: полное — при первом открытии за сессию, короткое — при смене плана.
   const [drawMode] = useState(() => (reducedMotion() ? 'none' : firstTimeThisSession('map-draw') ? 'drawing' : 'settling'));
   const settleDelay = drawMode === 'drawing' ? 1400 : drawMode === 'settling' ? 300 : 0;
+
+  // Встреча Адсона и девушки: знак-роза на плане аббатства и короткая сцена при её открытии.
+  const meetingEvent = eventById.get(MEETING_EVENT_ID);
+  const meetingShown = p.view === 'abbey' && !!meetingEvent && visible(meetingEvent);
+  const meetingSelected = meetingShown && p.selectedEventId === MEETING_EVENT_ID;
+  const [sceneKey, setSceneKey] = useState(0);
+  const [scenePlaying, setScenePlaying] = useState(false);
+  useEffect(() => {
+    // каждое новое открытие встречи проигрывает сцену заново; при уменьшении движения сцены нет
+    if (!meetingSelected || reducedMotion()) { setScenePlaying(false); return; }
+    const start = window.setTimeout(() => { setSceneKey((k) => k + 1); setScenePlaying(true); }, MEETING_SCENE_DELAY_MS);
+    const end = window.setTimeout(() => setScenePlaying(false), MEETING_SCENE_DELAY_MS + MEETING_SCENE_MS);
+    return () => { window.clearTimeout(start); window.clearTimeout(end); };
+  }, [meetingSelected]);
 
   const hotspots = useMemo(() => [...plan.hotspots].sort((a, b) => LAYER_ORDER[a.kind] - LAYER_ORDER[b.kind]), [plan]);
   const selected = p.selectedSpot ? hotspots.find((h) => h.id === p.selectedSpot) : undefined;
@@ -163,7 +178,7 @@ export function PlanMap(p: Props) {
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
-        className={`plan-svg tone-${p.tone} plan-${p.view}${p.layers.has('arch') ? ' layers-arch' : ''}`}
+        className={`plan-svg tone-${p.tone} plan-${p.view}${p.layers.has('arch') ? ' layers-arch' : ''}${scenePlaying ? ' is-meeting-scene' : ''}`}
         role="group"
         aria-label={p.view === 'abbey' ? "План аббатства (L'Abbazia)" : 'План библиотеки'}
         {...pz.handlers}
@@ -320,6 +335,12 @@ export function PlanMap(p: Props) {
               {p.layers.has('route') && ghost && <RouteLines key={`ghost-${routeKey}`} steps={ghost.steps.filter((s) => visible(s))} view={p.view} unit={unit} cls="route-ghost" animate={false} segMs={0} current={null} />}
               {p.layers.has('route') && p.route && (
                 <RouteLines key={routeKey} steps={visibleSteps} view={p.view} unit={unit} cls={routeStyle} animate={!reducedMotion()} segMs={segMs} current={p.routeStep} startDelay={settleDelay} />
+              )}
+
+              {meetingSelected && scenePlaying && <MeetingScene key={sceneKey} uid={String(sceneKey)} unit={unit} width={W} height={H} />}
+              {meetingShown && (
+                <MeetingMarker unit={unit} selected={meetingSelected}
+                  onPick={click(() => p.onPickEvent(MEETING_EVENT_ID))} onActivate={() => p.onPickEvent(MEETING_EVENT_ID)} />
               )}
             </g>
 

@@ -54,6 +54,7 @@
   --seal-2: #4a4540;
   --seal-3: #5d5750;
   --seal-ink: #050504;
+  --scene-veil: rgba(4, 3, 2, 0.74);
 
   /* Шрифты */
   --f-display: 'Cormorant Garamond', 'Cormorant', Garamond, Georgia, 'Times New Roman', serif;
@@ -137,6 +138,7 @@
   --spotlight: rgba(60, 45, 30, 0.22);
   --backdrop: rgba(40, 30, 22, 0.45);
   --scan-frame: #ece5d7;
+  --scene-veil: rgba(46, 32, 20, 0.5);
 }
 :root[data-theme="light"] .sheet, :root[data-theme="light"] .detail-panel, :root[data-theme="light"] .dialog, :root[data-theme="light"] .spoiler-pop {
   --field: #ffffff;
@@ -1041,8 +1043,45 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
   .facts dt { padding-top: 8px; }
 }
 
+/* ── Встреча Адсона и девушки: знак-роза и сцена ── */
+.marker-meeting { cursor: pointer; outline: none; }
+.marker-meeting .hit { fill: transparent; }
+.meeting-disc { fill: var(--surface); stroke: var(--blood-lit); }
+.meeting-rose path { fill: none; stroke: var(--blood-lit); stroke-width: 1.15; stroke-linecap: round; stroke-linejoin: round; }
+.meeting-glow { fill: none; stroke: var(--blood-lit); opacity: 0.25; transform-box: fill-box; transform-origin: center; animation: meeting-breathe 6s ease-in-out infinite; }
+@keyframes meeting-breathe { 0%, 100% { opacity: 0.12; transform: scale(0.94); } 45% { opacity: 0.55; transform: scale(1.06); } 70% { opacity: 0.3; transform: scale(1); } }
+.marker-meeting:hover .meeting-disc, .marker-meeting:focus-visible .meeting-disc, .marker-meeting.is-selected .meeting-disc { fill: var(--blood-deep); stroke: var(--blood-lit); }
+.marker-meeting:hover .meeting-rose path, .marker-meeting:focus-visible .meeting-rose path, .marker-meeting.is-selected .meeting-rose path { stroke: #f0c9c9; }
+.meeting-label { opacity: 0; transition: opacity var(--t-medium) var(--ease); pointer-events: none; }
+.marker-meeting:hover .meeting-label, .marker-meeting:focus-visible .meeting-label, .marker-meeting.is-selected .meeting-label { opacity: 1; }
+.meeting-label text { paint-order: stroke; stroke: var(--halo); stroke-width: 3.5px; stroke-linejoin: round; font-family: var(--f-ui); }
+.meeting-label-title { fill: var(--bone); font-weight: 500; }
+.meeting-label-sub { fill: var(--ash); font-style: italic; }
+
+.meeting-scene { pointer-events: none; }
+/* на время сцены — чистый кадр: прочие метки, подписи зон и сама метка-роза отступают, остаётся большая роза и подпись */
+.plan-svg :is(.layer-people, .layer-deaths, .layer-clues, .layer-route, .spot-tip, .investigation-thread, .marker-meeting) { transition: opacity var(--t-slow) var(--ease); }
+.plan-svg.is-meeting-scene :is(.layer-people, .layer-deaths, .layer-clues, .layer-route, .spot-tip, .investigation-thread) { opacity: 0.12; }
+.plan-svg.is-meeting-scene .marker-meeting { opacity: 0; }
+/* у подсказки зоны своя анимация появления — её значение перекрыло бы прозрачность, поэтому выключаем */
+.plan-svg.is-meeting-scene .spot-tip { animation: none; opacity: 0; }
+.scene-veil { fill: var(--scene-veil); opacity: 0; animation: scene-veil 3.6s var(--ease-in-out) both; }
+/* сцена начинается, когда камера уже подлетела (см. MEETING_SCENE_DELAY_MS) — кадр неподвижен */
+@keyframes scene-veil { 0% { opacity: 0; } 18% { opacity: 1; } 72% { opacity: 1; } 100% { opacity: 0; } }
+.scene-rose path { fill: none; stroke: var(--blood-lit); stroke-width: 0.32; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1; animation: scene-rose-draw 1.5s var(--ease-in-out) both, scene-rose-fade 0.9s var(--ease) both;
+  animation-delay: calc(0.4s + var(--rd, 0s)), 2.8s; }
+@keyframes scene-rose-draw { to { stroke-dashoffset: 0; } }
+@keyframes scene-rose-fade { to { opacity: 0; } }
+.scene-caption { opacity: 0; animation: scene-caption 2.8s var(--ease) both; animation-delay: 0.8s; }
+@keyframes scene-caption { 0% { opacity: 0; transform: translateY(6px); } 22% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; } }
+.scene-caption text { paint-order: stroke; stroke: var(--halo); stroke-width: 4px; stroke-linejoin: round; }
+.scene-caption-title { fill: var(--bone); font-family: var(--f-display); font-weight: 600; letter-spacing: 0.02em; }
+.scene-caption-sub { fill: var(--bone-2); font-family: var(--f-ui); font-style: italic; }
+
 /* Уменьшение движения: без декоративных анимаций, пульса и ожидания */
 @media (prefers-reduced-motion: reduce) {
+  .meeting-glow { animation: none; opacity: 0.35; }
   *, *::before, *::after { animation: none !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
   .sketch, .marker-death .pulse, .drip-drop, .drip-head { display: none; }
   .drip-reveal { transform: none !important; }
