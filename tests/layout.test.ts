@@ -28,4 +28,37 @@ describe('вёрстка для телефона', () => {
     // вид анимации не зависит от фазы вступления — смена фазы не перезапускает кровь
     expect(css).not.toMatch(/\.intro\.is-(playing|rest) \.drip-/);
   });
+
+  it('режимы спойлеров на узком экране стоят столбиком, а не переносятся с пустой ячейкой', () => {
+    expect(css).toMatch(/@media \(max-width: 560px\) \{\s*\.spoiler-picker \.seg \{ display: flex; flex-direction: column;/);
+  });
+});
+
+describe('светлая тема', () => {
+  const root = join(__dirname, '..');
+  const light = css.match(/:root\[data-theme="light"\] \{([^}]+)\}/)?.[1] ?? '';
+
+  it('переопределяет базовую палитру и все поверхности', () => {
+    for (const token of ['--night', '--bone', '--ash', '--surface', '--halo', '--bar-bg', '--backdrop', '--spotlight']) {
+      expect(light, token).toMatch(new RegExp(`${token}:`));
+    }
+    expect(light).toContain('color-scheme: light');
+  });
+
+  it('в стилях компонентов не осталось жёстко заданных тёмных фонов', () => {
+    const body = css.slice(css.indexOf('* { box-sizing: border-box; }'));
+    expect(body).not.toMatch(/#0e0d0b|#0c0b0a|rgba\(12, 11, 10/);
+  });
+
+  it('пары «фон кость — текст чернила» заменены на переключаемые (иначе в светлой теме тёмное на тёмном)', () => {
+    expect(css).not.toMatch(/background: var\(--bone\); color: var\(--ink\)/);
+  });
+
+  it('тема выставляется до отрисовки отдельным скриптом (CSP запрещает встроенные)', () => {
+    const html = readFileSync(join(root, 'index.html'), 'utf8');
+    expect(html).toContain('<script src="/theme-init.js"></script>');
+    const init = readFileSync(join(root, 'public', 'theme-init.js'), 'utf8');
+    expect(init).toContain("'rose-atlas:theme'");
+    expect(readFileSync(join(root, 'src', 'lib', 'theme.ts'), 'utf8')).toContain("THEME_KEY = 'rose-atlas:theme'");
+  });
 });

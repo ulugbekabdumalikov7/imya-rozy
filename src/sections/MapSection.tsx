@@ -10,6 +10,7 @@ import { horizon } from '../lib/spoilers';
 import { count, EPISODES } from '../lib/ru';
 import { patchParams, type Route as AppRoute } from '../lib/router';
 import { useSpoiler } from '../state/spoiler';
+import { useTheme, type Theme } from '../lib/theme';
 import { PlanMap, type FocusReason, type LayerKey } from './PlanMap';
 import { EventCard, LocationCard } from '../components/cards';
 import { AbbeyLegend, HotspotCard, PlanFacts } from '../components/PlanCards';
@@ -26,16 +27,27 @@ const LAYERS: { key: LayerKey; label: string; hint: string }[] = [
 const DEFAULT_LAYERS = 'arch,people,deaths';
 const VIEWS: MapView[] = ['abbey', 'library'];
 const TONE_KEY = 'rose-atlas:plan-tone';
+type Tone = 'night' | 'scan';
 
-function loadTone(): 'night' | 'scan' {
-  try { return window.localStorage.getItem(TONE_KEY) === 'scan' ? 'scan' : 'night'; } catch { return 'night'; }
+/** Гамма плана запоминается отдельно для каждой темы: по умолчанию ночная — в тёмной, исходный скан — в светлой. */
+function loadTone(theme: Theme): Tone {
+  try {
+    const v = window.localStorage.getItem(theme === 'dark' ? TONE_KEY : `${TONE_KEY}:${theme}`);
+    if (v === 'scan' || v === 'night') return v;
+  } catch { /* хранилище недоступно */ }
+  return theme === 'light' ? 'scan' : 'night';
 }
 
 export function MapSection({ route }: { route: AppRoute }) {
   const { spoiler, visible } = useSpoiler();
   const [controlsOpen, setControlsOpen] = useState(false);
-  const [tone, setTone] = useState<'night' | 'scan'>(loadTone);
-  useEffect(() => { try { window.localStorage.setItem(TONE_KEY, tone); } catch { /* ignore */ } }, [tone]);
+  const theme = useTheme();
+  const [tones, setTones] = useState<Record<Theme, Tone>>(() => ({ dark: loadTone('dark'), light: loadTone('light') }));
+  const tone = tones[theme];
+  const setTone = (v: Tone) => {
+    setTones((t) => ({ ...t, [theme]: v }));
+    try { window.localStorage.setItem(theme === 'dark' ? TONE_KEY : `${TONE_KEY}:${theme}`, v); } catch { /* ignore */ }
+  };
 
   const prm = route.params;
   const view = (VIEWS.includes(prm.get('view') as MapView) ? prm.get('view') : 'abbey') as MapView;
