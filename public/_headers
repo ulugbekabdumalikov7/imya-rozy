@@ -16,6 +16,16 @@
 /favicon.svg
   Cache-Control: public, max-age=86400
 
+# Service worker проверяется браузером при каждом визите — так новые версии приходят сразу.
+/sw.js
+  Cache-Control: no-cache
+
+/manifest.webmanifest
+  Cache-Control: public, max-age=3600
+
+/icons/*
+  Cache-Control: public, max-age=604800
+
 # Предпросмотры веток (<ветка>.<проект>.pages.dev, <хеш>.<проект>.pages.dev) не индексируются поисковиками.
 https://:version.:project.pages.dev/*
   X-Robots-Tag: noindex

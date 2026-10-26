@@ -56,3 +56,44 @@ describe('конфигурация развёртывания', () => {
     expect(read('vite.config.ts')).toMatch(/plugins: \[react\(\)/);
   });
 });
+
+describe('PWA: установка и работа без интернета', () => {
+  const manifest = JSON.parse(read('public/manifest.webmanifest'));
+
+  it('манифест: русское название, запуск с главной, отдельное окно, цвета атласа', () => {
+    expect(manifest.name).toBe('Атлас «Имени розы»');
+    expect(manifest.short_name).toBe('Имя розы');
+    expect(manifest.lang).toBe('ru');
+    expect(manifest.start_url).toBe('/');
+    expect(manifest.display).toBe('standalone');
+    expect(manifest.theme_color).toBe('#0c0b0a');
+  });
+
+  it('иконки 192, 512 и маскируемая для Android есть на диске; иконка для iPhone подключена', () => {
+    const sizes = manifest.icons.map((i: { sizes: string }) => i.sizes);
+    expect(sizes).toEqual(expect.arrayContaining(['192x192', '512x512']));
+    expect(manifest.icons.some((i: { purpose?: string }) => i.purpose === 'maskable')).toBe(true);
+    for (const i of manifest.icons) expect(existsSync(join(root, 'public', i.src)), i.src).toBe(true);
+    const html = read('index.html');
+    expect(html).toContain('<link rel="manifest" href="/manifest.webmanifest" />');
+    expect(html).toContain('<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />');
+    expect(existsSync(join(root, 'public/icons/apple-touch-icon.png'))).toBe(true);
+  });
+
+  it('service worker: шаблон с местами для версии и списка файлов; страница кэшируется как «/» (Cloudflare перенаправляет /index.html)', () => {
+    const sw = read('scripts/sw-template.js');
+    expect(sw).toContain("'__VERSION__'");
+    expect(sw).toContain('__PRECACHE__');
+    expect(sw).toMatch(/cache\.put\('\/', copy\)/);
+    expect(sw).not.toMatch(/['"]\/index\.html['"]/);
+    expect(read('vite.config.ts')).toMatch(/NOT_PRECACHED = new Set\(\[[^\]]*'index\.html'/);
+  });
+
+  it('sw.js не кэшируется браузером надолго — новые версии приходят сразу', () => {
+    expect(read('public/_headers')).toMatch(/\/sw\.js\n\s+Cache-Control: no-cache/);
+  });
+
+  it('service worker регистрируется только в собранном сайте и не в сборке одним файлом', () => {
+    expect(read('src/main.tsx')).toMatch(/import\.meta\.env\.PROD && import\.meta\.env\.MODE !== 'single'\) registerServiceWorker\(\)/);
+  });
+});

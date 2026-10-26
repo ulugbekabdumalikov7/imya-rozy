@@ -1,0 +1,25 @@
+{
+  "name": "Атлас «Имени розы»",
+  "short_name": "Имя розы",
+  "description": "Интерактивный атлас аббатства из романа Умберто Эко «Имя розы»: карта, герои, связи, семь дней по часам службы, улики и исторический контекст.",
+  "lang": "ru",
+  "dir": "ltr",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c0b0a",
+  "theme_color": "#0c0b0a",
+  "categories": ["books", "education"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Карта аббатства", "short_name": "Карта", "url": "/#/map", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Хронология семи дней", "short_name": "Хронология", "url": "/#/timeline", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Герои", "short_name": "Герои", "url": "/#/heroes", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
