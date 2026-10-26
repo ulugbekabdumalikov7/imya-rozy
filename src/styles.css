@@ -1093,13 +1093,11 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .moment-label text { paint-order: stroke; stroke: var(--halo); stroke-width: 4px; stroke-linejoin: round; }
 .moment-when { fill: var(--accent); font-family: var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; }
 .moment-title { fill: var(--bone); font-family: var(--f-display); font-weight: 600; }
-.moment-person circle { fill: var(--night-3); stroke: var(--rule-2); }
-.moment-person.gnode-investigators circle { fill: var(--blood-deep); }
-.moment-person:is(.gnode-library, .gnode-franciscans, .gnode-papal, .gnode-outside) circle { fill: var(--seal-2); }
-.moment-person text { fill: var(--bone); font-family: var(--f-display); font-weight: 600; }
-:root[data-theme="light"] .moment-person:is(.gnode-investigators, .gnode-library, .gnode-franciscans, .gnode-papal, .gnode-outside) text { fill: #ece6d9; }
-.moment-person { animation: rise var(--t-medium) var(--ease) both; animation-delay: calc(160ms + var(--i, 0) * 50ms); }
-.moment-more { fill: var(--fg-3); font-family: var(--f-ui); }
+.moment-people { animation: rise var(--t-medium) var(--ease) both; animation-delay: 160ms; pointer-events: none; }
+.moment-names { paint-order: stroke; stroke: var(--halo); stroke-width: 4px; stroke-linejoin: round; font-family: var(--f-ui); }
+.moment-name { fill: var(--bone-2); }
+.moment-name.is-lead { fill: var(--blood-lit); font-weight: 500; }
+.moment-sep { fill: var(--ash); }
 /* телефон: полоса времени — под планом, как плеер маршрута (правило стоит после основного, иначе то перебьёт его) */
 @media (max-width: 900px) {
   .time-bar { position: static; margin: 10px 12px 0; box-shadow: none; }

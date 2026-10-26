@@ -56,3 +56,37 @@ describe('«Час за часом» — моменты романа', () => {
     expect(firstMomentOfDay(3, steps)!.id).toBe(steps[marks.find((x) => x.day === 3)!.index]!.id);
   });
 });
+
+import { nameRows } from '../src/sections/MomentLayer';
+
+describe('«Час за часом» — имена участников под кольцом', () => {
+  const it3 = (n: string, lead = false) => ({ id: n, name: n, lead });
+
+  it('имена идут строками по 3–4, без потерь и в исходном порядке', () => {
+    const names = ['Вильгельм', 'Адсон', 'Хорхе', 'Малахия', 'Беренгар', 'Венанций', 'Бенций', 'Аймаро'];
+    const rows = nameRows(names.map((n) => it3(n)));
+    expect(rows.flat().map((x) => x.name)).toEqual(names);
+    expect(rows.length).toBeLessThanOrEqual(4);
+    for (const r of rows) expect(r.map((x) => x.name).join(' · ').length).toBeLessThanOrEqual(26);
+  });
+
+  it('восемь участников суда Бернарда Ги помещаются целиком, без «и ещё»', () => {
+    const trial = ['Бернард Ги', 'Ремигий', 'Сальватор', 'Девушка', 'Вильгельм', 'Адсон', 'Бертран', 'Аббон'];
+    const rows = nameRows(trial.map((n) => it3(n)));
+    expect(rows.flat().map((x) => x.name)).toEqual(trial);
+  });
+
+  it('одно-два имени — одна строка', () => {
+    expect(nameRows([it3('Адсон'), it3('Девушка')])).toHaveLength(1);
+  });
+
+  it('если имён слишком много — четыре строки и «и ещё N»', () => {
+    const many = Array.from({ length: 20 }, (_, i) => it3(`Имярек${i}`));
+    const rows = nameRows(many);
+    expect(rows).toHaveLength(4);
+    const last = rows[3]!.at(-1)!;
+    expect(last.name).toMatch(/^и ещё \d+$/);
+    const shown = rows.flat().length - 1;
+    expect(last.name).toBe(`и ещё ${20 - shown}`);
+  });
+});
