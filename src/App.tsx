@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { BookMarked, Clock3, Landmark, Map as MapIcon, Network, ScrollText, Users } from 'lucide-react';
 import { href, useRoute } from './lib/router';
 import { useSwap, DURATION } from './lib/motion';
@@ -41,8 +41,37 @@ export function RoseMark({ className }: { className?: string }) {
   );
 }
 
+/** На узком экране вкладки прокручиваются: затухающий край показывает, что есть ещё, активная вкладка всегда видна. */
+function useNavOverflow(activeKey: string) {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const nav = ref.current;
+    if (!nav) return;
+    const update = () => {
+      nav.classList.toggle('has-more-start', nav.scrollLeft > 2);
+      nav.classList.toggle('has-more-end', nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2);
+    };
+    update();
+    nav.addEventListener('scroll', update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(nav);
+    return () => { nav.removeEventListener('scroll', update); ro.disconnect(); };
+  }, []);
+  useEffect(() => {
+    const nav = ref.current;
+    const active = nav?.querySelector<HTMLElement>('a.is-active');
+    if (!nav || !active || nav.scrollWidth <= nav.clientWidth) return;
+    const left = active.offsetLeft - nav.offsetLeft;
+    if (left < nav.scrollLeft || left + active.offsetWidth > nav.scrollLeft + nav.clientWidth) {
+      nav.scrollTo({ left: Math.max(0, left - (nav.clientWidth - active.offsetWidth) / 2), behavior: 'smooth' });
+    }
+  }, [activeKey]);
+  return ref;
+}
+
 function Shell() {
   const liveRoute = useRoute();
+  const navRef = useNavOverflow(liveRoute.path[0] ?? '');
   // Уход текущей страницы (лёгкое размытие) и появление новой — только при смене раздела.
   const { shown: route, phase } = useSwap(liveRoute, liveRoute.path[0] ?? '', DURATION.fast);
   const section = route.path[0] ?? '';
@@ -78,7 +107,7 @@ function Shell() {
           <RoseMark className="wordmark-rose" />
           <span className="wordmark-text">Имя розы<span className="wordmark-sub">атлас аббатства · 1327</span></span>
         </a>
-        <nav className="mainnav" aria-label="Разделы">
+        <nav className="mainnav" aria-label="Разделы" ref={navRef}>
           {NAV.map((n) => {
             const active = n.match.includes(liveRoute.path[0] ?? '');
             const Icon = n.icon;

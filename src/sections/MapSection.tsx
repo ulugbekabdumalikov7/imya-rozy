@@ -257,7 +257,7 @@ export function MapSection({ route }: { route: AppRoute }) {
         ) : null}
       </DetailPanel>
       {!panelOpen && (
-        <aside className="map-hint only-desktop" aria-label="Подсказка">
+        <aside className="map-hint" aria-label="Подсказка">
           <p className="rubric" lang="la">Ad lectorem</p>
           {view === 'abbey' ? (
             <>

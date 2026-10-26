@@ -158,7 +158,7 @@ export function PlanMap(p: Props) {
   const tip = hovered ?? selected;
 
   return (
-    <div className="map-canvas">
+    <div className="map-canvas" style={{ ['--plan-ratio' as string]: `${W} / ${H}` }}>
       <svg
         ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
