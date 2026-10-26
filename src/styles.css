@@ -255,7 +255,7 @@ main { outline: none; }
 .spoiler-btn:hover { border-color: var(--bone-2); color: var(--bone); }
 .spoiler-btn.mode-full { border-color: var(--blood-lit); color: var(--bone); }
 .spoiler-pop {
-  position: absolute; right: 0; top: calc(100% + 10px); width: min(400px, calc(100vw - 32px));
+  position: absolute; right: 0; top: calc(100% + 10px); width: min(470px, calc(100vw - 32px));
   border: 1px solid var(--rule-2); box-shadow: var(--shadow); padding: 18px; z-index: 70;
   animation: sheet-in var(--t-medium) var(--ease-out) both;
 }
@@ -310,10 +310,14 @@ main { outline: none; }
   .spoiler-btn { padding-inline: 9px; gap: 4px; }
   .spoiler-btn-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
+/* три режима — всегда одной ровной строкой из трёх ячеек: если места не хватает, подпись переносится внутри своей ячейки,
+   а не уезжает целой кнопкой на вторую строку */
+.spoiler-pop .spoiler-picker .seg { display: grid; grid-template-columns: repeat(3, auto); width: 100%; }
+.spoiler-pop .spoiler-picker .seg button { justify-content: center; text-align: left; }
 /* выбор режима спойлеров: на узком экране три режима не помещаются в строку — ставим их столбиком, а не переносом */
 @media (max-width: 560px) {
-  .spoiler-picker .seg { display: flex; flex-direction: column; width: 100%; }
-  .spoiler-picker .seg button { border-right: 0; border-bottom: 1px solid var(--rule); justify-content: flex-start; padding: 11px 14px; }
+  .spoiler-picker .seg, .spoiler-pop .spoiler-picker .seg { display: flex; flex-direction: column; width: 100%; }
+  .spoiler-picker .seg button, .spoiler-pop .spoiler-picker .seg button { border-right: 0; border-bottom: 1px solid var(--rule); justify-content: flex-start; padding: 11px 14px; }
   .spoiler-picker .seg button:last-child { border-bottom: 0; }
 }
 

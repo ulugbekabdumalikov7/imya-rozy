@@ -29,8 +29,14 @@ describe('вёрстка для телефона', () => {
     expect(css).not.toMatch(/\.intro\.is-(playing|rest) \.drip-/);
   });
 
+  it('во всплывающем окне три режима — одна ровная строка (окно достаточно широкое, перенос только внутри ячейки)', () => {
+    expect(css).toMatch(/\.spoiler-pop \{[^}]*width: min\(470px/);
+    expect(css).toMatch(/\.spoiler-pop \.spoiler-picker \.seg \{ display: grid; grid-template-columns: repeat\(3, auto\)/);
+  });
+
   it('режимы спойлеров на узком экране стоят столбиком, а не переносятся с пустой ячейкой', () => {
-    expect(css).toMatch(/@media \(max-width: 560px\) \{\s*\.spoiler-picker \.seg \{ display: flex; flex-direction: column;/);
+    // правило для телефона должно перебивать и правило всплывающего окна (та же или большая специфичность)
+    expect(css).toMatch(/@media \(max-width: 560px\) \{\s*\.spoiler-picker \.seg, \.spoiler-pop \.spoiler-picker \.seg \{ display: flex; flex-direction: column;/);
   });
 });
 
