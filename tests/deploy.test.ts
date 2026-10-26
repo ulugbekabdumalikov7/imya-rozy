@@ -51,6 +51,7 @@ describe('конфигурация развёртывания', () => {
     const cfg = JSON.parse(read('wrangler.jsonc').replace(/^\s*\/\/.*$/gm, ''));
     expect(cfg.assets.directory).toBe('./dist');
     expect(cfg.assets.not_found_handling).toBe('single-page-application');
+    expect(cfg.previews).toEqual({}); // без него `wrangler preview` (сборки веток) падает
     // wrangler ищет в vite.config литерал plugins: [...]; без него сборка Worker падает
     expect(read('vite.config.ts')).toMatch(/plugins: \[react\(\)/);
   });

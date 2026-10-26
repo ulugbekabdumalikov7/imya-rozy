@@ -79,7 +79,7 @@ In **Workers & Pages → your Worker → Settings → Build**:
 |---|---|
 | Build command | `npm run build` |
 | Deploy command | `npx wrangler deploy` |
-| Non-production branch deploy command | `npx wrangler versions upload` (gives each branch a preview URL) |
+| Non-production branch deploy command | `npx wrangler preview` or `npx wrangler versions upload` (both work; gives each branch a preview URL) |
 | Root directory | *(empty)* |
 
 The `name` in `wrangler.jsonc` must equal the Worker's name in the dashboard (default `imya-rozy`); if yours differs, change the file. Then **Deployments → Retry build** (or push any commit). The site is at `https://imya-rozy.<your-subdomain>.workers.dev`. `_headers` (CSP, caching) works the same way; the `*.pages.dev` noindex rule simply doesn't apply.

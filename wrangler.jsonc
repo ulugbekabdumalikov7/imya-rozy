@@ -2,7 +2,7 @@
 // (Workers & Pages → Create → Workers → Import a repository). Для проекта Pages этот файл не используется.
 //
 // Сборка в Cloudflare: Build command — npm run build; Deploy command — npx wrangler deploy;
-// Non-production branch deploy command — npx wrangler versions upload (предпросмотры веток).
+// Предпросмотры веток: Cloudflare запускает npx wrangler preview (или npx wrangler versions upload).
 {
   // Имя должно совпадать с именем Worker в панели Cloudflare.
   "name": "imya-rozy",
@@ -11,5 +11,8 @@
     "directory": "./dist",
     // Неизвестный путь (/foo/bar) отдаёт index.html; разделы сайта адресуются через # и сервера не требуют.
     "not_found_handling": "single-page-application"
-  }
+  },
+  // Нужен для `npx wrangler preview` — предпросмотра каждой ветки и pull request.
+  // Пустой блок: файлы, совместимость и прочие настройки берутся с верхнего уровня.
+  "previews": {}
 }
