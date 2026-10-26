@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { BookMarked, Clock3, Landmark, Map as MapIcon, Moon, Network, ScrollText, Sun, Users } from 'lucide-react';
+import { BookMarked, Clock3, Download, Landmark, Map as MapIcon, Moon, Network, RefreshCw, ScrollText, Sun, Users, X } from 'lucide-react';
 import { href, useRoute } from './lib/router';
 import { useSwap, DURATION } from './lib/motion';
 import { SpoilerProvider } from './state/spoiler';
 import { SpoilerControl } from './components/SpoilerControl';
 import { setTheme, useTheme } from './lib/theme';
+import { applyUpdate, dismissUpdate, installApp, usePwa } from './lib/pwa';
 import { HomeSection } from './sections/HomeSection';
 import { MapSection } from './sections/MapSection';
 import { HeroesSection } from './sections/HeroesSection';
@@ -82,6 +83,29 @@ function ThemeToggle() {
   );
 }
 
+/** Плашка о новой версии сайта: обновление применяется по нажатию, а не посреди чтения. */
+function UpdateNotice() {
+  const { updateReady } = usePwa();
+  if (!updateReady) return null;
+  return (
+    <div className="update-notice" role="status">
+      <RefreshCw size={15} aria-hidden="true" />
+      <span>Атлас обновился</span>
+      <button type="button" className="btn btn-small btn-accent" onClick={applyUpdate}>Обновить</button>
+      <button type="button" className="icon-btn" onClick={dismissUpdate} aria-label="Позже"><X size={15} /></button>
+    </div>
+  );
+}
+
+/** Кнопка установки на устройство — видна, только когда браузер готов её предложить. */
+function InstallButton() {
+  const { canInstall } = usePwa();
+  if (!canInstall) return null;
+  return (
+    <p><button type="button" className="link-btn install-btn" onClick={() => { void installApp(); }}><Download size={14} aria-hidden="true" /> Установить на устройство — работает без интернета</button></p>
+  );
+}
+
 function Shell() {
   const liveRoute = useRoute();
   const navRef = useNavOverflow(liveRoute.path[0] ?? '');
@@ -114,6 +138,7 @@ function Shell() {
 
   return (
     <div className={`app section-${section || 'home'}`}>
+      <UpdateNotice />
       <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>К содержанию</a>
       <header className="topbar">
         <a className="wordmark" href={href('')} aria-label="Атлас «Имени розы» — на главную">
@@ -143,6 +168,7 @@ function Shell() {
         <footer className="footer">
           <p>Атлас по роману Умберто Эко «Имя розы» (1980). Тексты — пересказ, а не цитаты; карты — эталонные планы из книги с выровненными зонами.</p>
           <p><a href={href('sources')}><ScrollText size={14} aria-hidden="true" /> Источники и достоверность</a></p>
+          <InstallButton />
         </footer>
       )}
     </div>

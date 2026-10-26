@@ -1,4 +1,7 @@
 /// <reference types="vitest" />
+import { createHash } from 'node:crypto';
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { viteSingleFile } from 'vite-plugin-singlefile';
@@ -25,6 +28,34 @@ function deployMeta(): Plugin {
   };
 }
 
+/** Служебные файлы Cloudflare и сам service worker в кэш не кладём. */
+const NOT_PRECACHED = new Set(['_headers', '_redirects', 'robots.txt', 'sw.js', 'index.html']);
+
+/**
+ * PWA: после сборки пишет dist/sw.js из scripts/sw-template.js — со списком всех файлов сайта
+ * и версией по их содержимому (новый деплой → новая версия → старый кэш удаляется).
+ */
+function pwa(): Plugin {
+  let outDir = 'dist';
+  return {
+    name: 'pwa-service-worker',
+    apply: 'build',
+    configResolved(c) { outDir = c.build.outDir; },
+    writeBundle() {
+      const walk = (d: string): string[] => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
+      const files = walk(outDir).map((f) => relative(outDir, f).split(sep).join('/')).filter((f) => !NOT_PRECACHED.has(f)).sort();
+      const hash = createHash('sha256');
+      for (const f of [...files, 'index.html']) hash.update(f).update(readFileSync(join(outDir, f)));
+      const version = hash.digest('hex').slice(0, 12);
+      const precache = ['/', ...files.map((f) => `/${f}`)];
+      const sw = readFileSync('scripts/sw-template.js', 'utf8')
+        .replace("'__VERSION__'", JSON.stringify(version))
+        .replace('__PRECACHE__', JSON.stringify(precache, null, 2));
+      writeFileSync(join(outDir, 'sw.js'), sw);
+    },
+  };
+}
+
 // `npm run build` — сборка сайта в dist/ (её публикует Cloudflare Pages).
 // `npm run build:single` — один самодостаточный HTML-файл в dist-single/ (для публикации как одной страницы).
 export default defineConfig(({ mode }) => {
@@ -32,7 +63,8 @@ export default defineConfig(({ mode }) => {
   return {
     // Абсолютные пути: страница корректно грузит ресурсы с любого адреса (например, /foo/bar после SPA-отката Pages).
     base: single ? './' : '/',
-    plugins: [react(), single ? viteSingleFile() : deployMeta()],
+    // одиночный HTML (для предпросмотра одной страницей) — без service worker
+    plugins: [react(), ...(single ? [viteSingleFile()] : [deployMeta(), pwa()])],
     build: {
       outDir: single ? 'dist-single' : 'dist',
       target: 'es2020',
