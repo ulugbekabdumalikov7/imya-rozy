@@ -13,10 +13,10 @@ import { statusText } from '../src/sections/HeroesSection';
  * термины плана, латинские слова романа, названия трудов.
  */
 const ALLOWED_LATIN = new Set(`
-  Finis Africae Aedificium Septentrio Oriens Meridies Occidens Chiesa Chiostro Fucine Edificio Stabja Ospedale Balnea
+  Finis Africae Aedificium Septentrio Oriens Meridies Occidens Chiesa Chiostro Fucina Edificio Stabbi Ospedale Balnea
   Dormitori Sala capitolare Stalle Abbazia quatuor Brunellus Coena Cypriani Cum inter nonnullos Regula Benedicti
   Practica inquisitionis heretice pravitatis Arbor vitae crucifixae Jesu Fra Dolcino Postille nome della rosa Il
-  Ecclesia Claustrum Capitulum Hospitale Balneum Scriptorium Refectorium Poetics Wikipedia LitCharts L'Abbazia
+  Ecclesia Claustrum Capitulum Hospitale Balneum Scriptorium Refectorium Poetics Wikipedia LitCharts
 `.split(/\s+/).filter(Boolean));
 
 const latinWords = (t: string) => (t.match(/[A-Za-z][A-Za-z’'-]+/g) ?? []).filter((w) => w.length > 1 && !ALLOWED_LATIN.has(w) && !/^[IVXLCDM]+$/.test(w));

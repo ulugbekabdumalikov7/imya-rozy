@@ -569,10 +569,6 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .plan-facts-name { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 600; font-size: 1.25rem; margin: 6px 0; }
 .plan-letter { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 6px; border: 1px solid var(--rule-2); font-family: var(--f-text); font-weight: 600; font-size: 1.05rem; }
 .plan-letter.is-red { color: var(--accent); border-color: var(--accent); }
-.legend-mismatch { display: inline-flex; align-items: center; gap: 4px; color: var(--accent); font-style: italic; white-space: nowrap; }
-.legend-onplan { display: flex; align-items: baseline; gap: 5px; font-size: 0.8rem; color: var(--fg-3); font-style: italic; line-height: 1.35; margin-top: 1px; }
-.legend-onplan svg { flex-shrink: 0; color: var(--accent); position: relative; top: 1px; }
-.plan-legend .is-conflict dt { color: var(--accent); }
 .plan-legend-line { font-family: var(--f-ui); font-size: 0.86rem; color: var(--fg-2); margin: 2px 0 8px; }
 .plan-legend-line span { font-style: italic; }
 .plan-note { font-size: 0.93rem; color: var(--fg-2); border-left: 1px solid var(--accent); padding-left: 10px; }

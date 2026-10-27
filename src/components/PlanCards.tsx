@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, MapPinned } from 'lucide-react';
+import { ArrowRight, MapPinned } from 'lucide-react';
 import { ABBEY_LEGEND, type PlanHotspot } from '../data/plans';
 import { locationById, plans } from '../data';
 import type { MapView } from '../data/types';
@@ -15,26 +15,27 @@ export function hotspotTexts(h: PlanHotspot, known: boolean) {
   };
 }
 
-/** Сведения с эталонного плана: буква и легенда дословно, описание, оговорки. */
+/** Сведения с эталонного плана: буква и название по легенде, описание, оговорки. */
 export function PlanFacts({ h, asPartOf, onOpenPlan }: { h: PlanHotspot; asPartOf?: string; onOpenPlan?: (v: MapView) => void }) {
   const { visible } = useSpoiler();
   const t = hotspotTexts(h, !h.revealDay || visible({ revealDay: h.revealDay }));
   const plan = plans[h.plan];
   return (
     <section className="plan-facts" aria-label="Сведения с плана">
-      <p className="plan-facts-kicker"><MapPinned size={13} aria-hidden="true" /> На плане · <span lang="it">{plan.titleIt}</span></p>
+      <p className="plan-facts-kicker"><MapPinned size={13} aria-hidden="true" /> На плане · <span lang={plan.titleLang}>{plan.titleOrig}</span></p>
       {asPartOf && <p className="small">Отдельно на плане не нарисовано, показано в составе: <strong>{asPartOf}</strong>.</p>}
       <p className="plan-facts-name">
         {h.printed && <span className={`plan-letter${h.red ? ' is-red' : ''}`} title="Буква, напечатанная на плане" lang="la">{h.printed}</span>}
         <span>{t.name}</span>
       </p>
-      {h.legend && (
-        <p className={`plan-legend-line${h.legendConflict ? ' is-conflict' : ''}`}>
-          Легенда плана: <span lang="it">{h.printed} — {h.legend}</span>
-          {h.legendConflict && <> <span className="legend-mismatch"><AlertTriangle size={13} aria-hidden="true" /> не совпадает с рисунком</span></>}
-        </p>
-      )}
-      {h.plan === 'abbey' && h.printed && !h.legend && <p className="plan-legend-line">Этой буквы нет в легенде.</p>}
+      {h.legend && (() => {
+        const it = ABBEY_LEGEND.find((l) => l.letter === h.printed)?.it;
+        return (
+          <p className="plan-legend-line">
+            Название — по легенде плана{it && <>; в итальянском издании — <span lang="it">{it}</span></>}.
+          </p>
+        );
+      })()}
       <p>{t.description}</p>
       {t.note && <p className="plan-note"><CertaintyBadge c={h.certainty} /> {t.note}</p>}
       {!t.note && h.certainty !== 'confirmed' && <p className="plan-note"><CertaintyBadge c={h.certainty} /></p>}
@@ -78,19 +79,16 @@ export function HotspotCard({ h, onOpenPlan, onPickLocation }: { h: PlanHotspot;
 export function AbbeyLegend() {
   return (
     <div className="plan-legend">
-      <p className="legend-title">Легенда плана · <span lang="it">L'Abbazia</span></p>
+      <p className="legend-title">Легенда плана · Аббатство</p>
+      {/* как на плане русского издания: буква и подпись; рядом — подпись итальянского оригинала */}
       <dl>
         {ABBEY_LEGEND.map((l) => (
-          <div key={l.letter} className={l.conflict ? 'is-conflict' : undefined}>
+          <div key={l.letter}>
             <dt lang="la">{l.letter}</dt>
-            <dd>
-              <span lang="it">{l.it}</span> <span className="muted">· {l.ru}</span>
-              {l.onPlan && <span className="legend-onplan">{l.conflict && <AlertTriangle size={12} aria-label="Не совпадает с рисунком" />} {l.onPlan}</span>}
-            </dd>
+            <dd>{l.ru} <span className="muted">· <span lang="it">{l.it}</span></span></dd>
           </div>
         ))}
       </dl>
-      <p className="small muted">Легенда напечатана на самом плане, но буквы C, D, E и одна из R стоят не на тех постройках, что в ней названы. Атлас называет постройки по рисунку и роману, а буквы показывает как есть. Буква K на плане есть, а в легенде её нет.</p>
     </div>
   );
 }

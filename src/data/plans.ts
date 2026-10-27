@@ -3,7 +3,7 @@ import { ABBEY_POLYS, LIBRARY_ROOMS } from './planGeometry';
 
 /**
  * Два эталонных плана, каждый со своей системой координат (пиксели исходного изображения):
- *  — 'abbey'   — общий план аббатства «L'Abbazia» (1490 × 1055);
+ *  — 'abbey'   — общий план аббатства «Аббатство» из русского издания романа (1336 × 1024);
  *  — 'library' — план библиотеки на верхнем этаже Эдифиция (1280 × 1289).
  * Связь между планами задаётся явно: зона Эдифиция на общем плане открывает план библиотеки,
  * а места атласа (Location) ссылаются на конкретную зону через Location.plan.
@@ -19,19 +19,14 @@ export interface PlanHotspot {
   printed?: string;
   /** Буква на плане библиотеки нарисована красным. */
   red?: boolean;
-  /** Строка легенды для этой буквы, дословно по-итальянски. */
+  /** Строка легенды для этой буквы — дословно, как напечатана на плане. */
   legend?: string;
-  /**
-   * Буква напечатана не на той постройке, что названа в легенде (D внутри Эдифиция, E в церкви, R в клуатре…).
-   * Атлас называет зону по рисунку и роману, а букву показывает как есть — с пометкой о расхождении.
-   */
-  legendConflict?: true;
   /** Название и описание по-русски — основной текст интерфейса. */
   name: string;
   description: string;
   /** Насколько надёжно опознание этой зоны. */
   certainty: Certainty;
-  /** Расхождение легенды и надписи на плане или иная оговорка. */
+  /** Оговорка: как место называется в романе, чем опознание обосновано. */
   note?: string;
   /** Английский вариант описания (вторичный слой, показывается свёрнутым). */
   en?: { name: string; description: string; note?: string };
@@ -49,7 +44,9 @@ export interface PlanHotspot {
 
 export interface PlanDef {
   id: PlanId;
-  titleIt: string;
+  /** Заголовок, напечатанный на самом плане, и его язык. */
+  titleOrig: string;
+  titleLang: 'ru' | 'it';
   titleRu: string;
   width: number;
   height: number;
@@ -58,199 +55,169 @@ export interface PlanDef {
 
 const P = ABBEY_POLYS as Record<string, [number, number][]>;
 const ab = (id: string, rest: Omit<PlanHotspot, 'id' | 'plan' | 'poly'>): PlanHotspot => ({ id: `ab-${id}`, plan: 'abbey', poly: P[id]!, ...rest });
-const NOT_LETTERED = 'На плане не подписано.';
-const NOT_LETTERED_EN = 'Not lettered on the plan.';
+const NOT_IN_LEGEND = 'В легенде плана не названо.';
+const NOT_IN_LEGEND_EN = 'Not named in the plan legend.';
 
-/** Легенда плана аббатства — дословно, с русским и английским переводом. */
-/** Строка легенды; `onPlan` — где эта буква на самом деле стоит, если не совпадает с легендой. */
-export const ABBEY_LEGEND: { letter: string; it: string; ru: string; en: string; onPlan?: string; conflict?: true }[] = [
-  { letter: 'A', it: 'Ospedale', ru: 'Лечебница', en: 'Hospital', onPlan: 'на плане A стоит дважды: у западных ворот и в юго-западном углу' },
-  { letter: 'B', it: 'Balnea', ru: 'Баня', en: 'Baths' },
-  { letter: 'C', conflict: true, it: 'Edificio', ru: 'Эдифиций', en: 'The Aedificium', onPlan: 'на плане C стоит на простом корпусе у восточной стены; сам Эдифиций помечен буквой D' },
-  { letter: 'D', conflict: true, it: 'Chiesa', ru: 'Церковь', en: 'Church', onPlan: 'на плане D стоит внутри Эдифиция; церковь помечена буквой E' },
-  { letter: 'E', conflict: true, it: 'Chiostro', ru: 'Клуатр', en: 'Cloister', onPlan: 'на плане E стоит в церкви и в саду с фонтаном; клуатр помечен буквой R' },
-  { letter: 'F', it: 'Dormitori', ru: 'Дормитории', en: 'Dormitories', onPlan: 'на плане F стоит дважды: у северной и у восточной стены' },
-  { letter: 'H', it: 'Sala capitolare', ru: 'Капитулярный зал', en: 'Chapter house' },
-  { letter: 'M', it: 'Stabja', ru: 'Хлева', en: 'Animal pens', onPlan: 'на плане M стоит дважды, на соседних зданиях южного ряда' },
-  { letter: 'N', it: 'Stalle', ru: 'Конюшни', en: 'Stables' },
-  { letter: 'R', conflict: true, it: 'Fucine', ru: 'Кузницы', en: 'Forges', onPlan: 'на плане R стоит дважды: у кузниц (верно) и во дворе клуатра' },
+/**
+ * Легенда плана аббатства — как напечатана на плане русского издания; рядом подпись итальянского оригинала.
+ * Буквы стоят на тех постройках, что названы в легенде. Остальные мелкие буквы рисунка (C, E, G, L, O–V)
+ * в легенде не названы — атлас их не подписывает.
+ */
+export const ABBEY_LEGEND: { letter: string; ru: string; it: string; en: string }[] = [
+  { letter: 'K', ru: 'Лечебница', it: 'Ospedale', en: 'Hospital' },
+  { letter: 'J', ru: 'Купальня', it: 'Balnea', en: 'Baths' },
+  { letter: 'A', ru: 'Храмина', it: 'Edificio', en: 'The Aedificium' },
+  { letter: 'B', ru: 'Церковь', it: 'Chiesa', en: 'Church' },
+  { letter: 'D', ru: 'Церковный двор', it: 'Chiostro', en: 'Cloister' },
+  { letter: 'F', ru: 'Спальный корпус', it: 'Dormitori', en: 'Dormitories' },
+  { letter: 'H', ru: 'Капитулярная зала', it: 'Sala capitolare', en: 'Chapter house' },
+  { letter: 'M', ru: 'Выгребная яма', it: 'Stabbi', en: 'Pens (pigsties)' },
+  { letter: 'N', ru: 'Конюшня', it: 'Stalle', en: 'Stables' },
+  { letter: 'R', ru: 'Кузни', it: 'Fucina', en: 'Forge' },
 ];
 
+/** Зона с буквой легенды: буква, строка легенды и название на карте берутся из ABBEY_LEGEND. */
+const lettered = (id: string, letter: string, rest: Omit<PlanHotspot, 'id' | 'plan' | 'poly' | 'printed' | 'legend' | 'name'>): PlanHotspot => {
+  const l = ABBEY_LEGEND.find((x) => x.letter === letter)!;
+  return ab(id, { printed: letter, legend: l.ru, name: l.ru, ...rest });
+};
+
 const abbeyHotspots: PlanHotspot[] = [
-  ab('aedificium', {
-    kind: 'building', printed: 'D', legend: 'Chiesa', name: 'Эдифиций',
-    description: 'Крестообразное здание с четырьмя многоугольными башнями и восьмиугольным колодцем в центре, на северном краю ограды над склоном. По роману внизу кухня и трапезная, над ними скрипторий, наверху библиотека. Этажи на этом плане не начерчены.',
-    legendConflict: true,
-    certainty: 'interpretation',
-    note: 'В легенде D — «Chiesa» (церковь), но буква D напечатана внутри этого четырёхбашенного здания. По форме оно совпадает с Эдифицием из романа, поэтому атлас опознаёт его как Эдифиций.',
-    en: { name: 'The Aedificium', description: 'Cross-shaped building with four polygonal towers and an octagonal central well, on the northern edge of the enclosure above the slope.', note: 'The legend gives D as “Chiesa”, but D is printed inside this four-towered building; the atlas identifies it as the Aedificium.' },
+  lettered('aedificium', 'A', {
+    kind: 'building',
+    description: 'Огромное здание с четырьмя многоугольными башнями и восьмиугольным колодцем в центре, на северном краю ограды над обрывом. По роману внизу кухня и трапезная, над ними скрипторий, наверху библиотека. Этажи на этом плане не начерчены.',
+    certainty: 'confirmed',
+    note: 'В романе это здание называется Эдифицием (Aedificium); в легенде русского издания — Храмина.',
+    en: { name: 'The Aedificium', description: 'Huge building with four polygonal towers and an octagonal central well, on the northern edge of the enclosure above the cliff.' },
     locationId: 'aedificium', opensPlan: 'library',
   }),
-  ab('church', {
-    kind: 'building', printed: 'E', legend: 'Chiostro', name: 'Церковь аббатства',
-    description: 'Базилика с колоннадой в нефе, трансептом и полукруглой апсидой на востоке.',
-    legendConflict: true,
-    certainty: 'interpretation',
-    note: 'В легенде E — «Chiostro» (клуатр), но эта буква E стоит в нефе здания базиликального типа. Атлас опознаёт его как церковь по форме.',
-    en: { name: 'Abbey church', description: 'Basilica with a colonnaded nave, a transept and a semicircular apse at the east end.', note: 'The legend gives E as “Chiostro”; the atlas identifies this building as the church by its form.' },
+  lettered('church', 'B', {
+    kind: 'building',
+    description: 'Базилика с колоннадой в нефе, хором и полукруглой апсидой на востоке.',
+    certainty: 'confirmed',
+    en: { name: 'Church', description: 'Basilica with a colonnaded nave, a choir and a semicircular apse at the east end.' },
     locationId: 'church',
   }),
-  ab('cloister', {
-    kind: 'open', printed: 'R', legend: 'Fucine', name: 'Клуатр',
-    description: 'Открытый двор, обрамлённый галереями с колоннами, с южной стороны церкви.',
-    legendConflict: true,
-    certainty: 'interpretation',
-    note: 'В легенде R — «Fucine» (кузницы), но эта R отмечает двор с аркадами у церкви; по форме атлас опознаёт его как клуатр. Вторая R, в южном ряду, кузницам соответствует.',
-    en: { name: 'Cloister', description: 'Open court framed by colonnaded walks on the south side of the church.', note: 'The legend gives R as “Fucine”; by its form the atlas identifies this court as the cloister.' },
+  lettered('cloister', 'D', {
+    kind: 'open',
+    description: 'Открытый двор, обрамлённый галереями с колоннами, у южной стены церкви.',
+    certainty: 'confirmed',
+    note: 'В романе этот двор называется клуатром.',
+    en: { name: 'Cloister', description: 'Open court framed by colonnaded walks against the south wall of the church.' },
     locationId: 'cloister',
   }),
-  ab('garden-E', {
-    kind: 'open', printed: 'E', legend: 'Chiostro', name: 'Огороженный сад с фонтаном',
-    description: 'Прямоугольная ограда с грядками и фонтаном посередине, к северу от главной аллеи.',
-    legendConflict: true,
-    certainty: 'uncertain',
-    note: 'Буква E, в легенде — «Chiostro». На рисунке — сад, а не двор с аркадами, и та же буква стоит в церкви. Атлас сохраняет надпись, но не связывает сад с местом из романа.',
-    en: { name: 'Walled garden with a fountain', description: 'Rectangular enclosure with planted beds and a fountain in the middle.' },
+  lettered('dormitory', 'F', {
+    kind: 'building',
+    description: 'Восточное крыло клуатра: длинный зал с двумя рядами колонн у апсиды церкви и переходы к нему с юга. Так в монастырях обычно и строили спальни — рядом с церковью, чтобы ночью идти прямо к службе.',
+    certainty: 'interpretation',
+    note: 'Маленькая буква F напечатана в переходе, а на самом зале — буква E, которой в легенде нет. Атлас считает спальным корпусом всё восточное крыло.',
+    en: { name: 'Dormitory', description: 'East wing of the cloister: a long hall with two rows of columns by the church apse, and the passages leading to it from the south.' },
+    locationId: 'dormitory',
+  }),
+  lettered('chapter-house', 'H', {
+    kind: 'building',
+    description: 'Южный корпус клуатра: галерея с крестовыми сводами и помещение с лестницей у западного конца, где стоит буква H.',
+    certainty: 'confirmed',
+    note: 'В романе здесь проходят диспут о бедности Христа и суд Бернарда Ги.',
+    en: { name: 'Chapter house', description: 'South range of the cloister: a cross-vaulted gallery and a room with a stair at its western end.' },
+    locationId: 'chapter-house',
+  }),
+  lettered('hospital', 'K', {
+    kind: 'building',
+    description: 'Длинное узкое здание вдоль северо-западной стены, поставленное под углом, со скруглённым торцом и лестницей у южного конца.',
+    certainty: 'confirmed',
+    en: { name: 'Hospital', description: 'Long, narrow building set at an angle along the north-western wall, with a rounded end and a stair at its southern end.' },
+    locationId: 'hospital',
+  }),
+  lettered('baths', 'J', {
+    kind: 'building',
+    description: 'Небольшое здание из трёх помещений у северной стены, рядом с лечебницей и грядками.',
+    certainty: 'confirmed',
+    en: { name: 'Baths', description: 'Small three-room building against the northern wall, next to the hospital and the garden plots.' },
+    locationId: 'balneary',
+  }),
+  lettered('pigsty', 'M', {
+    kind: 'building',
+    description: 'Небольшое здание в северном конце восточного ряда, у стены под Храминой.',
+    certainty: 'interpretation',
+    note: 'В итальянской легенде эта буква — «Stabbi»: загоны для скота, свинарники. Атлас помещает сюда свинарник, у которого во второй день находят тело Венанция.',
+    en: { name: 'Pens (pigsties)', description: 'Small building at the northern end of the eastern row.', note: 'The Italian legend gives M as “Stabbi”, animal pens; the atlas places the pigsty here.' },
+    locationId: 'pigsty',
+  }),
+  lettered('stables', 'N', {
+    kind: 'building',
+    description: 'Восточный ряд построек: зал с портиком и длинный ряд стойл вдоль стены.',
+    certainty: 'confirmed',
+    en: { name: 'Stables', description: 'Eastern row: a hall with a portico and a long row of stalls along the wall.' },
+    locationId: 'stables',
+  }),
+  lettered('forges', 'R', {
+    kind: 'building',
+    description: 'Здание в юго-восточном углу ограды с круглым горном.',
+    certainty: 'confirmed',
+    note: 'В романе в кузнях работает стекольщик Николай Моримондский.',
+    en: { name: 'Forge', description: 'Building in the south-eastern corner of the enclosure with a round furnace.' },
+    locationId: 'workshops',
+  }),
+  ab('small-south', { kind: 'building', name: 'Небольшое здание', description: 'Небольшое здание к югу от спального корпуса.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Small building', description: 'Small building south of the dormitory.', note: NOT_IN_LEGEND_EN } }),
+  ab('gate-house', { kind: 'building', name: 'Здание у ворот', description: 'Небольшое здание со сводчатым помещением сразу за западными воротами.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building by the gate', description: 'Small building with a vaulted room just inside the western gate.', note: NOT_IN_LEGEND_EN } }),
+  ab('east-2', { kind: 'building', name: 'Здание у восточной стены', description: 'Здание из двух помещений к югу от конюшни.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building on the eastern side', description: 'Two-room building south of the stables.', note: NOT_IN_LEGEND_EN } }),
+  ab('east-3', { kind: 'building', name: 'Здание у восточной стены', description: 'Здание с крестовым сводом и портиком.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building on the eastern side', description: 'Building with a cross-vaulted room and a portico.', note: NOT_IN_LEGEND_EN } }),
+  ab('east-4', { kind: 'building', name: 'Здание у восточной стены', description: 'Большой зал и три маленьких помещения вдоль его северной стороны.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building on the eastern side', description: 'A large hall with three small rooms along its north side.', note: NOT_IN_LEGEND_EN } }),
+  ab('south-1', { kind: 'building', name: 'Здание в южном ряду', description: 'Г-образное здание в юго-западном углу ограды.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building in the southern row', description: 'L-shaped building in the south-western corner of the enclosure.', note: NOT_IN_LEGEND_EN } }),
+  ab('south-2', { kind: 'building', name: 'Здание в южном ряду', description: 'Здание с внутренним двором и сводчатой галереей.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building in the southern row', description: 'Building with an inner yard and a vaulted gallery.', note: NOT_IN_LEGEND_EN } }),
+  ab('south-3', { kind: 'building', name: 'Здание в южном ряду', description: 'Прямоугольное здание; вдоль северной стены начерчены четыре круга.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building in the southern row', description: 'Rectangular building; four circles are drawn along its north wall.', note: NOT_IN_LEGEND_EN } }),
+  ab('south-4', { kind: 'building', name: 'Здание в южном ряду', description: 'Здание с перегородками и рядом опор.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building in the southern row', description: 'Building with partitions and a row of piers.', note: NOT_IN_LEGEND_EN } }),
+  ab('south-5', { kind: 'building', name: 'Здание в южном ряду', description: 'Здание с большим кругом посередине.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building in the southern row', description: 'Building with a large circle drawn in the middle.', note: NOT_IN_LEGEND_EN } }),
+  ab('south-6', { kind: 'building', name: 'Здание в южном ряду', description: 'Небольшое здание с круглыми знаками внутри.', certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Building in the southern row', description: 'Small building with circles drawn inside.', note: NOT_IN_LEGEND_EN } }),
+  ab('garden', {
+    kind: 'open', name: 'Поле с посадками',
+    description: 'Большой участок с рядами посадок к северу от главной аллеи.',
+    certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Planted field', description: 'Large plot with rows of planting north of the main avenue.', note: NOT_IN_LEGEND_EN },
   }),
   ab('plots', {
     kind: 'open', name: 'Грядки',
-    description: 'Сетка грядок между баней, малым корпусом F и огороженным садом.',
+    description: 'Сетка грядок между лечебницей, купальней и полем.',
     certainty: 'interpretation',
-    note: `${NOT_LETTERED} В романе травяной сад Северина находится рядом с лечебницей и баней, поэтому атлас помещает его сюда.`,
-    en: { name: 'Garden plots', description: 'Grid of planted beds between the balneum, the small F range and the walled garden.' },
+    note: `${NOT_IN_LEGEND} В романе травяной сад Северина находится рядом с лечебницей и купальней, поэтому атлас помещает его сюда.`,
+    en: { name: 'Garden plots', description: 'Grid of planted beds between the hospital, the baths and the field.' },
     locationId: 'herb-garden',
   }),
   ab('orchard', {
     kind: 'open', name: 'Плодовый сад',
-    description: 'Деревья к югу от бани вдоль западной стены.',
-    certainty: 'interpretation', note: NOT_LETTERED,
-    en: { name: 'Orchard', description: 'Trees drawn south of the balneum along the western wall.', note: NOT_LETTERED_EN },
+    description: 'Деревья вдоль западной стены, между лечебницей и главной аллеей.',
+    certainty: 'interpretation', note: NOT_IN_LEGEND,
+    en: { name: 'Orchard', description: 'Trees along the western wall, between the hospital and the main avenue.', note: NOT_IN_LEGEND_EN },
   }),
-  ab('B', {
-    kind: 'building', printed: 'B', legend: 'Balnea', name: 'Баня',
-    description: 'Длинное узкое здание вдоль северо-западной стены, поставленное под углом, со скруглённым торцом и небольшой пристройкой.',
-    certainty: 'confirmed', locationId: 'balneary',
-    en: { name: 'Balneum (baths)', description: 'Long, narrow building set at an angle along the north-western wall, with a rounded end and a small annex.' },
-  }),
-  ab('A-gate', {
-    kind: 'building', printed: 'A', legend: 'Ospedale', name: 'Лечебница',
-    description: 'Небольшое здание сразу за западными воротами, со сводчатым помещением.',
-    certainty: 'interpretation',
-    note: 'Буква A напечатана дважды: здесь и в юго-западном углу. Атлас связывает лечебницу и лабораторию Северина с этим зданием — оно ближе к бане и грядкам.',
-    en: { name: 'Hospital', description: 'Small building just inside the western gate, with a vaulted room.', note: 'The letter A is printed twice; the atlas links Severinus’s hospital to this one.' },
-    locationId: 'hospital',
-  }),
-  ab('A-south', {
-    kind: 'building', printed: 'A', legend: 'Ospedale', name: 'Второе здание с буквой A',
-    description: 'Г-образное здание в юго-западном углу ограды.',
-    certainty: 'uncertain',
-    note: 'Тоже отмечено буквой A (Ospedale). План не говорит, которое из двух зданий — лечебница Северина; атлас связывает её со зданием у ворот.',
-    en: { name: 'Second building marked A', description: 'L-shaped building in the south-western corner of the enclosure.' },
-  }),
-  ab('F-top', {
-    kind: 'building', printed: 'F', legend: 'Dormitori', name: 'Малый корпус с буквой F',
-    description: 'Ряд из трёх помещений у северной стены, рядом с огороженным садом. Буква F напечатана у стены справа от него.',
-    certainty: 'confirmed',
-    en: { name: 'Small range marked F', description: 'Row of three cells against the northern wall.' },
-  }),
-  ab('dormitory-east', {
-    kind: 'building', printed: 'F', legend: 'Dormitori', name: 'Дормиторий',
-    description: 'Корпус вдоль восточной стены: зал с портиком и длинный ряд келий.',
-    certainty: 'confirmed',
-    note: 'Буква F напечатана дважды. Дормиторий монахов с кельями атлас помещает в этот восточный корпус.',
-    en: { name: 'Dormitory', description: 'Range along the eastern wall: a hall with a portico and a long row of cells.' },
-    locationId: 'dormitory',
-  }),
-  ab('ne-building', {
-    kind: 'building', name: 'Здание в северном конце восточного корпуса',
-    description: 'Зал с портиком в начале ряда келий.', certainty: 'uncertain', note: NOT_LETTERED,
-    en: { name: 'Building at the north end of the eastern range', description: 'Hall with a portico at the head of the row of cells.', note: NOT_LETTERED_EN },
-  }),
-  ab('e2', { kind: 'building', name: 'Здание у восточной стены', description: 'Здание из двух помещений к югу от дормитория.', certainty: 'uncertain', note: NOT_LETTERED,
-    en: { name: 'Building on the eastern side', description: 'Two-room building south of the dormitory.' } }),
-  ab('e3', { kind: 'building', name: 'Здание у восточной стены', description: 'Здание с крестовым сводом и портиком.', certainty: 'uncertain', note: NOT_LETTERED,
-    en: { name: 'Building on the eastern side', description: 'Building with a cross-vaulted room and a portico.' } }),
-  ab('C', {
-    kind: 'building', printed: 'C', legend: 'Edificio', name: 'Здание с буквой C',
-    description: 'Прямоугольный корпус у восточной стены: большой зал и три маленьких помещения вдоль северной стороны.',
-    legendConflict: true,
-    certainty: 'uncertain',
-    note: 'В легенде C — «Edificio». Но в романе Эдифиций — четырёхбашенное здание, которое здесь отмечено буквой D. Атлас сохраняет надпись и не связывает этот корпус с местом из романа.',
-    en: { name: 'Building marked C', description: 'Rectangular block on the eastern side: a large hall and three small rooms along its north side.' },
-  }),
-  ab('N', {
-    kind: 'building', printed: 'N', legend: 'Stalle', name: 'Конюшни',
-    description: 'Здание в южном ряду: стойла вдоль одной стороны и мощёная полоса.',
-    certainty: 'confirmed', locationId: 'stables',
-    en: { name: 'Stables', description: 'Building in the southern row with stalls along one side and a paved strip.' },
-  }),
-  ab('M', {
-    kind: 'building', printed: 'M', legend: 'Stabja', name: 'Хлева',
-    description: 'Прямоугольное здание в южном ряду; вдоль северной стены начерчены четыре круга.',
-    certainty: 'interpretation',
-    note: '«Stabja» — хлева, загоны. Атлас помещает сюда свинарник, у которого находят тело Венанция; в романе этот двор не связан с конкретной буквой.',
-    en: { name: 'Animal pens', description: 'Rectangular building in the southern row; four circles are drawn along its north wall.' },
-    locationId: 'pigsty',
-  }),
-  ab('Ms', {
-    kind: 'building', printed: 'M', legend: 'Stabja', name: 'Второе здание с буквой M',
-    description: 'Небольшое здание рядом с M. У буквы есть маленький нижний индекс, который на скане читается неуверенно.',
-    certainty: 'uncertain',
-    en: { name: 'Second building marked M', description: 'Small building beside M; the letter carries a subscript that is hard to read.' },
-  }),
-  ab('R-forge', {
-    kind: 'building', printed: 'R', legend: 'Fucine', name: 'Кузницы',
-    description: 'Здание в южном ряду с круглым горном.',
-    certainty: 'confirmed',
-    note: 'В романе в кузницах работает стекольщик Николай Моримондский.',
-    en: { name: 'Forges', description: 'Building in the southern row with a round furnace.' },
-    locationId: 'workshops',
-  }),
-  ab('H', {
-    kind: 'building', printed: 'H', legend: 'Sala capitolare', name: 'Капитулярный зал',
-    description: 'Здание в южном ряду; внутри начерчены круги.',
-    certainty: 'interpretation',
-    note: 'Опознано по легенде: буква H на плане и в легенде совпадают. В романе в капитулярном зале проходят диспут и суд.',
-    en: { name: 'Chapter house', description: 'Building in the southern row with circles drawn inside.' },
-    locationId: 'chapter-house',
-  }),
-  ab('K', {
-    kind: 'building', printed: 'K', name: 'Здание с буквой K',
-    description: 'Здание в юго-восточном углу с круглой башней.',
-    certainty: 'uncertain', note: 'Буквы K в легенде нет.',
-    en: { name: 'Building marked K', description: 'Building in the south-eastern corner with a round tower.', note: 'The letter K does not appear in the legend.' },
-  }),
-  ab('east-range', {
-    kind: 'building', name: 'Зал с колоннами к востоку от клуатра',
-    description: 'Длинный зал с двумя рядами колонн, примыкающий к южной стороне церкви.',
-    certainty: 'uncertain', note: NOT_LETTERED,
-    en: { name: 'Columned hall east of the cloister', description: 'Long hall with two rows of columns, joined to the south side of the church.' },
-  }),
-  ab('south-range', {
-    kind: 'building', name: 'Корпус к югу от клуатра',
-    description: 'Здание со сводчатым залом и небольшими помещениями, замыкающее клуатр с юга.',
-    certainty: 'uncertain', note: NOT_LETTERED,
-    en: { name: 'Range south of the cloister', description: 'Building with a cross-vaulted hall and smaller rooms.' },
-  }),
-  ab('small-south', { kind: 'building', name: 'Небольшое здание', description: 'Небольшое здание ниже зала с колоннами.', certainty: 'uncertain', note: NOT_LETTERED,
-    en: { name: 'Small building', description: 'Small building below the columned hall.' } }),
   ab('tree-garden', {
     kind: 'open', name: 'Сад с деревьями',
     description: 'Квадратный сад из четырёх засаженных четвертей, к югу от аллеи.',
-    certainty: 'uncertain', note: NOT_LETTERED,
-    en: { name: 'Garden with trees', description: 'Square garden with four planted quarters south of the avenue.' },
+    certainty: 'uncertain', note: NOT_IN_LEGEND,
+    en: { name: 'Garden with trees', description: 'Square garden with four planted quarters south of the avenue.', note: NOT_IN_LEGEND_EN },
   }),
   ab('cemetery', {
     kind: 'open', name: 'Кладбище',
-    description: 'Поле крестов между церковью и южной башней Эдифиция.',
-    certainty: 'interpretation', note: `${NOT_LETTERED} Кресты обозначают могилы.`,
+    description: 'Поле крестов между церковью и южной башней Храмины.',
+    certainty: 'interpretation', note: `${NOT_IN_LEGEND} Кресты обозначают могилы.`,
     en: { name: 'Cemetery', description: 'Field of crosses between the church and the southern tower of the Aedificium.' },
     locationId: 'cemetery',
   }),
   ab('gate', {
     kind: 'opening', name: 'Ворота',
     description: 'Проём в западной стене, через который в ограду входит дорога.',
-    certainty: 'interpretation', note: `${NOT_LETTERED} Опознано по разрыву стены и дороге.`, locationId: 'gate',
+    certainty: 'interpretation', note: `${NOT_IN_LEGEND} Опознано по разрыву стены и дороге.`, locationId: 'gate',
     en: { name: 'Gate', description: 'Opening in the western wall where the road enters the enclosure.' },
   }),
   ab('road', {
@@ -260,8 +227,8 @@ const abbeyHotspots: PlanHotspot[] = [
     en: { name: 'Road outside the walls', description: 'Track winding down outside the western wall.' },
   }),
   ab('cliff', {
-    kind: 'terrain', name: 'Склон под Эдифицием',
-    description: 'Заштрихованные склоны, обрывающиеся за северной стеной вокруг Эдифиция.',
+    kind: 'terrain', name: 'Склон за северной стеной',
+    description: 'Заштрихованные склоны, обрывающиеся за северной стеной вокруг Храмины.',
     certainty: 'interpretation', locationId: 'ravine',
     en: { name: 'Slope below the Aedificium', description: 'Hatched slopes falling away outside the northern wall around the Aedificium.' },
   }),
@@ -331,8 +298,8 @@ const libraryHotspots: PlanHotspot[] = LIBRARY_ROOMS.map((r) => {
 });
 
 export const plans: Record<PlanId, PlanDef> = {
-  abbey: { id: 'abbey', titleIt: "L'Abbazia", titleRu: 'План аббатства', width: 1490, height: 1055, hotspots: abbeyHotspots },
-  library: { id: 'library', titleIt: 'Biblioteca', titleRu: 'План библиотеки', width: 1280, height: 1289, hotspots: libraryHotspots },
+  abbey: { id: 'abbey', titleOrig: 'Аббатство', titleLang: 'ru', titleRu: 'План аббатства', width: 1336, height: 1024, hotspots: abbeyHotspots },
+  library: { id: 'library', titleOrig: 'Biblioteca', titleLang: 'it', titleRu: 'План библиотеки', width: 1280, height: 1289, hotspots: libraryHotspots },
 };
 
 export const hotspotById = new Map<string, PlanHotspot>(
@@ -354,11 +321,11 @@ export function centroid(poly: [number, number][]): [number, number] {
 
 /** Явные точки привязки там, где центроид неудачен (вогнутые зоны). */
 const ANCHOR_OVERRIDE: Record<string, [number, number]> = {
-  'ab-cliff': [985, 160],
-  'ab-cemetery': [800, 540],
-  'ab-road': [150, 470],
-  'ab-dormitory-east': [1160, 565],
-  'ab-aedificium': [912, 260],
+  'ab-cliff': [1180, 300],
+  'ab-cemetery': [800, 520],
+  'ab-stables': [1130, 560],
+  'ab-dormitory': [900, 740],
+  'ab-aedificium': [883, 350],
 };
 
 export function hotspotAnchor(h: PlanHotspot): [number, number] {
