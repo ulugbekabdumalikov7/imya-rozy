@@ -90,3 +90,13 @@ describe('«Час за часом» — имена участников под 
     expect(last.name).toBe(`и ещё ${20 - shown}`);
   });
 });
+
+describe('слой «Персонажи» — окошко «Здесь бывали»', () => {
+  it('показывает всех героев без «и ещё N»', () => {
+    const many = Array.from({ length: 21 }, (_, i) => ({ id: String(i), name: `Герой${i}`, lead: false }));
+    const rows = nameRows(many, Infinity);
+    expect(rows.flat()).toHaveLength(21);
+    expect(rows.flat().some((x) => x.name.startsWith('и ещё'))).toBe(false);
+  });
+});
+

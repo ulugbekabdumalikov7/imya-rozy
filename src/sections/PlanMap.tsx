@@ -13,6 +13,7 @@ import { useSpoiler } from '../state/spoiler';
 import { happenedBy } from '../lib/moments';
 import { eventTitle } from '../lib/visible';
 import { MomentLayer } from './MomentLayer';
+import { PeopleBadge, PeoplePopover } from './PeopleBadge';
 import { MEETING_EVENT_ID, MEETING_SCENE_DELAY_MS, MEETING_SCENE_MS, MeetingMarker, MeetingScene } from './MeetingRose';
 import abbeyPlanUrl from '../assets/abbey-plan.webp';
 import { FOOT_PATH, footprints, type Footprint } from '../lib/footsteps';
@@ -61,6 +62,15 @@ export function PlanMap(p: Props) {
   const pz = usePanZoom(svgRef, W, H, 1, p.view === 'library' ? 5 : 6);
   const unit = 1 / (pz.pxPerUnit * pz.view.k || 1); // одна экранная точка в единицах плана
   const [hoverId, setHoverId] = useState<string | null>(null);
+  // «Здесь бывали»: открытое окошко слоя «Персонажи» (id зоны плана)
+  const [peopleOpen, setPeopleOpen] = useState<string | null>(null);
+  useEffect(() => { setPeopleOpen(null); }, [p.focusKey, p.view]);
+  useEffect(() => {
+    if (!peopleOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setPeopleOpen(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [peopleOpen]);
 
   // Проявление плана: полное — при первом открытии за сессию, короткое — при смене плана.
   const [drawMode] = useState(() => (reducedMotion() ? 'none' : firstTimeThisSession('map-draw') ? 'drawing' : 'settling'));
@@ -202,6 +212,7 @@ export function PlanMap(p: Props) {
         role="group"
         aria-label={p.view === 'abbey' ? "План аббатства (L'Abbazia)" : 'План библиотеки'}
         {...pz.handlers}
+        onClick={() => { if (peopleOpen) setPeopleOpen(null); }} // нажатие мимо окошка «Здесь бывали» закрывает его
       >
         <defs>
           <filter id="tone-night" colorInterpolationFilters="sRGB">
@@ -276,11 +287,9 @@ export function PlanMap(p: Props) {
                     if (!h) return null;
                     const a = hotspotAnchor(h);
                     return (
-                      <g key={id} transform={`translate(${a[0] - 16 * unit} ${a[1] + 14 * unit})`} onClick={click(() => p.onPickHotspot(h))} className="marker marker-people">
-                        <title>{`Здесь бывали: ${[...set].map((c) => characterById.get(c)!.short).join(', ')}`}</title>
-                        <circle r={9 * unit} />
-                        <text style={{ fontSize: 10 * unit }} textAnchor="middle" dominantBaseline="central">{set.size}</text>
-                      </g>
+                      <PeopleBadge key={id} x={a[0] - 18 * unit} y={a[1] + 14 * unit} unit={unit}
+                        people={[...set].map((c) => characterById.get(c)!)} open={peopleOpen === id} placeName={label(h).title}
+                        onToggle={() => { if (!pz.wasDrag()) setPeopleOpen((cur) => (cur === id ? null : id)); }} />
                     );
                   })}
                 </g>
@@ -371,6 +380,21 @@ export function PlanMap(p: Props) {
                   onPick={(id) => p.onPickEvent(id)} />
               )}
             </g>
+
+            {/* «Здесь бывали» — поверх всех слоёв */}
+            {peopleOpen && p.layers.has('people') && (() => {
+              const h = hotspots.find((x) => x.id === peopleOpen);
+              const set = peopleAt.get(peopleOpen);
+              if (!h || !set) return null;
+              const a = hotspotAnchor(h);
+              const bx = a[0] - 18 * unit;
+              const by = a[1] + 14 * unit;
+              return (
+                <PeoplePopover unit={unit} people={[...set].map((c) => characterById.get(c)!)} x={bx} y={by}
+                  below={by < H * 0.3} minX={8 * unit} maxX={W - 8 * unit}
+                  onOpenPlace={() => { setPeopleOpen(null); p.onPickHotspot(h); }} />
+              );
+            })()}
 
             {/* Подпись зоны под курсором или выбранной */}
             {tip && (() => {

@@ -582,8 +582,21 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
 .marker { cursor: pointer; }
-.marker-people circle { fill: var(--night-4); stroke: var(--ash); stroke-width: 1; }
-.marker-people text { fill: var(--bone-2); font-family: var(--f-ui); font-weight: 500; pointer-events: none; }
+.marker-people [role="button"] { cursor: pointer; outline: none; }
+.marker-people .hit { fill: transparent; }
+.people-pill { fill: var(--night-4); stroke: var(--ash); transition: fill var(--t-fast) var(--ease), stroke var(--t-fast) var(--ease); }
+.people-icon { fill: var(--bone-2); pointer-events: none; }
+.people-count { fill: var(--bone); font-family: var(--f-ui); font-weight: 500; pointer-events: none; }
+.marker-people [role="button"]:hover .people-pill, .marker-people [role="button"]:focus-visible .people-pill { stroke: var(--bone-2); }
+.marker-people.is-open .people-pill { fill: var(--bone); stroke: var(--bone); }
+.marker-people.is-open .people-icon, .marker-people.is-open .people-count { fill: var(--night); }
+/* окошко «Здесь бывали» */
+.people-pop { animation: fade var(--t-medium) var(--ease) both; }
+.people-pop-bg { fill: var(--bar-bg-strong); stroke: var(--rule-2); filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35)); }
+.people-pop-head { fill: var(--accent); font-family: var(--f-ui); letter-spacing: 0.08em; text-transform: uppercase; }
+.people-pop-names { font-family: var(--f-ui); }
+.people-pop-link { fill: var(--bone); font-family: var(--f-ui); cursor: pointer; text-decoration: underline; text-decoration-color: var(--blood-lit); outline: none; }
+.people-pop-link:hover, .people-pop-link:focus-visible { fill: var(--accent); }
 .marker-clue rect { fill: var(--surface); stroke: var(--bone-2); stroke-width: 1; }
 .marker-clue text { fill: var(--bone-2); font-family: var(--f-ui); font-weight: 500; pointer-events: none; }
 
@@ -657,7 +670,10 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .lg-site { border: 1.5px dashed var(--blood-lit); border-radius: 50%; }
 .legend-swatch { width: 12px; height: 12px; margin-top: 6px; flex-shrink: 0; }
 .swatch-arch { border: 1px solid var(--bone-2); background: repeating-linear-gradient(45deg, var(--hatch) 0 1px, transparent 1px 4px); }
-.swatch-people { background: var(--night-4); border: 1px solid var(--ash); border-radius: 50%; }
+.swatch-people { background: var(--night-4); border: 1px solid var(--ash); border-radius: 8px; width: 20px; position: relative; }
+.swatch-people::before { content: ""; position: absolute; left: 4px; top: 50%; width: 7px; height: 8px; transform: translateY(-50%);
+  background: var(--bone-2); -webkit-mask: radial-gradient(circle at 50% 22%, #000 1.9px, transparent 2.1px), radial-gradient(ellipse 3.6px 3.4px at 50% 100%, #000 98%, transparent);
+  mask: radial-gradient(circle at 50% 22%, #000 1.9px, transparent 2.1px), radial-gradient(ellipse 3.6px 3.4px at 50% 100%, #000 98%, transparent); }
 .swatch-deaths { background: var(--blood-lit); border-radius: 50%; transform: scale(0.75); }
 .swatch-clues { border: 1px solid var(--bone-2); transform: rotate(45deg) scale(0.75); }
 .swatch-route { background: none; position: relative; }
