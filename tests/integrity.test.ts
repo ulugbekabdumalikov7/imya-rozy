@@ -141,26 +141,22 @@ describe('целостность ссылок', () => {
 });
 
 describe('буквы общего плана и легенда', () => {
-  it('расхождение с легендой отмечено ровно там, где буква стоит не на своей постройке', async () => {
+  it('каждая буква легенды стоит ровно на одной постройке и называет её так, как в легенде', async () => {
     const { plans, ABBEY_LEGEND } = await import('../src/data/plans');
-    const conflicts = plans.abbey.hotspots.filter((h) => h.legendConflict).map((h) => h.id).sort();
-    expect(conflicts).toEqual(['ab-C', 'ab-aedificium', 'ab-church', 'ab-cloister', 'ab-garden-E']);
-    // у каждой такой буквы в легенде написано, где она стоит на самом деле
-    for (const h of plans.abbey.hotspots.filter((x) => x.legendConflict)) {
+    const lettered = plans.abbey.hotspots.filter((h) => h.printed);
+    expect(lettered.map((h) => h.printed).sort()).toEqual(ABBEY_LEGEND.map((l) => l.letter).sort());
+    for (const h of lettered) {
       const l = ABBEY_LEGEND.find((x) => x.letter === h.printed)!;
-      expect(l.conflict, h.printed).toBe(true);
-      expect(l.onPlan, h.printed).toBeTruthy();
-      expect(h.note, h.id).toBeTruthy(); // в карточке есть объяснение
+      expect(h.legend, h.id).toBe(l.ru);
+      expect(h.name, h.id).toBe(l.ru);
     }
-    // а постройки, названные по легенде, с ней совпадают
-    const byLegend: Record<string, string> = { 'ab-B': 'B', 'ab-N': 'N', 'ab-R-forge': 'R', 'ab-H': 'H', 'ab-dormitory-east': 'F', 'ab-A-gate': 'A', 'ab-M': 'M' };
-    for (const [id, letter] of Object.entries(byLegend)) {
-      const h = plans.abbey.hotspots.find((x) => x.id === id)!;
-      expect(h.printed, id).toBe(letter);
-      expect(h.legendConflict, id).toBeUndefined();
-      const ru = ABBEY_LEGEND.find((x) => x.letter === letter)!.ru.toLowerCase();
-      expect(h.name.toLowerCase().slice(0, 5), id).toBe(ru.slice(0, 5)); // «Конюшни» ↔ «Конюшни», «Кузницы» ↔ «Кузницы»…
+    // места романа привязаны к постройкам по легенде
+    const byLetter: Record<string, string> = {
+      A: 'aedificium', B: 'church', D: 'cloister', F: 'dormitory', H: 'chapter-house',
+      K: 'hospital', J: 'balneary', M: 'pigsty', N: 'stables', R: 'workshops',
+    };
+    for (const [letter, loc] of Object.entries(byLetter)) {
+      expect(lettered.find((h) => h.printed === letter)?.locationId, letter).toBe(loc);
     }
   });
 });
-

@@ -4,7 +4,7 @@ import {
   anchorIn, characterById, clues, dayLabel, deaths, eventById, events, hotspotAnchor, hotspotIn, locationById, plans, routeByCharacter,
 } from '../data';
 import { LIBRARY_PASSAGE_MARK, LIBRARY_RED_GLYPHS } from '../data/planGeometry';
-import { ABBEY_LEGEND, type PlanHotspot } from '../data/plans';
+import type { PlanHotspot } from '../data/plans';
 import type { MapView, Route, RouteStep, StoryEvent } from '../data/types';
 import { usePanZoom } from '../lib/usePanZoom';
 import { firstTimeThisSession, reducedMotion } from '../lib/motion';
@@ -198,20 +198,14 @@ export function PlanMap(p: Props) {
     const known = !h.revealDay || visible({ revealDay: h.revealDay });
     const name = known ? h.name : h.safeName ?? h.name;
     const atlasName = loc && known && visible({ revealDay: loc.revealDay ?? 0 }) ? loc.name : undefined;
-    // Буква с плана. Если она стоит не на той постройке, что в легенде, — так и пишем, а не «R · Fucine» под «Клуатром».
-    const legendRuRaw = h.legend ? ABBEY_LEGEND.find((l) => l.letter === h.printed)?.ru : undefined;
-    const legendRu = legendRuRaw === 'Эдифиций' ? legendRuRaw : legendRuRaw?.toLowerCase(); // имя собственное — с прописной
-    const sub = h.printed
-      ? h.legendConflict && legendRu
-        ? `«${h.printed}» на плане — не по легенде (в ней ${h.printed} — ${legendRu})`
-        : `${h.printed}${h.legend ? ` · ${h.legend}` : h.plan === 'abbey' ? ' · нет в легенде' : ''}`
-      : atlasName && atlasName !== name ? name : undefined;
-    if (!h.printed) return { title: atlasName ?? name, sub };
-    // У зоны с буквой главное — название по плану (оно согласовано с буквой и легендой);
-    // если в романе место называется иначе («Купальня» при B — Balnea), даём это третьей строкой.
-    const norm = (t: string) => t.toLowerCase();
-    const differs = atlasName && !norm(atlasName).includes(norm(name).split(' ')[0]!) && !norm(name).includes(norm(atlasName).split(' ')[0]!);
-    return { title: name, sub, alt: differs ? `в романе: ${atlasName}` : undefined };
+    if (!h.printed) return { title: atlasName ?? name, sub: atlasName && atlasName !== name ? name : undefined };
+    // У зоны с буквой главное — буква и название по легенде плана;
+    // если в романе место называется иначе («Храмина» — Эдифиций), даём это второй строкой.
+    const stem = (t: string) => t.toLowerCase().split(' ')[0]!.slice(0, 5);
+    const differs = atlasName && stem(atlasName) !== stem(name);
+    const sub = differs ? `в романе: ${atlasName}` : undefined;
+    // в библиотеке буква уже входит в название («Комната «A»»)
+    return { title: h.plan === 'abbey' ? `${h.printed} — ${name}` : name, sub };
   };
   const tip = hovered ?? selected;
 
@@ -222,7 +216,7 @@ export function PlanMap(p: Props) {
         viewBox={`0 0 ${W} ${H}`}
         className={`plan-svg tone-${p.tone} plan-${p.view}${p.layers.has('arch') ? ' layers-arch' : ''}${scenePlaying ? ' is-meeting-scene' : ''}`}
         role="group"
-        aria-label={p.view === 'abbey' ? "План аббатства (L'Abbazia)" : 'План библиотеки'}
+        aria-label={p.view === 'abbey' ? 'План аббатства' : 'План библиотеки'}
         {...pz.handlers}
         onClick={() => { if (peopleOpen) setPeopleOpen(null); }} // нажатие мимо окошка «Здесь бывали» закрывает его
       >
@@ -278,7 +272,7 @@ export function PlanMap(p: Props) {
                     style={{ strokeWidth: (isSel ? 2 : 1.3) * unit }}
                     role="button"
                     tabIndex={0}
-                    aria-label={`${lb.title}${h.printed ? `, буква ${h.printed} на плане` : ''}`}
+                    aria-label={`${lb.title}${lb.sub ? `, ${lb.sub}` : ''}`}
                     aria-pressed={isSel}
                     onPointerEnter={(e) => e.pointerType === 'mouse' && setHoverId(h.id)}
                     onPointerLeave={() => setHoverId((x) => (x === h.id ? null : x))}
@@ -416,8 +410,7 @@ export function PlanMap(p: Props) {
               return (
                 <g className="spot-tip" aria-hidden="true" transform={`translate(${a[0]} ${a[1] - 22 * unit})`}>
                   <text className="tip-title" textAnchor="middle" style={{ fontSize: fs }}>{lb.title}</text>
-                  {lb.sub && <text className="tip-sub" textAnchor="middle" y={fs * 1.15} style={{ fontSize: fs * 0.8 }} lang={tip.printed && !tip.legendConflict ? 'it' : undefined}>{lb.sub}</text>}
-                  {'alt' in lb && lb.alt && <text className="tip-sub" textAnchor="middle" y={fs * 2.15} style={{ fontSize: fs * 0.8 }}>{lb.alt}</text>}
+                  {lb.sub && <text className="tip-sub" textAnchor="middle" y={fs * 1.15} style={{ fontSize: fs * 0.8 }}>{lb.sub}</text>}
                 </g>
               );
             })()}

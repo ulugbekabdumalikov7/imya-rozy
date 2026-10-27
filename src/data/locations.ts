@@ -88,7 +88,7 @@ export const locations: Location[] = [
     name: 'Капитулярный зал',
     latin: 'Capitulum',
     type: 'residence',
-    plan: { view: 'abbey', hotspot: 'ab-H' },
+    plan: { view: 'abbey', hotspot: 'ab-chapter-house' },
     description: 'Зал собраний общины. Здесь аббат объявляет решения и разбираются дела монастыря.',
     significance: [
       { revealDay: 5, text: 'На пятый день здесь проходит диспут о бедности Христа между францисканцами и папским посольством, а затем — суд Бернарда Ги над келарем.' },
@@ -100,7 +100,7 @@ export const locations: Location[] = [
     id: 'dormitory',
     name: 'Дормиторий и кельи',
     type: 'residence',
-    plan: { view: 'abbey', hotspot: 'ab-dormitory-east' },
+    plan: { view: 'abbey', hotspot: 'ab-dormitory' },
     description: 'Спальный корпус монахов с отдельными кельями. Ночью монахи обязаны быть здесь — поэтому любое ночное отсутствие становится подозрительным.',
     significance: [
       { revealDay: 3, text: 'Беренгар не возвращается в келью; в ней находят окровавленную ткань. С этого начинается его исчезновение.' },
@@ -138,7 +138,7 @@ export const locations: Location[] = [
     name: 'Лечебница и лаборатория',
     latin: 'Hospitale',
     type: 'medical',
-    plan: { view: 'abbey', hotspot: 'ab-A-gate' },
+    plan: { view: 'abbey', hotspot: 'ab-hospital' },
     description: 'Владения травника Северина: лечебница, склад снадобий и лаборатория с приборами, книгами по медицине и опасными веществами.',
     significance: [
       { revealDay: 2, text: 'Здесь Вильгельм и Северин осматривают тело Венанция.' },
@@ -153,7 +153,7 @@ export const locations: Location[] = [
     name: 'Купальня',
     latin: 'Balneum',
     type: 'medical',
-    plan: { view: 'abbey', hotspot: 'ab-B' },
+    plan: { view: 'abbey', hotspot: 'ab-baths' },
     description: 'Помещение для омовений рядом с лечебницей, с ваннами, которые травник использовал и для лечебных купаний.',
     significance: [
       { revealDay: 4, text: 'Утром четвёртого дня здесь, в ванне, находят тело Беренгара.' },
@@ -177,7 +177,7 @@ export const locations: Location[] = [
     id: 'pigsty',
     name: 'Свинарник',
     type: 'service',
-    plan: { view: 'abbey', hotspot: 'ab-M' },
+    plan: { view: 'abbey', hotspot: 'ab-pigsty' },
     description: 'Хозяйственный двор, где зимой режут свиней. Кровь собирают в большой сосуд, чтобы делать кровяную колбасу.',
     significance: [
       { revealDay: 2, text: 'Утром второго дня из сосуда с кровью торчат ноги Венанция.' },
@@ -189,8 +189,8 @@ export const locations: Location[] = [
     id: 'stables',
     name: 'Конюшни',
     type: 'service',
-    plan: { view: 'abbey', hotspot: 'ab-N' },
-    description: 'Конюшни в южном ряду построек. Сюда ведут беглого коня аббата Гнедка (Brunellus), которого Вильгельм описал, ни разу не видев.',
+    plan: { view: 'abbey', hotspot: 'ab-stables' },
+    description: 'Конюшни в восточном ряду построек. Сюда ведут беглого коня аббата Гнедка (Brunellus), которого Вильгельм описал, ни разу не видев.',
     significance: [
       { revealDay: 1, text: 'Эта сцена в первый день показывает метод Вильгельма: читать следы как знаки.' },
     ],
@@ -201,7 +201,7 @@ export const locations: Location[] = [
     id: 'workshops',
     name: 'Мастерские',
     type: 'service',
-    plan: { view: 'abbey', hotspot: 'ab-R-forge' },
+    plan: { view: 'abbey', hotspot: 'ab-forges' },
     description: 'Кузница и мастерская стекольщика Николая Моримондского, где делают витражи и шлифуют стёкла.',
     significance: [
       { revealDay: 3, text: 'После кражи очков Вильгельм вместе с Николаем пытается выточить новые линзы.' },
