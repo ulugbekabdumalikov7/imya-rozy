@@ -88,7 +88,7 @@ const ROW_CHARS = 26; // примерно столько символов пом
 const MAX_ROWS = 4;
 
 /** Имена участников строками по 3–4 имени; если не помещаются в четыре строки — остаток числом «и ещё N». */
-export function nameRows(items: NameItem[]): NameItem[][] {
+export function nameRows(items: NameItem[], maxRows = MAX_ROWS): NameItem[][] {
   const rows: NameItem[][] = [];
   let cur: NameItem[] = [];
   let len = 0;
@@ -99,9 +99,9 @@ export function nameRows(items: NameItem[]): NameItem[][] {
     len += (cur.length > 1 ? 3 : 0) + it.name.length;
   }
   if (cur.length) rows.push(cur);
-  if (rows.length <= MAX_ROWS) return rows;
-  const kept = rows.slice(0, MAX_ROWS);
+  if (rows.length <= maxRows) return rows;
+  const kept = rows.slice(0, maxRows);
   const shown = kept.reduce((n, r) => n + r.length, 0);
-  kept[MAX_ROWS - 1] = [...kept[MAX_ROWS - 1]!, { id: '__more', name: `и ещё ${items.length - shown}`, lead: false }];
+  kept[maxRows - 1] = [...kept[maxRows - 1]!, { id: '__more', name: `и ещё ${items.length - shown}`, lead: false }];
   return kept;
 }

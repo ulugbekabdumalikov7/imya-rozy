@@ -21,7 +21,7 @@ import { DetailPanel, LocChip } from '../components/ui';
 
 const LAYERS: { key: LayerKey; label: string; hint: string }[] = [
   { key: 'arch', label: 'Контуры зон', hint: 'Обводка построек и комнат по плану' },
-  { key: 'people', label: 'Персонажи', hint: 'Сколько героев бывало в месте' },
+  { key: 'people', label: 'Персонажи', hint: 'Сколько героев бывало в месте; нажмите — имена' },
   { key: 'deaths', label: 'Смерти', hint: 'Места обнаружения тел и гибели' },
   { key: 'clues', label: 'Улики', hint: 'Предметы и свидетельства' },
   { key: 'route', label: 'Маршрут', hint: 'Путь выбранного героя' },
