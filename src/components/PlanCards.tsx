@@ -1,4 +1,4 @@
-import { ArrowRight, MapPinned } from 'lucide-react';
+import { AlertTriangle, ArrowRight, MapPinned } from 'lucide-react';
 import { ABBEY_LEGEND, type PlanHotspot } from '../data/plans';
 import { locationById, plans } from '../data';
 import type { MapView } from '../data/types';
@@ -29,7 +29,10 @@ export function PlanFacts({ h, asPartOf, onOpenPlan }: { h: PlanHotspot; asPartO
         <span>{t.name}</span>
       </p>
       {h.legend && (
-        <p className="plan-legend-line">Легенда плана: <span lang="it">{h.printed} — {h.legend}</span></p>
+        <p className={`plan-legend-line${h.legendConflict ? ' is-conflict' : ''}`}>
+          Легенда плана: <span lang="it">{h.printed} — {h.legend}</span>
+          {h.legendConflict && <> <span className="legend-mismatch"><AlertTriangle size={13} aria-hidden="true" /> не совпадает с рисунком</span></>}
+        </p>
       )}
       {h.plan === 'abbey' && h.printed && !h.legend && <p className="plan-legend-line">Этой буквы нет в легенде.</p>}
       <p>{t.description}</p>
@@ -78,10 +81,16 @@ export function AbbeyLegend() {
       <p className="legend-title">Легенда плана · <span lang="it">L'Abbazia</span></p>
       <dl>
         {ABBEY_LEGEND.map((l) => (
-          <div key={l.letter}><dt lang="la">{l.letter}</dt><dd><span lang="it">{l.it}</span> <span className="muted">· {l.ru}</span></dd></div>
+          <div key={l.letter} className={l.conflict ? 'is-conflict' : undefined}>
+            <dt lang="la">{l.letter}</dt>
+            <dd>
+              <span lang="it">{l.it}</span> <span className="muted">· {l.ru}</span>
+              {l.onPlan && <span className="legend-onplan">{l.conflict && <AlertTriangle size={12} aria-label="Не совпадает с рисунком" />} {l.onPlan}</span>}
+            </dd>
+          </div>
         ))}
       </dl>
-      <p className="small muted">Буквы C, D, E и одна из R стоят на плане не там, куда их помещает легенда. Атлас сохраняет обе надписи и отмечает расхождение в карточке.</p>
+      <p className="small muted">Легенда напечатана на самом плане, но буквы C, D, E и одна из R стоят не на тех постройках, что в ней названы. Атлас называет постройки по рисунку и роману, а буквы показывает как есть. Буква K на плане есть, а в легенде её нет.</p>
     </div>
   );
 }
