@@ -76,21 +76,28 @@ export function HotspotCard({ h, onOpenPlan, onPickLocation }: { h: PlanHotspot;
 }
 
 export function AbbeyLegend() {
+  const conflicts = ABBEY_LEGEND.filter((l) => l.conflict && l.onPlan);
+  const doubles = ABBEY_LEGEND.filter((l) => !l.conflict && l.onPlan).map((l) => l.letter);
   return (
     <div className="plan-legend">
       <p className="legend-title">Легенда плана · <span lang="it">L'Abbazia</span></p>
+      {/* сама легенда — как на плане: буква, итальянская подпись, перевод */}
       <dl>
         {ABBEY_LEGEND.map((l) => (
           <div key={l.letter} className={l.conflict ? 'is-conflict' : undefined}>
-            <dt lang="la">{l.letter}</dt>
-            <dd>
-              <span lang="it">{l.it}</span> <span className="muted">· {l.ru}</span>
-              {l.onPlan && <span className="legend-onplan">{l.conflict && <AlertTriangle size={12} aria-label="Не совпадает с рисунком" />} {l.onPlan}</span>}
-            </dd>
+            <dt lang="la">{l.letter}{l.conflict && <span className="legend-mark" aria-label="не совпадает с рисунком">*</span>}</dt>
+            <dd><span lang="it">{l.it}</span> · <span className="muted">{l.ru}</span></dd>
           </div>
         ))}
       </dl>
-      <p className="small muted">Легенда напечатана на самом плане, но буквы C, D, E и одна из R стоят не на тех постройках, что в ней названы. Атлас называет постройки по рисунку и роману, а буквы показывает как есть. Буква K на плане есть, а в легенде её нет.</p>
+      <details className="legend-why">
+        <summary>* Почему эти буквы не совпадают с рисунком</summary>
+        <p>Легенда напечатана на самом плане, но четыре буквы стоят не на тех постройках, что в ней названы:</p>
+        <ul>
+          {conflicts.map((l) => <li key={l.letter}><strong lang="la">{l.letter}</strong> — {l.onPlan!.replace(/^на плане \S+ стоит /, '')}.</li>)}
+        </ul>
+        <p>Атлас называет постройки по рисунку и роману, а буквы показывает как есть. Буквы {doubles.join(', ')} напечатаны дважды; буквы K в легенде нет.</p>
+      </details>
     </div>
   );
 }
