@@ -139,3 +139,28 @@ describe('целостность ссылок', () => {
     for (const d of deaths) expect(anchorIn('abbey', d.foundLocationId), d.id).not.toBeNull();
   });
 });
+
+describe('буквы общего плана и легенда', () => {
+  it('расхождение с легендой отмечено ровно там, где буква стоит не на своей постройке', async () => {
+    const { plans, ABBEY_LEGEND } = await import('../src/data/plans');
+    const conflicts = plans.abbey.hotspots.filter((h) => h.legendConflict).map((h) => h.id).sort();
+    expect(conflicts).toEqual(['ab-C', 'ab-aedificium', 'ab-church', 'ab-cloister', 'ab-garden-E']);
+    // у каждой такой буквы в легенде написано, где она стоит на самом деле
+    for (const h of plans.abbey.hotspots.filter((x) => x.legendConflict)) {
+      const l = ABBEY_LEGEND.find((x) => x.letter === h.printed)!;
+      expect(l.conflict, h.printed).toBe(true);
+      expect(l.onPlan, h.printed).toBeTruthy();
+      expect(h.note, h.id).toBeTruthy(); // в карточке есть объяснение
+    }
+    // а постройки, названные по легенде, с ней совпадают
+    const byLegend: Record<string, string> = { 'ab-B': 'B', 'ab-N': 'N', 'ab-R-forge': 'R', 'ab-H': 'H', 'ab-dormitory-east': 'F', 'ab-A-gate': 'A', 'ab-M': 'M' };
+    for (const [id, letter] of Object.entries(byLegend)) {
+      const h = plans.abbey.hotspots.find((x) => x.id === id)!;
+      expect(h.printed, id).toBe(letter);
+      expect(h.legendConflict, id).toBeUndefined();
+      const ru = ABBEY_LEGEND.find((x) => x.letter === letter)!.ru.toLowerCase();
+      expect(h.name.toLowerCase().slice(0, 5), id).toBe(ru.slice(0, 5)); // «Конюшни» ↔ «Конюшни», «Кузницы» ↔ «Кузницы»…
+    }
+  });
+});
+
