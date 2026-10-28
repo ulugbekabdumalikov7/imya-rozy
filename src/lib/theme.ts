@@ -4,7 +4,7 @@ import { useSyncExternalStore } from 'react';
 export type Theme = 'dark' | 'light';
 
 export const THEME_KEY = 'rose-atlas:theme';
-const THEME_COLOR: Record<Theme, string> = { dark: '#0c0b0a', light: '#f3eee3' };
+const THEME_COLOR: Record<Theme, string> = { dark: '#0c0b0a', light: '#edeae4' };
 
 const listeners = new Set<() => void>();
 

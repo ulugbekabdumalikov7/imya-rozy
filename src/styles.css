@@ -104,41 +104,41 @@
   color: var(--ink);
 }
 
-/* ── Светлая тема: пергамент вместо ночи. Меняются только базовые цвета — компоненты не трогаем. ── */
+/* ── Светлая тема: известняк — светлый тёплый камень вместо ночи. Меняются только базовые цвета — компоненты не трогаем. ── */
 :root[data-theme="light"] {
   color-scheme: light;
-  --night: #f3eee3;
-  --night-2: #ebe4d6;
-  --night-3: #e1d8c6;
-  --night-4: #d3c8b2;
-  --bone: #1b1714;
-  --bone-2: #463f37;
-  --ash: #6c6458;
-  --ash-2: #9b9285;
-  --sheet: #fbf8f1;
-  --sheet-2: #efe8da;
-  --blood-lit: #a52b33;
+  --night: #edeae4;
+  --night-2: #e4e0d8;
+  --night-3: #d9d4ca;
+  --night-4: #c9c3b7;
+  --bone: #1a1917;
+  --bone-2: #44413c;
+  --ash: #655f57;
+  --ash-2: #9a948a;
+  --sheet: #faf8f4;
+  --sheet-2: #efebe4;
+  --blood-lit: #9c2a31;
 
-  --rule: rgba(27, 23, 20, 0.13);
-  --rule-2: rgba(27, 23, 20, 0.28);
-  --accent-veil: rgba(165, 43, 51, 0.1);
-  --shadow: 0 18px 44px rgba(60, 45, 30, 0.18);
+  --rule: rgba(26, 25, 23, 0.13);
+  --rule-2: rgba(26, 25, 23, 0.27);
+  --accent-veil: rgba(156, 42, 49, 0.1);
+  --shadow: 0 18px 44px rgba(40, 36, 30, 0.16);
 
-  --surface: #ece5d7;
-  --surface-2: #ece5d7;
-  --halo: #f3eee3;
-  --bar-bg: rgba(243, 238, 227, 0.92);
-  --bar-bg-strong: rgba(251, 248, 241, 0.96);
-  --intro-glow: #fbf8f1;
-  --intro-veil: rgba(243, 238, 227, 0.9);
-  --intro-veil-2: rgba(243, 238, 227, 0.6);
-  --hover-veil: rgba(27, 23, 20, 0.06);
-  --linked-stroke: rgba(27, 23, 20, 0.2);
-  --hatch: rgba(27, 23, 20, 0.35);
-  --spotlight: rgba(60, 45, 30, 0.22);
-  --backdrop: rgba(40, 30, 22, 0.45);
-  --scan-frame: #ece5d7;
-  --scene-veil: rgba(46, 32, 20, 0.5);
+  --surface: #e6e2db;
+  --surface-2: #e6e2db;
+  --halo: #edeae4;
+  --bar-bg: rgba(237, 234, 228, 0.92);
+  --bar-bg-strong: rgba(250, 248, 244, 0.96);
+  --intro-glow: #faf8f4;
+  --intro-veil: rgba(237, 234, 228, 0.9);
+  --intro-veil-2: rgba(237, 234, 228, 0.6);
+  --hover-veil: rgba(26, 25, 23, 0.06);
+  --linked-stroke: rgba(26, 25, 23, 0.2);
+  --hatch: rgba(26, 25, 23, 0.35);
+  --spotlight: rgba(40, 36, 30, 0.2);
+  --backdrop: rgba(30, 27, 23, 0.42);
+  --scan-frame: #e6e2db;
+  --scene-veil: rgba(36, 30, 24, 0.48);
 }
 :root[data-theme="light"] .sheet, :root[data-theme="light"] .detail-panel, :root[data-theme="light"] .dialog, :root[data-theme="light"] .spoiler-pop {
   --field: #ffffff;
