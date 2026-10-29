@@ -472,6 +472,10 @@ select { padding-right: 28px; }
 .intro.is-playing .intro-lede, .intro.is-playing .intro-cta { animation: fade-blur 0.8s var(--ease) both 2.9s; }
 .intro.is-playing .intro-skip { animation: fade-blur 0.4s var(--ease) both 0.3s; }
 .intro.is-rest .intro-route { opacity: 0; }
+/* повторный заход: только линии аббатства, точка и маршрут — короче и без ожидания текста */
+.intro.is-return .intro-arch { animation: draw 1.3s var(--ease-in-out) both; animation-delay: calc(0.05s + var(--d, 0) * 0.05s); }
+.intro.is-return .intro-dot { animation: dot-in 0.4s var(--ease-out) both 0.75s; }
+.intro.is-return .intro-route { animation: route-draw 1.3s var(--ease-in-out) both 0.9s; }
 @keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 .intro-arch, .sketch, .board-lines path { stroke-dasharray: 1 2; }
 @keyframes route-draw { 0% { stroke-dashoffset: 1; opacity: 0; } 4% { opacity: 0.9; } 70% { stroke-dashoffset: 0; opacity: 0.9; } 100% { stroke-dashoffset: 0; opacity: 0; } }
