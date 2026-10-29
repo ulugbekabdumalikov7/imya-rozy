@@ -29,7 +29,7 @@ export const relationships: CharacterRelationship[] = [
   R('r-william-adso', 'william', 'adso', true, 3, [
     { revealDay: 0, type: 'mentor', note: 'Вильгельм учит Адсона видеть знаки; Адсон записывает и не всегда понимает.', certainty: 'confirmed' },
     { revealDay: 3, type: 'attachment', note: 'После ночи с девушкой Адсон исповедуется учителю; их связь становится глубже ученичества.', certainty: 'confirmed' },
-    { revealDay: 7, critical: true, type: 'attachment', note: 'Расставаясь в Мюнхене, Вильгельм дарит Адсону очки, сделанные Николаем, и обнимает его по-отечески.', certainty: 'confirmed' },
+    { revealDay: 7, critical: true, type: 'attachment', note: 'Расставаясь в Мюнхене, Вильгельм дарит Адсону стёкла, сделанные Николаем: «наступит день, когда они тебе понадобятся».', certainty: 'confirmed' },
   ], ['e-arrival', 'e-night-scriptorium', 'e-adso-girl', 'e-finis-africae', 'e-epilogue']),
 
   R('r-william-abbo', 'william', 'abbo', false, 3, [
@@ -46,7 +46,7 @@ export const relationships: CharacterRelationship[] = [
 
   R('r-william-ubertino', 'william', 'ubertino', false, 2, [
     { revealDay: 0, type: 'trust', note: 'Старые друзья по ордену, при этом спорящие о мистике и разуме.', certainty: 'confirmed' },
-    { revealDay: 5, type: 'cooperation', note: 'Вильгельм советует Убертину бежать, пока Бернард Ги его не схватил.', certainty: 'confirmed' },
+    { revealDay: 5, type: 'cooperation', note: 'Вильгельм велит Убертину бежать, пока Бернард Ги его не погубил; они прощаются, и больше не увидятся.', certainty: 'confirmed' },
   ], ['e-ubertino-church', 'e-ubertino-flees']),
 
   R('r-william-severinus', 'william', 'severinus', false, 2, [
@@ -56,7 +56,7 @@ export const relationships: CharacterRelationship[] = [
 
   R('r-william-bernard', 'william', 'bernard', false, 3, [
     { revealDay: 4, type: 'ideological', note: 'Два инквизитора: один ищет истину по уликам, другой — виновного по прошлому.', certainty: 'confirmed' },
-    { revealDay: 5, type: 'political', note: 'На диспуте Бернард предлагает Вильгельму изложить свои взгляды папе в Авиньоне; на суде Вильгельм бессилен против его метода.', certainty: 'confirmed' },
+    { revealDay: 5, type: 'political', note: 'После ареста Сальватора Бернард напоминает Вильгельму о его прошлом инквизитора; на суде Вильгельм бессилен против его метода.', certainty: 'confirmed' },
   ], ['e-legations-arrive', 'e-disputation', 'e-trial'], 4),
 
   R('r-william-nicholas', 'william', 'nicholas', false, 1, [
@@ -92,7 +92,7 @@ export const relationships: CharacterRelationship[] = [
   ], ['e-abbot-dinner', 'e-abbot-trapped', 'e-jorge-confession']),
 
   R('r-jorge-alinardo', 'jorge', 'alinardo', true, 1, [
-    { revealDay: 4, type: 'conflict', note: 'Алинард считает, что его обошли при выборе библиотекаря, отдав должность чужеземцу.', certainty: 'interpretation' },
+    { revealDay: 4, type: 'conflict', note: 'Алинард жалуется, что библиотеку отдали не ему, а тому, кто съездил в Силос и знал наречие неверных, — намёк на испанца.', certainty: 'interpretation' },
     { revealDay: 7, critical: true, type: 'conflict', note: 'За выбором библиотекарей все эти десятилетия стоял Хорхе.', certainty: 'interpretation' },
   ], ['e-alinardo-trumpets', 'e-nicholas-librarians', 'e-catalogue', 'e-jorge-confession'], 4, false, 'interpretation'),
 
@@ -103,22 +103,22 @@ export const relationships: CharacterRelationship[] = [
 
   R('r-jorge-adelmo', 'jorge', 'adelmo', false, 1, [
     { revealDay: 0, type: 'ideological', note: 'Смешные рисунки Адельма — то, против чего проповедует Хорхе.', certainty: 'confirmed' },
-    { revealDay: 2, type: 'secret', note: 'Перед гибелью Адельм исповедался Хорхе; после исповеди он говорил Беренгару, что проклят.', certainty: 'interpretation' },
+    { revealDay: 2, type: 'secret', note: 'Перед гибелью Адельм исповедался у двери Хорхе; Вильгельм предполагает, что суровый старец отказал ему в отпущении или наложил непосильное взыскание.', certainty: 'interpretation' },
   ], ['e-scriptorium-laughter', 'e-benno-tale']),
 
   R('r-malachi-berengar', 'malachi', 'berengar', false, 3, [
     { revealDay: 0, type: 'superior', note: 'Библиотекарь и помощник.', certainty: 'confirmed' },
-    { revealDay: 7, critical: true, type: 'attachment', note: 'Их связывала многолетняя близость; на ревности Малахии сыграл Хорхе.', certainty: 'confirmed' },
+    { revealDay: 7, critical: true, type: 'attachment', note: 'Малахия ревновал «ненаглядного» Беренгара; на этой ревности сыграл Хорхе.', certainty: 'confirmed' },
   ], ['e-scriptorium-laughter', 'e-jorge-confession']),
 
   R('r-berengar-adelmo', 'berengar', 'adelmo', true, 3, [
-    { revealDay: 2, type: 'attachment', note: 'Беренгар вожделел Адельма; на кладбище тот назвал его «прекрасным учителем».', certainty: 'confirmed' },
-    { revealDay: 2, type: 'secret', note: 'Сделка: близость в обмен на доступ к запретной книге.', certainty: 'confirmed' },
+    { revealDay: 2, type: 'attachment', note: 'По словам Бенция, Беренгара снедала нездоровая страсть к Адельму.', certainty: 'confirmed' },
+    { revealDay: 2, type: 'secret', note: 'Сделка: близость в обмен на тайну, которую Адельм жаждал узнать.', certainty: 'confirmed' },
   ], ['e-adelmo-bargain', 'e-berengar-ghost', 'e-benno-tale'], 2),
 
   R('r-adelmo-venantius', 'adelmo', 'venantius', false, 2, [
     { revealDay: 0, type: 'shared-interest', note: 'Товарищи по скрипторию.', certainty: 'confirmed' },
-    { revealDay: 2, type: 'secret', note: 'После исповеди Адельм рассказал Венанцию о запретной книге.', certainty: 'confirmed' },
+    { revealDay: 2, type: 'secret', note: 'В ночь гибели Венанций пошёл за Адельмом в церковь; Вильгельм считает весьма вероятным, что Адельм передал ему тайну.', certainty: 'interpretation' },
   ], ['e-scriptorium-laughter', 'e-benno-tale']),
 
   R('r-berengar-venantius', 'berengar', 'venantius', false, 2, [
@@ -135,13 +135,15 @@ export const relationships: CharacterRelationship[] = [
   ], ['e-benno-testimony', 'e-benno-tale'], 2),
 
   R('r-malachi-severinus', 'malachi', 'severinus', true, 2, [
-    { revealDay: 5, type: 'suspicion', note: 'Бенций видел, как Малахия прятался в лечебнице до прихода Ремигия.', certainty: 'confirmed' },
-    { revealDay: 7, critical: true, type: 'conflict', note: 'Малахия убивает Северина, поверив Хорхе, что тот был любовником Беренгара.', certainty: 'confirmed' },
-  ], ['e-severinus-killed', 'e-jorge-confession'], 5),
+    { revealDay: 4, type: 'shared-interest', note: 'Малахия приходит к Северину «из-за головной боли»; травы для курения в библиотеке он ежедневно берёт у травщика.', certainty: 'confirmed' },
+    { revealDay: 5, type: 'suspicion', note: 'Бенций уверен, что Малахия выжидал в лаборатории за пологом ещё до прихода келаря.', certainty: 'confirmed' },
+    { revealDay: 7, critical: true, type: 'conflict', note: 'Малахия убивает Северина, поверив Хорхе, что Беренгар был с ним в связи и отдал ему книгу.', certainty: 'confirmed' },
+  ], ['e-severinus-poison', 'e-severinus-killed', 'e-jorge-confession'], 4),
 
   R('r-severinus-berengar', 'severinus', 'berengar', false, 1, [
-    { revealDay: 7, critical: true, type: 'secret', note: 'Книга, которую нашёл Северин, — та, что Беренгар перед смертью спрятал в лечебнице. Хорхе ложно выдал их за любовников.', certainty: 'interpretation' },
-  ], ['e-berengar-dies', 'e-severinus-killed', 'e-jorge-confession'], 7, true, 'interpretation'),
+    { revealDay: 5, type: 'secret', note: 'Северин узнаёт, что перед смертью Беренгар побывал в лечебнице, и находит у себя чужую странную книгу.', certainty: 'confirmed' },
+    { revealDay: 7, critical: true, type: 'secret', note: 'Книгу принёс в лечебницу Беренгар, чтобы читать вдали от чужих глаз. Хорхе ложно выдал их за любовников.', certainty: 'confirmed' },
+  ], ['e-severinus-strange-book', 'e-severinus-killed', 'e-jorge-confession'], 5),
 
   R('r-remigio-salvatore', 'remigio', 'salvatore', false, 3, [
     { revealDay: 1, type: 'trust', note: 'Сальватор следует за келарем, как когда-то по дорогам.', certainty: 'confirmed' },
@@ -150,8 +152,8 @@ export const relationships: CharacterRelationship[] = [
   ], ['e-aymaro-allusions', 'e-salvatore-story', 'e-remigio-pressed', 'e-trial'], 1),
 
   R('r-remigio-malachi', 'remigio', 'malachi', false, 1, [
-    { revealDay: 4, type: 'secret', note: 'Ремигий говорит, что обязан Малахии.', certainty: 'confirmed' },
-    { revealDay: 5, type: 'secret', note: 'На суде выясняется: келарь отдал Малахии на хранение письма Дольчино; Малахия это подтверждает.', certainty: 'confirmed' },
+    { revealDay: 4, type: 'secret', note: 'Ремигий отказывается свидетельствовать против Малахии: тот что-то о нём знает и всегда вёл себя порядочно.', certainty: 'confirmed' },
+    { revealDay: 5, type: 'secret', note: '«Клянись, и я клянусь!» — «Я не буду делать ничего во вред тебе». На суде выясняется: келарь отдал Малахии на хранение письма Дольчино.', certainty: 'confirmed' },
   ], ['e-remigio-pressed', 'e-trial'], 4),
 
   R('r-bernard-remigio', 'bernard', 'remigio', true, 3, [
@@ -200,8 +202,8 @@ export const relationships: CharacterRelationship[] = [
   ], ['e-legations-arrive'], 4),
 
   R('r-aymaro-malachi', 'aymaro', 'malachi', true, 1, [
-    { revealDay: 2, type: 'conflict', note: 'Аймаро жалуется, что аббатством заправляют иностранцы, — а библиотекарь Малахия «немец». Прямой ссоры между ними роман не показывает.', certainty: 'interpretation' },
-  ], ['e-scriptorium-laughter', 'e-aymaro-allusions'], 2, false, 'interpretation'),
+    { revealDay: 2, type: 'conflict', note: 'Имарос жалуется, что библиотекой заправляет кучка иностранцев; после смерти Малахии радуется, что умер «германец». На суде насмешку над Малахией Адсон приписывает ему.', certainty: 'interpretation' },
+  ], ['e-scriptorium-laughter', 'e-aymaro-allusions', 'e-trial'], 2, false, 'interpretation'),
 
   R('r-abbo-remigio', 'abbo', 'remigio', true, 1, [
     { revealDay: 0, type: 'superior', note: 'Келарь отвечает перед аббатом за хозяйство.', certainty: 'confirmed' },

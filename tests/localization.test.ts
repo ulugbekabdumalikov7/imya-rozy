@@ -97,10 +97,10 @@ describe('имена героев', () => {
   });
 
   it('устаревшие варианты имён хранятся только как альтернативные', () => {
-    const deprecated = ['Аймарий', 'Санкт-Вендельский', 'Аббон Фоссанова'];
+    const deprecated = ['Аймарий', 'Аймаро', 'Санкт-Вендельский', 'Хильдесхайм', 'Моримондск'];
     for (const c of characters) for (const d of deprecated) expect(c.name.includes(d), `${c.id}: ${c.name}`).toBe(false);
     const severinus = characters.find((c) => c.id === 'severinus')!;
-    expect(severinus.name).toContain('Эммеран'); // как в оригинале: Severino da Sant’Emmerano
+    expect(severinus.name).toContain('Эммерано'); // как в переводе Костюкович: «Северин из Сант’Эммерано»
     expect(severinus.alternativeNames).toContain('Северин Санкт-Вендельский'); // поиск по варианту перевода
   });
 });

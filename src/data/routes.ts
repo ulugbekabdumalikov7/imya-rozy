@@ -15,7 +15,7 @@ export const routes: Route[] = [
     id: 'route-william', characterId: 'william', title: 'Путь Вильгельма',
     steps: [
       s('gate', 1, 'Прибытие; эпизод с конём аббата.', 'confirmed', 'e-arrival', 0),
-      s('pilgrims-house', 1, 'Аббат приходит в келью и даёт поручение.', 'reconstructed', 'e-abbot-commission', 0),
+      s('pilgrims-house', 1, 'Аббат приходит в келью и даёт поручение.', 'confirmed', 'e-abbot-commission', 0),
       s('church', 1, 'Портал церкви, встреча с Убертином.', 'confirmed', 'e-ubertino-church', 0),
       s('herb-garden', 1, 'Беседа с Северином о травах.', 'confirmed', 'e-severinus-garden', 0),
       s('scriptorium', 1, 'Скрипторий, спор о смехе.', 'confirmed', 'e-scriptorium-laughter', 0),
@@ -23,7 +23,7 @@ export const routes: Route[] = [
       s('workshops', 1, 'Разговор со стекольщиком.', 'confirmed', 'e-nicholas-glass', 0),
       s('pigsty', 2, 'Тело Венанция.', 'confirmed', 'e-venantius-found'),
       s('church', 2, 'Аббат показывает сокровища и говорит о еретиках.', 'reconstructed', 'e-abbot-treasure'),
-      s('ossuary', 2, 'Ночью — через оссуарий.', 'confirmed', 'e-night-scriptorium'),
+      s('ossuary', 2, 'Ночью — через мощехранилище.', 'confirmed', 'e-night-scriptorium'),
       s('kitchen', 2, 'Ход выходит в кухню.', 'confirmed', 'e-night-scriptorium'),
       s('scriptorium', 2, 'Стол Венанция, похищенная книга.', 'confirmed', 'e-night-scriptorium'),
       s('library', 2, 'Блуждание по лабиринту.', 'confirmed', 'e-first-labyrinth'),
@@ -36,7 +36,7 @@ export const routes: Route[] = [
       s('hospital', 5, 'Северин мёртв.', 'confirmed', 'e-severinus-killed'),
       s('chapter-house', 5, 'Суд Бернарда Ги.', 'confirmed', 'e-trial'),
       s('church', 5, 'Проповедь Хорхе на повечерии.', 'confirmed', 'e-jorge-sermon'),
-      s('church', 6, 'Смерть Малахии на утрене.', 'confirmed', 'e-malachi-death'),
+      s('church', 6, 'Смерть Малахии на полунощнице.', 'confirmed', 'e-malachi-death'),
       s('scriptorium', 6, 'Каталог библиотеки.', 'confirmed', 'e-catalogue'),
       s('abbots-house', 6, 'Аббат велит уехать.', 'reconstructed', 'e-abbot-dismisses'),
       s('stables', 6, 'Разгадка «четырёх».', 'confirmed', 'e-quatuor-solved', 6, true),
@@ -109,7 +109,7 @@ export const routes: Route[] = [
       s('scriptorium', 1, 'Встречает Вильгельма в скриптории.', 'confirmed', 'e-scriptorium-laughter', 0),
       s('hospital', 5, 'Бенций видел, как он прятался в лечебнице.', 'confirmed', 'e-severinus-killed'),
       s('chapter-house', 5, 'На суде подтверждает, что хранил письма Ремигия.', 'confirmed', 'e-trial'),
-      s('church', 6, 'Умирает на утрене.', 'confirmed', 'e-malachi-death'),
+      s('church', 6, 'Умирает на полунощнице.', 'confirmed', 'e-malachi-death'),
     ],
   },
   {
@@ -117,7 +117,7 @@ export const routes: Route[] = [
     steps: [
       s('scriptorium', 1, 'Спор о смехе.', 'confirmed', 'e-scriptorium-laughter', 0),
       s('church', 5, 'Проповедь о конце времён.', 'confirmed', 'e-jorge-sermon'),
-      s('church', 6, 'На утрене, когда умирает Малахия.', 'confirmed', 'e-malachi-death'),
+      s('church', 6, 'На полунощнице, когда умирает Малахия.', 'confirmed', 'e-malachi-death'),
       s('finis-africae', 6, 'Запирает аббата и ждёт следователей.', 'confirmed', 'e-abbot-trapped', 7, true),
       s('library', 7, 'Пожар.', 'confirmed', 'e-fire', 7, true),
     ],
@@ -125,7 +125,7 @@ export const routes: Route[] = [
   {
     id: 'route-abbo', characterId: 'abbo', title: 'Путь аббата',
     steps: [
-      s('abbots-house', 1, 'Даёт поручение Вильгельму.', 'confirmed', 'e-abbot-commission', 0),
+      s('pilgrims-house', 1, 'Приходит в келью Вильгельма и даёт поручение.', 'confirmed', 'e-abbot-commission', 0),
       s('pigsty', 2, 'У тела Венанция.', 'reconstructed', 'e-venantius-found'),
       s('church', 2, 'Показывает Вильгельму сокровища.', 'reconstructed', 'e-abbot-treasure'),
       s('dormitory', 3, 'Исчезновение Беренгара.', 'reconstructed', 'e-berengar-missing'),
