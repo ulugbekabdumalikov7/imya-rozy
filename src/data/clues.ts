@@ -16,16 +16,16 @@ export const clues: Clue[] = [
     eventId: 'e-scriptorium-laughter', locationId: 'scriptorium', characterIds: ['adelmo', 'jorge', 'william'], revealDay: 0, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
-    id: 'c-adelmo-fall', kind: 'clue', title: 'Окна, которые не открываются',
-    description: 'Окна Эдифиция над обрывом не открываются. Значит, Адельм не мог выпасть из них, как считает аббат.',
-    later: [{ revealDay: 3, text: 'Вывод Вильгельма: Адельм бросился с высоты сам, тело сползло вместе с осыпью к подножию здания.', certainty: 'interpretation' }],
-    eventId: 'e-adelmo-reasoning', locationId: 'ravine', characterIds: ['adelmo', 'william'], revealDay: 0, certainty: 'interpretation', sourceIds: ['novel'],
+    id: 'c-adelmo-fall', kind: 'clue', title: 'Падение не из окна',
+    description: 'Чтобы выбросить тело из окна Эдифиция, убийце пришлось бы поднять его наверх и открыть окно. Простейшее объяснение — Адельм бросился сам.',
+    later: [{ revealDay: 2, text: 'Вывод Вильгельма: с кладбища Адельм ушёл к ограде за конюшнями и бросился в обрыв ещё до бури; осыпь потом принесла тело к подножию Эдифиция, между северной и восточной башнями.', certainty: 'interpretation' }],
+    eventId: 'e-adelmo-reasoning', locationId: 'ravine', characterIds: ['adelmo', 'william'], revealDay: 0, certainty: 'interpretation', sourceIds: ['novel', 'litcharts', 'nusquamia'],
   },
   {
     id: 't-berengar-ghost', kind: 'testimony', title: 'Беренгар: «я видел Адельма»',
     speakerId: 'berengar',
     description: 'Беренгар утверждает, что в ночь гибели встретил Адельма на кладбище и тот говорил о своём проклятии.',
-    later: [{ revealDay: 3, text: 'Рассказ правдив в главном: Адельм действительно был в отчаянии. Но Беренгар умалчивает о своей роли в этом.', certainty: 'interpretation' }],
+    later: [{ revealDay: 2, text: 'Рассказ правдив в главном: Адельм действительно был в отчаянии. Но о своей роли в этом Беренгар умалчивает — её раскрывает Бенций.', certainty: 'interpretation' }],
     eventId: 'e-berengar-ghost', locationId: 'cemetery', characterIds: ['berengar', 'adelmo'], revealDay: 2, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
@@ -43,8 +43,14 @@ export const clues: Clue[] = [
   {
     id: 't-benno', kind: 'testimony', title: 'Бенций о споре в скриптории',
     speakerId: 'benno',
-    description: 'Бенций рассказывает о споре о смехе и загадках, о «пределе Африки» и о том, что Беренгар вожделел Адельма.',
-    eventId: 'e-benno-testimony', locationId: 'cloister', characterIds: ['benno', 'berengar', 'adelmo', 'venantius', 'jorge'], revealDay: 2, certainty: 'confirmed', sourceIds: ['novel'],
+    description: 'Бенций рассказывает о недавнем споре в скриптории: Венанций ссылался на книгу Аристотеля о комедии, Хорхе возражал, Беренгар пошутил про «африканцев», а Венанций и Адельм потом расспрашивали его о книге с пометкой «finis Africae».',
+    eventId: 'e-benno-testimony', locationId: 'scriptorium', characterIds: ['benno', 'berengar', 'adelmo', 'venantius', 'jorge'], revealDay: 2, certainty: 'confirmed', sourceIds: ['novel', 'litcharts'],
+  },
+  {
+    id: 't-benno-tale', kind: 'testimony', title: 'Бенций о сделке Адельма',
+    speakerId: 'benno',
+    description: 'Адельм согласился на близость с Беренгаром в обмен на доступ к запретной книге, потом исповедался Хорхе, рассказал о книге Венанцию и ушёл на кладбище.',
+    eventId: 'e-benno-tale', characterIds: ['benno', 'adelmo', 'berengar', 'jorge', 'venantius'], revealDay: 2, certainty: 'confirmed', sourceIds: ['novel', 'litcharts'],
   },
   {
     id: 'c-finis-words', kind: 'clue', title: 'Слова «предел Африки»',
@@ -54,13 +60,17 @@ export const clues: Clue[] = [
   {
     id: 't-alinardo', kind: 'testimony', title: 'Алинард о трубах и библиотекарях',
     speakerId: 'alinardo',
-    description: 'Старик говорит о лабиринте, о несправедливом выборе библиотекаря и о том, что смерти исполняют пророчество Апокалипсиса.',
-    eventId: 'e-alinardo-labyrinth', locationId: 'cloister', characterIds: ['alinardo'], revealDay: 2, certainty: 'interpretation', sourceIds: ['novel'],
+    description: 'Старик называет библиотеку лабиринтом, видит в смертях знаки Апокалипсиса и подсказывает тайный вход в Эдифиций через оссуарий.',
+    later: [{ revealDay: 4, text: 'На четвёртый день он связывает смерти с трубами Апокалипсиса, предсказывает следующую и жалуется, что библиотекарем когда-то выбрали чужеземца, а не его.', certainty: 'confirmed' }],
+    eventId: 'e-alinardo-labyrinth', locationId: 'ossuary', characterIds: ['alinardo'], revealDay: 2, certainty: 'confirmed', sourceIds: ['novel', 'litcharts', 'wordsandpeace'],
   },
   {
     id: 'c-venantius-notes', kind: 'object', title: 'Записи Венанция',
-    description: 'Греческие заметки и строка тайнописи знаками зодиака на столе Венанция.',
-    later: [{ revealDay: 4, text: 'Расшифровка: тайна «предела Африки» связана с рукой над идолом, первым и седьмым из четырёх. Греческие заметки описывают книгу, которую читал Венанций.', certainty: 'confirmed' }],
+    description: 'Заметки по-гречески на столе Венанция; у пламени на пергаменте проступает строка тайнописи знаками зодиака.',
+    later: [
+      { revealDay: 3, text: 'Расшифровка тайнописи: «тайна предела Африки: рука над идолом действует на первое и седьмое из четырёх».', certainty: 'confirmed' },
+      { revealDay: 4, text: 'Греческие заметки, прочитанные с новыми стёклами, бессвязны: похоже, это выписки из книги, которую читал Венанций.', certainty: 'confirmed' },
+    ],
     eventId: 'e-night-scriptorium', locationId: 'scriptorium', characterIds: ['venantius', 'william'], revealDay: 2, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
@@ -72,6 +82,7 @@ export const clues: Clue[] = [
   {
     id: 'c-stolen-lenses', kind: 'object', title: 'Украденные очки',
     description: 'В ту же ночь пропадают очки Вильгельма — без них он не может читать мелкие записи.',
+    later: [{ revealDay: 4, text: 'Северин находит очки в одежде мёртвого Беренгара.', certainty: 'confirmed' }],
     eventId: 'e-night-scriptorium', locationId: 'scriptorium', characterIds: ['william', 'nicholas'], revealDay: 2, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
@@ -81,8 +92,8 @@ export const clues: Clue[] = [
   },
   {
     id: 'c-bloody-cloth', kind: 'clue', title: 'Окровавленная ткань в келье',
-    description: 'В келье пропавшего Беренгара находят ткань со следами крови.',
-    eventId: 'e-berengar-missing', locationId: 'dormitory', characterIds: ['berengar'], revealDay: 3, certainty: 'interpretation', sourceIds: ['novel', 'litcharts'],
+    description: 'Под ложем в келье пропавшего Беренгара находят ткань со следами крови.',
+    eventId: 'e-berengar-missing', locationId: 'dormitory', characterIds: ['berengar'], revealDay: 3, certainty: 'confirmed', sourceIds: ['novel', 'litcharts', 'supersummary'],
   },
   {
     id: 'c-dolcinian-past', kind: 'fact', title: 'Ремигий и Сальватор — бывшие дольчинисты',
@@ -91,13 +102,19 @@ export const clues: Clue[] = [
   },
   {
     id: 'c-black-tongue', kind: 'clue', title: 'Чёрный язык Беренгара',
-    description: 'Северин замечает почерневший язык у утопленника.',
-    eventId: 'e-berengar-found', locationId: 'balneary', characterIds: ['berengar', 'severinus'], revealDay: 4, certainty: 'confirmed', sourceIds: ['novel', 'litcharts'],
+    description: 'При осмотре тела Северин и Вильгельм замечают почерневший язык — странный признак для утопленника.',
+    eventId: 'e-severinus-poison', characterIds: ['berengar', 'severinus', 'william'], revealDay: 4, certainty: 'confirmed', sourceIds: ['novel', 'litcharts', 'wordsandpeace'],
+  },
+  {
+    id: 't-remigio-kitchen', kind: 'testimony', title: 'Ремигий: «я видел его в кухне»',
+    speakerId: 'remigio',
+    description: 'Келарь признаётся, что в ночь смерти Венанция, придя на тайное свидание, нашёл его тело в кухне Эдифиция — без следов борьбы, рядом с разбитой чашей для воды — и ушёл, ничего не сказав.',
+    eventId: 'e-remigio-pressed', locationId: 'kitchen', characterIds: ['remigio', 'venantius'], revealDay: 4, certainty: 'confirmed', sourceIds: ['novel', 'litcharts', 'wordsandpeace'],
   },
   {
     id: 't-severinus-poison', kind: 'testimony', title: 'Северин о пропавшем яде',
     speakerId: 'severinus',
-    description: 'Травник рассказывает, что когда-то из его лаборатории исчезло сильнодействующее ядовитое вещество.',
+    description: 'Травник рассказывает, что когда-то, после взлома в бурю, из лечебницы исчез сильнодействующий яд, вызывающий слабость, паралич и смерть.',
     eventId: 'e-severinus-poison', locationId: 'hospital', characterIds: ['severinus'], revealDay: 4, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
@@ -108,7 +125,7 @@ export const clues: Clue[] = [
   {
     id: 'c-strange-book', kind: 'testimony', title: 'Северин: странная книга',
     speakerId: 'severinus',
-    description: 'Северин сообщает, что нашёл у себя книгу, не похожую на другие.',
+    description: 'Северин сообщает, что нашёл в лечебнице книгу, не похожую на другие. Разговор, кажется, слышат Хорхе, Ремигий и Аймаро.',
     eventId: 'e-severinus-strange-book', locationId: 'hospital', characterIds: ['severinus', 'william'], revealDay: 5, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
@@ -117,10 +134,16 @@ export const clues: Clue[] = [
     eventId: 'e-severinus-killed', locationId: 'hospital', characterIds: ['severinus'], revealDay: 5, certainty: 'confirmed', sourceIds: ['novel', 'wiki-novel'],
   },
   {
+    id: 't-benno-malachi', kind: 'testimony', title: 'Бенций: Малахия был в лечебнице',
+    speakerId: 'benno',
+    description: 'Бенций говорит, что до прихода Ремигия видел, как в лечебнице прячется Малахия.',
+    eventId: 'e-severinus-killed', locationId: 'hospital', characterIds: ['benno', 'malachi'], revealDay: 5, certainty: 'confirmed', sourceIds: ['novel', 'litcharts'],
+  },
+  {
     id: 't-benno-book', kind: 'testimony', title: 'Бенций: «я взял книгу»',
     speakerId: 'benno',
-    description: 'Бенций признаётся, что унёс книгу из лечебницы и передал её Малахии.',
-    eventId: 'e-benno-book', locationId: 'scriptorium', characterIds: ['benno', 'malachi'], revealDay: 5, certainty: 'confirmed', sourceIds: ['novel'],
+    description: 'Бенций признаётся, что унёс книгу из лечебницы и вернул её библиотеке, когда Малахия сделал его своим помощником.',
+    eventId: 'e-benno-book', locationId: 'hospital', characterIds: ['benno', 'malachi'], revealDay: 5, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
     id: 't-remigio-confession', kind: 'testimony', title: 'Признание Ремигия',
@@ -132,13 +155,14 @@ export const clues: Clue[] = [
   {
     id: 'c-malachi-words', kind: 'testimony', title: 'Последние слова Малахии',
     speakerId: 'malachi',
-    description: 'Умирая, Малахия говорит, что его предупреждали, и о жале тысячи скорпионов.',
+    description: 'Умирая, Малахия говорит: «Он сказал мне… правда… в ней сила тысячи скорпионов».',
     eventId: 'e-malachi-death', locationId: 'church', characterIds: ['malachi'], revealDay: 6, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
     id: 'c-librarian-succession', kind: 'testimony', title: 'Хроника библиотекарей',
     speakerId: 'nicholas',
-    description: 'Николай рассказывает, кто и когда занимал должность библиотекаря и почему выбор каждый раз удивлял общину.',
+    description: 'Николай рассказывает, что библиотекарь обычно становится аббатом, и вспоминает прежних библиотекарей.',
+    later: [{ revealDay: 6, text: 'Итальянские монахи радуются смерти «немца» Малахии и говорят, что следующий библиотекарь должен знать греческий и арабский.', certainty: 'confirmed' }],
     eventId: 'e-nicholas-librarians', locationId: 'church', characterIds: ['nicholas', 'malachi', 'alinardo', 'jorge'], revealDay: 6, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
@@ -148,13 +172,13 @@ export const clues: Clue[] = [
   },
   {
     id: 'c-catalogue', kind: 'object', title: 'Запись в каталоге',
-    description: 'В каталоге несколько разноязычных сочинений переплетены в один том, а записи сделаны разными руками.',
+    description: 'В записи о томе «finis Africae» значатся несколько сочинений на арабском, сирийском, латыни и греческом, среди них «Киприанов пир». Каталог вели три руки; около полувека назад был библиотекарь, которого нет в списках.',
     later: [{ revealDay: 7, critical: true, text: 'Греческое сочинение в этом томе — вторая книга «Поэтики» Аристотеля.', certainty: 'confirmed' }],
     eventId: 'e-catalogue', locationId: 'scriptorium', characterIds: ['william'], revealDay: 6, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
     id: 'c-quatuor', kind: 'clue', title: 'Слово «quatuor» над зеркалом',
-    description: '«Четыре» из тайнописи — это слово надписи над зеркалом. Нажатие на его первую и седьмую буквы открывает проход.',
+    description: '«Четыре» из тайнописи — это слово quatuor надписи над зеркалом. Нажатие на его первую и седьмую буквы (q и r) открывает проход. Догадку подсказывает искажённая латынь Сальватора «tertius equi».',
     eventId: 'e-quatuor-solved', locationId: 'mirror-room', characterIds: ['william', 'adso'], revealDay: 6, critical: true, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
@@ -167,7 +191,7 @@ export const clues: Clue[] = [
   {
     id: 'f-adelmo-suicide', kind: 'fact', title: 'Адельм покончил с собой',
     description: 'Первая смерть не была убийством: Адельм бросился с высоты в отчаянии.',
-    eventId: 'e-adelmo-death', locationId: 'ravine', characterIds: ['adelmo'], revealDay: 3, certainty: 'confirmed', sourceIds: ['novel', 'wiki-novel'],
+    eventId: 'e-adelmo-death', locationId: 'ravine', characterIds: ['adelmo'], revealDay: 2, certainty: 'confirmed', sourceIds: ['novel', 'wiki-novel'],
   },
   {
     id: 'f-poison-book', kind: 'fact', title: 'Смерти причиняет книга',
@@ -181,7 +205,7 @@ export const clues: Clue[] = [
   },
   {
     id: 'f-malachi-killed', kind: 'fact', title: 'Северина убил Малахия',
-    description: 'Малахия убил Северина по наущению Хорхе.',
+    description: 'Малахия убил Северина: Хорхе внушил ему, что Беренгар и Северин были любовниками.',
     eventId: 'e-jorge-confession', locationId: 'hospital', characterIds: ['malachi', 'severinus', 'jorge'], revealDay: 7, critical: true, certainty: 'confirmed', sourceIds: ['novel', 'wiki-novel'],
   },
   {
@@ -200,9 +224,9 @@ export const hypotheses: Hypothesis[] = [
     holderIds: ['abbo'],
     statement: 'Несчастный случай или убийство: молодой монах выпал или был выброшен из окна.',
     initialStatus: 'open', finalStatus: 'refuted',
-    verdict: { revealDay: 1, text: 'Окна над обрывом не открываются. Версия опровергнута в первый же день.', certainty: 'interpretation' },
+    verdict: { revealDay: 2, text: 'Отвергнута: выбросить тело из окна было бы слишком трудно, а на второй день выясняется, что Адельм в отчаянии сам бросился с ограды.', certainty: 'interpretation' },
     links: [
-      { clueId: 'c-adelmo-fall', relation: 'contradicts', note: 'Окна заперты и не открываются.', revealDay: 0 },
+      { clueId: 'c-adelmo-fall', relation: 'contradicts', note: 'Убийце пришлось бы поднять тело к окну и открыть его.', revealDay: 0 },
     ],
     eventIds: ['e-abbot-commission', 'e-adelmo-reasoning'], revealDay: 0, sourceIds: ['novel'],
   },
@@ -211,14 +235,14 @@ export const hypotheses: Hypothesis[] = [
     holderIds: ['william'],
     statement: 'Адельм бросился с высоты сам, раздавленный стыдом и страхом проклятия.',
     initialStatus: 'open', finalStatus: 'confirmed',
-    verdict: { revealDay: 3, text: 'Подтверждено: рассказ Беренгара и выяснившаяся сделка объясняют отчаяние Адельма.', certainty: 'confirmed' },
+    verdict: { revealDay: 2, text: 'Подтверждено на второй день: рассказ Беренгара о встрече на кладбище и рассказ Бенция о сделке и исповеди объясняют отчаяние Адельма.', certainty: 'confirmed' },
     links: [
       { clueId: 'c-adelmo-fall', relation: 'supports', note: 'Падение не из окна оставляет место для прыжка с другой высоты.', revealDay: 0 },
       { clueId: 't-berengar-ghost', relation: 'supports', note: 'Адельм говорил о проклятии.', revealDay: 2 },
-      { clueId: 't-benno', relation: 'context', note: 'Бенций намекает на отношения Беренгара и Адельма.', revealDay: 2 },
-      { clueId: 'f-adelmo-suicide', relation: 'supports', note: 'Итоговый вывод.', revealDay: 3 },
+      { clueId: 't-benno-tale', relation: 'supports', note: 'Сделка с Беренгаром и исповедь у Хорхе.', revealDay: 2 },
+      { clueId: 'f-adelmo-suicide', relation: 'supports', note: 'Итоговый вывод.', revealDay: 2 },
     ],
-    eventIds: ['e-adelmo-death', 'e-berengar-ghost'], revealDay: 2, sourceIds: ['novel'],
+    eventIds: ['e-adelmo-death', 'e-adelmo-reasoning', 'e-berengar-ghost', 'e-benno-tale'], revealDay: 0, sourceIds: ['novel', 'litcharts'],
   },
   {
     id: 'h-apocalypse', title: 'Смерти следуют трубам Апокалипсиса',
@@ -227,7 +251,7 @@ export const hypotheses: Hypothesis[] = [
     initialStatus: 'open', finalStatus: 'refuted',
     verdict: { revealDay: 7, critical: true, text: 'Схема ложна: совпадения случайны. Но Хорхе, узнав о ней, стал ей подыгрывать — и потому ложная версия привела Вильгельма к истине.', certainty: 'confirmed' },
     links: [
-      { clueId: 't-alinardo', relation: 'supports', note: 'Источник версии — речи Алинарда.', revealDay: 2 },
+      { clueId: 't-alinardo', relation: 'supports', note: 'Источник версии — речи Алинарда о знаках Апокалипсиса; на четвёртый день он прямо называет трубы.', revealDay: 2 },
       { clueId: 'c-snow-trail', relation: 'context', note: 'Кровь — «вторая труба»: совпадение, которое кажется знаком.', revealDay: 2 },
       { clueId: 'c-black-tongue', relation: 'context', note: 'Смерть в воде как будто продолжает ряд.', revealDay: 4 },
       { clueId: 'c-armillary', relation: 'context', note: 'Удар небесной сферой можно подогнать под «поражение светил».', revealDay: 5 },
@@ -246,6 +270,7 @@ export const hypotheses: Hypothesis[] = [
       { clueId: 't-berengar-ghost', relation: 'context', note: 'Беренгар явно что-то скрывает.', revealDay: 2 },
       { clueId: 'c-bloody-cloth', relation: 'supports', note: 'Подозрительная находка в его келье.', revealDay: 3 },
       { clueId: 'c-black-tongue', relation: 'contradicts', note: 'Беренгар умер с теми же признаками, что и Венанций.', revealDay: 4 },
+      { clueId: 't-remigio-kitchen', relation: 'contradicts', note: 'Тело Венанция лежало в кухне без следов борьбы.', revealDay: 4 },
       { clueId: 'f-berengar-moved', relation: 'contradicts', note: 'Итог: он только перенёс тело.', revealDay: 7, critical: true },
     ],
     eventIds: ['e-berengar-missing'], revealDay: 3, sourceIds: ['novel'],
@@ -259,7 +284,8 @@ export const hypotheses: Hypothesis[] = [
     links: [
       { clueId: 'c-black-fingers', relation: 'supports', note: 'Почерневшие пальцы.', revealDay: 2 },
       { clueId: 'c-black-tongue', relation: 'supports', note: 'Почерневший язык.', revealDay: 4 },
-      { clueId: 't-severinus-poison', relation: 'supports', note: 'Из лаборатории когда-то пропал яд.', revealDay: 4 },
+      { clueId: 't-severinus-poison', relation: 'supports', note: 'Из лечебницы когда-то пропал яд.', revealDay: 4 },
+      { clueId: 't-remigio-kitchen', relation: 'supports', note: 'Венанций лежал в кухне без следов борьбы, рядом с разбитой чашей.', revealDay: 4 },
       { clueId: 'c-malachi-words', relation: 'supports', note: 'Те же признаки у Малахии.', revealDay: 6 },
       { clueId: 'f-poison-book', relation: 'supports', note: 'Итоговое объяснение.', revealDay: 7, critical: true },
     ],
@@ -304,7 +330,7 @@ export const hypotheses: Hypothesis[] = [
     initialStatus: 'open', finalStatus: 'confirmed',
     verdict: { revealDay: 7, critical: true, text: 'Подтверждено: это Хорхе.', certainty: 'confirmed' },
     links: [
-      { clueId: 't-alinardo', relation: 'supports', note: 'Обида Алинарда на несправедливый выбор.', revealDay: 2 },
+      { clueId: 't-alinardo', relation: 'supports', note: 'Обида Алинарда на несправедливый выбор.', revealDay: 4 },
       { clueId: 'c-librarian-succession', relation: 'supports', note: 'Странная преемственность должности.', revealDay: 6 },
       { clueId: 'c-catalogue', relation: 'supports', note: 'Почерки в каталоге.', revealDay: 6 },
       { clueId: 'f-jorge-master', relation: 'supports', note: 'Итоговое объяснение.', revealDay: 7, critical: true },
@@ -319,6 +345,7 @@ export const hypotheses: Hypothesis[] = [
     verdict: { revealDay: 7, critical: true, text: 'Верно лишь отчасти: Малахия убил Северина, но был орудием Хорхе.', certainty: 'confirmed' },
     links: [
       { clueId: 't-benno-book', relation: 'supports', note: 'Книга ушла к Малахии.', revealDay: 5 },
+      { clueId: 't-benno-malachi', relation: 'supports', note: 'Бенций видел Малахию в лечебнице до прихода Ремигия.', revealDay: 5 },
       { clueId: 'c-malachi-words', relation: 'context', note: 'Малахию «предупреждали» — значит, был кто-то над ним.', revealDay: 6 },
       { clueId: 'f-malachi-killed', relation: 'supports', note: 'Итоговое объяснение.', revealDay: 7, critical: true },
       { clueId: 'f-jorge-master', relation: 'context', note: 'Приказ исходил от Хорхе.', revealDay: 7, critical: true },
