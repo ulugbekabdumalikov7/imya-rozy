@@ -137,7 +137,7 @@ export const clues: Clue[] = [
   },
   {
     id: 'c-armillary', kind: 'object', title: 'Армиллярная сфера',
-    description: 'Металлический армиллярная сфера на треноге, которой разбили голову Северину.',
+    description: 'Металлическая армиллярная сфера на треноге, которой разбили голову Северину.',
     eventId: 'e-severinus-killed', locationId: 'hospital', characterIds: ['severinus'], revealDay: 5, certainty: 'confirmed', sourceIds: ['novel', 'wiki-novel'],
   },
   {
