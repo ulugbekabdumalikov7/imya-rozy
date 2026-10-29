@@ -202,7 +202,7 @@ export const relationships: CharacterRelationship[] = [
   ], ['e-legations-arrive'], 4),
 
   R('r-aymaro-malachi', 'aymaro', 'malachi', true, 1, [
-    { revealDay: 2, type: 'conflict', note: 'Имарос жалуется, что библиотекой заправляет кучка иностранцев; после смерти Малахии радуется, что умер «германец». На суде насмешку над Малахией Адсон приписывает ему.', certainty: 'interpretation' },
+    { revealDay: 2, type: 'conflict', note: 'Аймаро жалуется, что библиотекой заправляет кучка иностранцев; после смерти Малахии радуется, что умер «германец». На суде насмешку над Малахией Адсон приписывает ему.', certainty: 'interpretation' },
   ], ['e-scriptorium-laughter', 'e-aymaro-allusions', 'e-trial'], 2, false, 'interpretation'),
 
   R('r-abbo-remigio', 'abbo', 'remigio', true, 1, [

@@ -20,7 +20,7 @@ export {
 };
 
 export const hourLabels: Record<CanonicalHour, string> = {
-  matins: 'Полунощница',
+  matins: 'Утреня',
   lauds: 'Хвалитны',
   prime: 'Час первый',
   terce: 'Час третий',

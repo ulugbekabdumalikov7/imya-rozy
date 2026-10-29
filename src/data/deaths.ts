@@ -9,14 +9,14 @@ import type { DeathCase } from './types';
 export const deaths: DeathCase[] = [
   {
     id: 'd-adelmo', characterId: 'adelmo', eventId: 'e-adelmo-death', foundLocationId: 'ravine', day: 0,
-    circumstances: 'После бури изорванное тело находят под отвесным обрывом у подножия восточной башни Храмины.',
-    initialVersion: { revealDay: 0, text: 'Наутро все окна Храмины были закрыты; аббат боится, что Адельма выбросили из окна, то есть что это убийство.', certainty: 'confirmed' },
+    circumstances: 'После бури изорванное тело находят под отвесным обрывом у подножия восточной башни Эдифиция.',
+    initialVersion: { revealDay: 0, text: 'Наутро все окна Эдифиция были закрыты; аббат боится, что Адельма выбросили из окна, то есть что это убийство.', certainty: 'confirmed' },
     revealedLater: [
       { revealDay: 1, text: 'Вильгельм считает убийство маловероятным: под башней нет скал, о которые разбилось тело, а убийце пришлось бы поднять жертву к высокому окну. Проще предположить, что Адельм бросился с уступа стены, а оползень снёс тело к башне.', certainty: 'interpretation' },
       { revealDay: 2, text: 'Беренгар видел Адельма в ту ночь на кладбище в отчаянии; Бенций рассказывает о сделке с Беренгаром и исповеди у Хорхе.', certainty: 'confirmed' },
     ],
     finalExplanation: { revealDay: 2, text: 'Самоубийство. После сделки с Беренгаром и исповеди у Хорхе Адельм бросился с уступа стены за скотным двором ещё до бури; оползень протащил тело под восточную и северную башни. Убийцы у этой смерти нет.', certainty: 'confirmed' },
-    deathLocationId: { revealDay: 1, locationId: 'ravine', text: 'По выводу Вильгельма — с уступа стены, откуда сбрасывают мусор (за скотным двором), а не из окна Храмины.', certainty: 'interpretation' },
+    deathLocationId: { revealDay: 1, locationId: 'ravine', text: 'По выводу Вильгельма — с уступа стены, откуда сбрасывают мусор (за скотным двором), а не из окна Эдифиция.', certainty: 'interpretation' },
     finalKind: 'suicide',
     clueIds: ['c-adelmo-fall', 't-berengar-ghost', 'f-adelmo-suicide'],
     relatedCharacterIds: ['berengar', 'abbo', 'william'],
@@ -24,7 +24,7 @@ export const deaths: DeathCase[] = [
   },
   {
     id: 'd-venantius', characterId: 'venantius', eventId: 'e-venantius-found', foundLocationId: 'pigsty', day: 2,
-    circumstances: 'Во время полунощницы свинари находят тело вниз головой в бочке со свиной кровью — на задворках хора, перед скотным двором.',
+    circumstances: 'Во время утрени свинари находят тело вниз головой в бочке со свиной кровью — на задворках хора, перед скотным двором.',
     initialVersion: { revealDay: 2, text: 'Убийство, связанное со смертью Адельма; жуткая постановка заставляет думать о злом умысле.', certainty: 'confirmed' },
     revealedLater: [
       { revealDay: 2, text: 'На теле нет ран; к сосуду тянется след от Эдифиция. Похоже, Венанций был мёртв до того, как попал в кровь.', certainty: 'interpretation' },
@@ -32,7 +32,7 @@ export const deaths: DeathCase[] = [
       { revealDay: 4, text: 'Ремигий признаётся, что ночью видел тело Венанция в кухне, возле кадки, рядом с разбитой чашкой и разлитой водой, и промолчал.', certainty: 'confirmed' },
     ],
     finalExplanation: { revealDay: 7, critical: true, text: 'Венанций умер от яда, читая книгу из Finis Africae. Беренгар нашёл тело и, боясь разоблачения, бросил его в сосуд с кровью.', certainty: 'confirmed' },
-    deathLocationId: { revealDay: 4, locationId: 'kitchen', text: 'По словам Ремигия, ночью тело лежало в кухне Храмины; к бочке его перенесли позже.', certainty: 'interpretation' },
+    deathLocationId: { revealDay: 4, locationId: 'kitchen', text: 'По словам Ремигия, ночью тело лежало в кухне Эдифиция; к бочке его перенесли позже.', certainty: 'interpretation' },
     finalKind: 'poison',
     clueIds: ['c-snow-trail', 'c-black-fingers', 't-remigio-kitchen', 'f-berengar-moved', 'f-poison-book'],
     relatedCharacterIds: ['berengar', 'jorge', 'severinus'],
@@ -62,7 +62,7 @@ export const deaths: DeathCase[] = [
       { revealDay: 5, text: 'Книгу ещё до прихода Вильгельма унёс Бенций и отдал Малахии.', certainty: 'confirmed' },
       { revealDay: 6, text: 'Смерть Малахии при арестованном Ремигии опровергает обвинение.', certainty: 'confirmed' },
     ],
-    finalExplanation: { revealDay: 7, critical: true, text: 'Убийство. Хорхе велел Малахии любой ценой вернуть книгу и внушил ему, что Беренгар был в связи с Северином и отдал ему книгу; в ревности Малахия ударил Северина небесным глобусом. Северин открыл ему без опаски: Малахия каждый день приходил за травами.', certainty: 'confirmed' },
+    finalExplanation: { revealDay: 7, critical: true, text: 'Убийство. Хорхе велел Малахии любой ценой вернуть книгу и внушил ему, что Беренгар был в связи с Северином и отдал ему книгу; в ревности Малахия ударил Северина армиллярной сферой. Северин открыл ему без опаски: Малахия каждый день приходил за травами.', certainty: 'confirmed' },
     finalKind: 'killed',
     clueIds: ['c-armillary', 'c-strange-book', 't-benno-malachi', 't-benno-book', 'f-malachi-killed'],
     relatedCharacterIds: ['malachi', 'jorge', 'remigio', 'benno', 'bernard'],
@@ -70,7 +70,7 @@ export const deaths: DeathCase[] = [
   },
   {
     id: 'd-malachi', characterId: 'malachi', eventId: 'e-malachi-death', foundLocationId: 'church', day: 6,
-    circumstances: 'Во время полунощницы библиотекарь падает на хорах и умирает со словами о тысяче скорпионов. Подушечки трёх пальцев правой руки у него чёрные.',
+    circumstances: 'Во время утрени библиотекарь падает на хорах и умирает со словами о тысяче скорпионов. Подушечки трёх пальцев правой руки у него чёрные.',
     initialVersion: { revealDay: 6, text: 'Очередная смерть с признаками яда; дело Бернарда Ги рассыпается.', certainty: 'confirmed' },
     revealedLater: [
       { revealDay: 6, text: 'Перед смертью Малахия говорит: «Меня предупреждали… Это правда…»', certainty: 'confirmed' },
