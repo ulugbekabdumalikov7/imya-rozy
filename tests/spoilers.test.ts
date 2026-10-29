@@ -62,18 +62,23 @@ describe('в режиме без спойлеров разгадка не про
 });
 
 describe('по ходу чтения', () => {
-  it('на третий день ещё не известно о смерти Беренгара, на четвёртый — известно', () => {
+  // тело Беренгара Вильгельм и Адсон находят в ночь третьего дня (глава «День третий. Ночь»)
+  it('на второй день ещё не известно о смерти Беренгара, на третий — известно', () => {
     const at = (s: SpoilerState) => deaths.map((d) => deathView(d, s)).filter(Boolean).map((d) => d!.death.id);
-    expect(at(DAY3)).not.toContain('d-berengar');
-    expect(at({ mode: 'progress', day: 4 })).toContain('d-berengar');
+    expect(at({ mode: 'progress', day: 2 })).not.toContain('d-berengar');
+    expect(at(DAY3)).toContain('d-berengar');
   });
-  it('до седьмого дня место фактической смерти Венанция не раскрыто', () => {
-    const v = deathView(deaths.find((d) => d.id === 'd-venantius')!, DAY6)!;
-    expect(v.deathLocation).toBeNull();
-    expect(v.final).toBeNull();
+  // на четвёртый день Ремигий признаётся, что видел тело Венанция в кухне, — но механизм смерти остаётся тайной
+  it('место смерти Венанция известно с четвёртого дня, а итог — только при открытой разгадке', () => {
+    const v3 = deathView(deaths.find((d) => d.id === 'd-venantius')!, DAY3)!;
+    expect(v3.deathLocation).toBeNull();
+    const v6 = deathView(deaths.find((d) => d.id === 'd-venantius')!, DAY6)!;
+    expect(v6.deathLocation?.locationId).toBe('kitchen');
+    expect(v6.final).toBeNull();
   });
-  it('итог Адельма открывается на третий день, итог Венанция — только в полном режиме', () => {
-    expect(deathView(deaths[0]!, DAY3)!.final).not.toBeNull();
+  it('итог Адельма открывается на второй день, итог Венанция — только в полном режиме', () => {
+    expect(deathView(deaths[0]!, { mode: 'progress', day: 1 })!.final).toBeNull();
+    expect(deathView(deaths[0]!, { mode: 'progress', day: 2 })!.final).not.toBeNull();
     expect(deathView(deaths[1]!, FULL)!.finalKind).toBe('poison');
   });
   it('тип связи меняется по ходу сюжета', () => {

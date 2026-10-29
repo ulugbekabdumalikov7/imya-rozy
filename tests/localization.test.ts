@@ -17,6 +17,7 @@ const ALLOWED_LATIN = new Set(`
   Dormitori Sala capitolare Stalle Abbazia quatuor Brunellus Coena Cypriani Cum inter nonnullos Regula Benedicti
   Practica inquisitionis heretice pravitatis Arbor vitae crucifixae Jesu Fra Dolcino Postille nome della rosa Il
   Ecclesia Claustrum Capitulum Hospitale Balneum Scriptorium Refectorium Poetics Wikipedia LitCharts
+  finis Secretum manus supra idolum age primum et septimum de Super thronos viginti Dies irae tertius equi
 `.split(/\s+/).filter(Boolean));
 
 const latinWords = (t: string) => (t.match(/[A-Za-z][A-Za-z’'-]+/g) ?? []).filter((w) => w.length > 1 && !ALLOWED_LATIN.has(w) && !/^[IVXLCDM]+$/.test(w));

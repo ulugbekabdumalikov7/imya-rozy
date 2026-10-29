@@ -155,7 +155,7 @@ const abbeyHotspots: PlanHotspot[] = [
     kind: 'building',
     description: 'Здание в юго-восточном углу ограды с круглым горном.',
     certainty: 'confirmed',
-    note: 'В романе в кузнях работает стекольщик Николай Моримондский.',
+    note: 'В романе в кузнях работает стекольщик Николай Моримундский.',
     en: { name: 'Forge', description: 'Building in the south-eastern corner of the enclosure with a round furnace.' },
     locationId: 'workshops',
   }),
