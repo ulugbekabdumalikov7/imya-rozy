@@ -160,7 +160,7 @@ describe('маршруты', () => {
       if (e.locationId && st.kind === 'confirmed') {
         const near = sameBranch(st.locationId, e.locationId)
           || locationById.get(st.locationId)!.parentId === locationById.get(e.locationId)!.parentId
-          // путь внутри одного эпизода (мощехранилище → кухня → скрипторий): в маршруте есть и шаг в самом месте события
+          // путь внутри одного эпизода (оссуарий → кухня → скрипторий): в маршруте есть и шаг в самом месте события
           || r.steps.some((o) => o.eventId === st.eventId && sameBranch(o.locationId, e.locationId!));
         expect(near, `${r.id}: ${st.locationId} ≠ ${e.locationId} (${e.id})`).toBe(true);
       }

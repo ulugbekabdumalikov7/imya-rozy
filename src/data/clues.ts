@@ -136,8 +136,8 @@ export const clues: Clue[] = [
     eventId: 'e-severinus-strange-book', locationId: 'hospital', characterIds: ['severinus', 'william', 'berengar'], revealDay: 5, certainty: 'confirmed', sourceIds: ['novel'],
   },
   {
-    id: 'c-armillary', kind: 'object', title: 'Небесный глобус',
-    description: 'Металлический небесный глобус (армиллярная сфера) на треноге, которым разбили голову Северину.',
+    id: 'c-armillary', kind: 'object', title: 'Армиллярная сфера',
+    description: 'Металлический армиллярная сфера на треноге, которой разбили голову Северину.',
     eventId: 'e-severinus-killed', locationId: 'hospital', characterIds: ['severinus'], revealDay: 5, certainty: 'confirmed', sourceIds: ['novel', 'wiki-novel'],
   },
   {
