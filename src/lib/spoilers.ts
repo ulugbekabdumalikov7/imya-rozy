@@ -20,13 +20,19 @@ export function criticalAllowed(s: SpoilerState): boolean {
 }
 
 /** Единое правило видимости для любой сущности или фрагмента. */
-export function isVisible(gate: Pick<Gate, 'revealDay' | 'critical'> | { revealDay?: number; critical?: boolean }, s: SpoilerState): boolean {
+export function isVisible(
+  gate: Pick<Gate, 'revealDay' | 'critical'> | { revealDay?: number; critical?: boolean },
+  s: SpoilerState,
+): boolean {
   const day = gate.revealDay ?? 0;
   if (gate.critical && !criticalAllowed(s)) return false;
   return day <= horizon(s);
 }
 
-export function filterVisible<T extends { revealDay?: number; critical?: boolean }>(items: readonly T[], s: SpoilerState): T[] {
+export function filterVisible<T extends { revealDay?: number; critical?: boolean }>(
+  items: readonly T[],
+  s: SpoilerState,
+): T[] {
   return items.filter((i) => isVisible(i, s));
 }
 

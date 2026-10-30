@@ -1,5 +1,5 @@
-import { anchorIn, characterById, plans } from '../data';
-import type { MapView, StoryEvent } from '../data/types';
+import { anchorIn, characterById, plans } from '../../data';
+import type { MapView, StoryEvent } from '../../data/types';
 
 interface Props {
   view: MapView;
@@ -24,7 +24,10 @@ export function MomentLayer({ view, unit, moment, thread, title, label, isVisibl
     const a = e.locationId ? anchorIn(view, e.locationId) : null;
     if (!a) continue;
     const last = pts[pts.length - 1];
-    if (last && last.x === a[0] && last.y === a[1]) { last.e = e; continue; }
+    if (last && last.x === a[0] && last.y === a[1]) {
+      last.e = e;
+      continue;
+    }
     pts.push({ e, x: a[0], y: a[1] });
   }
   const cur = moment.locationId ? anchorIn(view, moment.locationId) : null;
@@ -39,17 +42,31 @@ export function MomentLayer({ view, unit, moment, thread, title, label, isVisibl
   return (
     <g className="layer-moment">
       {pts.length > 1 && (
-        <polyline className="moment-thread" points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
-          style={{ strokeWidth: 1.3 * unit, strokeDasharray: `${2 * unit} ${4 * unit}` }} />
+        <polyline
+          className="moment-thread"
+          points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
+          style={{ strokeWidth: 1.3 * unit, strokeDasharray: `${2 * unit} ${4 * unit}` }}
+        />
       )}
-      {pts.filter((p) => p.e.id !== moment.id && !(cur && p.x === cur[0] && p.y === cur[1])).map((p) => (
-        <g key={p.e.id} transform={`translate(${p.x} ${p.y})`} className="moment-past" role="button" tabIndex={0}
-          aria-label={`Ранее в этот день: ${title(p.e)}`} onClick={() => onPick(p.e.id)}
-          onKeyDown={(ev) => { if (ev.key === 'Enter') onPick(p.e.id); }}>
-          <circle r={9 * unit} className="hit" />
-          <circle r={4 * unit} style={{ strokeWidth: unit }} />
-        </g>
-      ))}
+      {pts
+        .filter((p) => p.e.id !== moment.id && !(cur && p.x === cur[0] && p.y === cur[1]))
+        .map((p) => (
+          <g
+            key={p.e.id}
+            transform={`translate(${p.x} ${p.y})`}
+            className="moment-past"
+            role="button"
+            tabIndex={0}
+            aria-label={`Ранее в этот день: ${title(p.e)}`}
+            onClick={() => onPick(p.e.id)}
+            onKeyDown={(ev) => {
+              if (ev.key === 'Enter') onPick(p.e.id);
+            }}
+          >
+            <circle r={9 * unit} className="hit" />
+            <circle r={4 * unit} style={{ strokeWidth: unit }} />
+          </g>
+        ))}
       {cur && (
         // key — момент: при каждом шаге кольцо и подпись появляются заново
         <g key={moment.id} transform={`translate(${cur[0]} ${cur[1]})`} className="moment-now">
@@ -57,15 +74,25 @@ export function MomentLayer({ view, unit, moment, thread, title, label, isVisibl
           <circle r={R} className="moment-ring" style={{ strokeWidth: 1.6 * unit }} />
           <circle r={4.5 * unit} className="moment-core" />
           <g className="moment-label" transform={`translate(0 ${labelTop})`}>
-            <text textAnchor="middle" style={{ fontSize: 10.5 * unit }} className="moment-when">{label}</text>
-            <text textAnchor="middle" y={15 * unit} style={{ fontSize: 13.5 * unit }} className="moment-title">{title(moment)}</text>
+            <text textAnchor="middle" style={{ fontSize: 10.5 * unit }} className="moment-when">
+              {label}
+            </text>
+            <text textAnchor="middle" y={15 * unit} style={{ fontSize: 13.5 * unit }} className="moment-title">
+              {title(moment)}
+            </text>
           </g>
           {people.length > 0 && (
             // положение — атрибутом внешней группы, анимация появления — у внутренней (CSS-transform заменил бы атрибут)
             <g transform={`translate(0 ${namesY})`}>
               <g className="moment-people" aria-label={`Участники: ${people.map((c) => c.short).join(', ')}`}>
                 {rows.map((row, ri) => (
-                  <text key={ri} textAnchor="middle" y={ri * 15 * unit} style={{ fontSize: 11.5 * unit }} className="moment-names">
+                  <text
+                    key={ri}
+                    textAnchor="middle"
+                    y={ri * 15 * unit}
+                    style={{ fontSize: 11.5 * unit }}
+                    className="moment-names"
+                  >
                     {row.map((n, i) => (
                       <tspan key={n.id}>
                         {i > 0 && <tspan className="moment-sep"> · </tspan>}
@@ -94,7 +121,11 @@ export function nameRows(items: NameItem[], maxRows = MAX_ROWS): NameItem[][] {
   let len = 0;
   for (const it of items) {
     const add = (cur.length ? 3 : 0) + it.name.length;
-    if (cur.length && len + add > ROW_CHARS) { rows.push(cur); cur = []; len = 0; }
+    if (cur.length && len + add > ROW_CHARS) {
+      rows.push(cur);
+      cur = [];
+      len = 0;
+    }
     cur.push(it);
     len += (cur.length > 1 ? 3 : 0) + it.name.length;
   }

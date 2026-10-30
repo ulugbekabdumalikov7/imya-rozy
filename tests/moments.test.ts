@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
+
+import { nameRows } from '../src/components/map/MomentLayer';
 import { eventById, events } from '../src/data';
+import {
+  dayMarks,
+  dayThread,
+  firstMomentOfDay,
+  happenedBy,
+  momentLabel,
+  momentSteps,
+  resolveMoment,
+} from '../src/lib/moments';
 import { isVisible } from '../src/lib/spoilers';
-import { dayMarks, dayThread, firstMomentOfDay, happenedBy, momentLabel, momentSteps, resolveMoment } from '../src/lib/moments';
 
 const full = { mode: 'full', day: 7 } as const;
 const day3 = { mode: 'progress', day: 3 } as const;
@@ -57,8 +67,6 @@ describe('«Час за часом» — моменты романа', () => {
   });
 });
 
-import { nameRows } from '../src/sections/MomentLayer';
-
 describe('«Час за часом» — имена участников под кольцом', () => {
   const it3 = (n: string, lead = false) => ({ id: n, name: n, lead });
 
@@ -99,4 +107,3 @@ describe('слой «Персонажи» — окошко «Здесь быва
     expect(rows.flat().some((x) => x.name.startsWith('и ещё'))).toBe(false);
   });
 });
-

@@ -1,15 +1,33 @@
 import { describe, expect, it } from 'vitest';
+
 import {
-  characters, characterById, locations, locationById, events, eventById, deaths, relationships,
-  clues, clueById, hypotheses, routes, historicalNotes, sourceById, anchorIn, isOnPlan, hotspotById, plans,
+  anchorIn,
+  characterById,
+  characters,
+  clueById,
+  clues,
+  deaths,
+  eventById,
+  events,
+  historicalNotes,
+  hotspotById,
+  hypotheses,
+  isOnPlan,
+  locationById,
+  locations,
+  plans,
+  relationships,
+  routes,
+  sourceById,
 } from '../src/data';
 import { centroid } from '../src/data/plans';
 
 function inside(poly: [number, number][], [x, y]: [number, number]): boolean {
   let r = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i]!; const [xj, yj] = poly[j]!;
-    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) r = !r;
+    const [xi, yi] = poly[i]!;
+    const [xj, yj] = poly[j]!;
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) r = !r;
   }
   return r;
 }
@@ -18,7 +36,17 @@ const missing = (ids: string[], set: Map<string, unknown>) => ids.filter((id) =>
 
 describe('целостность ссылок', () => {
   it('идентификаторы уникальны в каждой коллекции', () => {
-    for (const list of [characters, locations, events, deaths, relationships, clues, hypotheses, routes, historicalNotes]) {
+    for (const list of [
+      characters,
+      locations,
+      events,
+      deaths,
+      relationships,
+      clues,
+      hypotheses,
+      routes,
+      historicalNotes,
+    ]) {
       const ids = list.map((x) => x.id);
       expect(new Set(ids).size, `дубликаты: ${ids.filter((x, i) => ids.indexOf(x) !== i)}`).toBe(ids.length);
     }
@@ -63,7 +91,13 @@ describe('целостность ссылок', () => {
       expect(missing(c.characterIds, characterById), c.id).toEqual([]);
     }
     for (const h of hypotheses) {
-      expect(missing(h.links.map((l) => l.clueId), clueById), h.id).toEqual([]);
+      expect(
+        missing(
+          h.links.map((l) => l.clueId),
+          clueById,
+        ),
+        h.id,
+      ).toEqual([]);
       expect(missing(h.holderIds, characterById), h.id).toEqual([]);
       expect(missing(h.eventIds, eventById), h.id).toEqual([]);
     }
@@ -123,9 +157,10 @@ describe('целостность ссылок', () => {
 
   it('зоны лежат в пределах своих изображений', () => {
     for (const p of Object.values(plans)) {
-      for (const h of p.hotspots) for (const [x, y] of h.poly) {
-        expect(x >= 0 && x <= p.width && y >= 0 && y <= p.height, `${h.id} ${x},${y}`).toBe(true);
-      }
+      for (const h of p.hotspots)
+        for (const [x, y] of h.poly) {
+          expect(x >= 0 && x <= p.width && y >= 0 && y <= p.height, `${h.id} ${x},${y}`).toBe(true);
+        }
     }
   });
 
@@ -152,8 +187,16 @@ describe('буквы общего плана и легенда', () => {
     }
     // места романа привязаны к постройкам по легенде
     const byLetter: Record<string, string> = {
-      A: 'aedificium', B: 'church', D: 'cloister', F: 'dormitory', H: 'chapter-house',
-      K: 'hospital', J: 'balneary', M: 'pigsty', N: 'stables', R: 'workshops',
+      A: 'aedificium',
+      B: 'church',
+      D: 'cloister',
+      F: 'dormitory',
+      H: 'chapter-house',
+      K: 'hospital',
+      J: 'balneary',
+      M: 'pigsty',
+      N: 'stables',
+      R: 'workshops',
     };
     for (const [letter, loc] of Object.entries(byLetter)) {
       expect(lettered.find((h) => h.printed === letter)?.locationId, letter).toBe(loc);

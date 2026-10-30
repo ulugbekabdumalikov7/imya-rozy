@@ -44,8 +44,10 @@ export const deathKindLabels: Record<DeathKind, string> = {
 export function deathView(d: DeathCase, s: SpoilerState): DeathView | null {
   if (!isVisible(d, s)) return null;
   const final = isVisible(d.finalExplanation, s) ? d.finalExplanation : null;
-  const deathLocation = d.deathLocationId && isVisible(d.deathLocationId, s) && d.deathLocationId.locationId !== d.foundLocationId
-    ? d.deathLocationId : null;
+  const deathLocation =
+    d.deathLocationId && isVisible(d.deathLocationId, s) && d.deathLocationId.locationId !== d.foundLocationId
+      ? d.deathLocationId
+      : null;
   return {
     death: d,
     initial: isVisible(d.initialVersion, s) ? d.initialVersion : null,

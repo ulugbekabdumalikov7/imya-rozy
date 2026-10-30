@@ -31,12 +31,15 @@ export function resolveMoment(id: string | null, steps: StoryEvent[]): { index: 
   const target = eventById.get(id);
   if (!target) return null;
   let index = 0;
-  steps.forEach((e, i) => { if (e.sequence <= target.sequence) index = i; });
+  steps.forEach((e, i) => {
+    if (e.sequence <= target.sequence) index = i;
+  });
   return { index, event: steps[index]! };
 }
 
 /** Произошло ли событие с таким порядковым номером к текущему моменту (включительно). */
-export const happenedBy = (moment: StoryEvent | undefined) => (sequence: number) => !moment || sequence <= moment.sequence;
+export const happenedBy = (moment: StoryEvent | undefined) => (sequence: number) =>
+  !moment || sequence <= moment.sequence;
 
 /** Первый момент дня (для перехода «смотреть этот день час за часом»). */
 export function firstMomentOfDay(day: number, steps: StoryEvent[]): StoryEvent | undefined {
@@ -51,6 +54,8 @@ export function dayThread(moment: StoryEvent, steps: StoryEvent[]): StoryEvent[]
 /** Отметки дней на шкале: с какого шага начинается каждый день. */
 export function dayMarks(steps: StoryEvent[]): { day: number; index: number }[] {
   const out: { day: number; index: number }[] = [];
-  steps.forEach((e, i) => { if (!out.length || out[out.length - 1]!.day !== e.day) out.push({ day: e.day, index: i }); });
+  steps.forEach((e, i) => {
+    if (!out.length || out[out.length - 1]!.day !== e.day) out.push({ day: e.day, index: i });
+  });
   return out;
 }

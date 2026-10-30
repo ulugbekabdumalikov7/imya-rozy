@@ -34,6 +34,9 @@ jobs:
       - name: Установка зависимостей
         run: npm ci
 
+      - name: Форматирование (Prettier)
+        run: npm run format:check
+
       - name: Линтер (ESLint)
         run: npm run lint
 

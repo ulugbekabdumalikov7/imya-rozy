@@ -1,7 +1,12 @@
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
+
 import { easeInOut, reducedMotion } from './motion';
 
-export interface View { x: number; y: number; k: number }
+export interface View {
+  x: number;
+  y: number;
+  k: number;
+}
 
 /**
  * Масштабирование и перемещение SVG-схемы: колесо мыши, перетаскивание, щипок двумя пальцами, кнопки.
@@ -14,7 +19,10 @@ export function usePanZoom(svgRef: RefObject<SVGSVGElement>, width: number, heig
   const anim = useRef<number | null>(null);
   /** Любое ручное действие прерывает плавный перелёт камеры. */
   const setView: typeof setViewRaw = useCallback((v) => {
-    if (anim.current) { cancelAnimationFrame(anim.current); anim.current = null; }
+    if (anim.current) {
+      cancelAnimationFrame(anim.current);
+      anim.current = null;
+    }
     setViewRaw(v);
   }, []);
   const [pxPerUnit, setPxPerUnit] = useState(1);
@@ -23,12 +31,15 @@ export function usePanZoom(svgRef: RefObject<SVGSVGElement>, width: number, heig
   const last = useRef<{ x: number; y: number; dist?: number } | null>(null);
   const moved = useRef(false);
 
-  const clamp = useCallback((v: View): View => {
-    const k = Math.min(maxK, Math.max(minK, v.k));
-    const minX = width - width * k;
-    const minY = height - height * k;
-    return { k, x: Math.min(0, Math.max(minX, v.x)), y: Math.min(0, Math.max(minY, v.y)) };
-  }, [width, height, minK, maxK]);
+  const clamp = useCallback(
+    (v: View): View => {
+      const k = Math.min(maxK, Math.max(minK, v.k));
+      const minX = width - width * k;
+      const minY = height - height * k;
+      return { k, x: Math.min(0, Math.max(minX, v.x)), y: Math.min(0, Math.max(minY, v.y)) };
+    },
+    [width, height, minK, maxK],
+  );
 
   // Пересчёт единиц схемы в экранные пиксели (для подписей постоянного размера).
   useEffect(() => {
@@ -36,7 +47,10 @@ export function usePanZoom(svgRef: RefObject<SVGSVGElement>, width: number, heig
     if (!el) return;
     const update = () => {
       const r = el.getBoundingClientRect();
-      if (r.width > 0 && r.height > 0) { setPxPerUnit(Math.min(r.width / width, r.height / height)); setBox({ w: r.width, h: r.height }); }
+      if (r.width > 0 && r.height > 0) {
+        setPxPerUnit(Math.min(r.width / width, r.height / height));
+        setBox({ w: r.width, h: r.height });
+      }
     };
     update();
     const ro = new ResizeObserver(update);
@@ -45,22 +59,28 @@ export function usePanZoom(svgRef: RefObject<SVGSVGElement>, width: number, heig
   }, [svgRef, width, height]);
 
   /** Экранная точка → координаты viewBox. */
-  const toSvg = useCallback((clientX: number, clientY: number) => {
-    const el = svgRef.current!;
-    const r = el.getBoundingClientRect();
-    const s = Math.min(r.width / width, r.height / height);
-    const ox = (r.width - width * s) / 2;
-    const oy = (r.height - height * s) / 2;
-    return { x: (clientX - r.left - ox) / s, y: (clientY - r.top - oy) / s };
-  }, [svgRef, width, height]);
+  const toSvg = useCallback(
+    (clientX: number, clientY: number) => {
+      const el = svgRef.current!;
+      const r = el.getBoundingClientRect();
+      const s = Math.min(r.width / width, r.height / height);
+      const ox = (r.width - width * s) / 2;
+      const oy = (r.height - height * s) / 2;
+      return { x: (clientX - r.left - ox) / s, y: (clientY - r.top - oy) / s };
+    },
+    [svgRef, width, height],
+  );
 
-  const zoomAt = useCallback((factor: number, cx = width / 2, cy = height / 2) => {
-    setView((v) => {
-      const k = Math.min(maxK, Math.max(minK, v.k * factor));
-      const f = k / v.k;
-      return clamp({ k, x: cx - (cx - v.x) * f, y: cy - (cy - v.y) * f });
-    });
-  }, [setView, clamp, width, height, minK, maxK]);
+  const zoomAt = useCallback(
+    (factor: number, cx = width / 2, cy = height / 2) => {
+      setView((v) => {
+        const k = Math.min(maxK, Math.max(minK, v.k * factor));
+        const f = k / v.k;
+        return clamp({ k, x: cx - (cx - v.x) * f, y: cy - (cy - v.y) * f });
+      });
+    },
+    [setView, clamp, width, height, minK, maxK],
+  );
 
   useEffect(() => {
     const el = svgRef.current;
@@ -113,28 +133,49 @@ export function usePanZoom(svgRef: RefObject<SVGSVGElement>, width: number, heig
   };
 
   /** Плавно перевести камеру к точке схемы (масштаб не уменьшается ниже заданного). */
-  const focus = useCallback((cx: number, cy: number, k?: number, ms = 900, exact = false, offsetY = 0) => {
-    const from = viewRef.current;
-    const kk = exact && k ? k : Math.max(from.k, k ?? from.k);
-    const to = clamp({ k: kk, x: width / 2 - cx * kk, y: height / 2 - offsetY - cy * kk });
-    if (anim.current) cancelAnimationFrame(anim.current);
-    if (reducedMotion() || ms <= 0) { anim.current = null; setViewRaw(to); return; }
-    const t0 = performance.now();
-    const step = (now: number) => {
-      const t = Math.min(1, (now - t0) / ms);
-      const e = easeInOut(t);
-      setViewRaw({ k: from.k + (to.k - from.k) * e, x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e });
-      anim.current = t < 1 ? requestAnimationFrame(step) : null;
-    };
-    anim.current = requestAnimationFrame(step);
-  }, [clamp, width, height]);
-  useEffect(() => () => { if (anim.current) cancelAnimationFrame(anim.current); }, []);
+  const focus = useCallback(
+    (cx: number, cy: number, k?: number, ms = 900, exact = false, offsetY = 0) => {
+      const from = viewRef.current;
+      const kk = exact && k ? k : Math.max(from.k, k ?? from.k);
+      const to = clamp({ k: kk, x: width / 2 - cx * kk, y: height / 2 - offsetY - cy * kk });
+      if (anim.current) cancelAnimationFrame(anim.current);
+      if (reducedMotion() || ms <= 0) {
+        anim.current = null;
+        setViewRaw(to);
+        return;
+      }
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - t0) / ms);
+        const e = easeInOut(t);
+        setViewRaw({
+          k: from.k + (to.k - from.k) * e,
+          x: from.x + (to.x - from.x) * e,
+          y: from.y + (to.y - from.y) * e,
+        });
+        anim.current = t < 1 ? requestAnimationFrame(step) : null;
+      };
+      anim.current = requestAnimationFrame(step);
+    },
+    [clamp, width, height],
+  );
+  useEffect(
+    () => () => {
+      if (anim.current) cancelAnimationFrame(anim.current);
+    },
+    [],
+  );
 
   return {
     view,
     pxPerUnit,
     /** Видимая область в единицах viewBox (с учётом полей при вписывании). */
-    visibleBox: { x0: width / 2 - box.w / 2 / pxPerUnit, x1: width / 2 + box.w / 2 / pxPerUnit, y0: height / 2 - box.h / 2 / pxPerUnit, y1: height / 2 + box.h / 2 / pxPerUnit },
+    visibleBox: {
+      x0: width / 2 - box.w / 2 / pxPerUnit,
+      x1: width / 2 + box.w / 2 / pxPerUnit,
+      y0: height / 2 - box.h / 2 / pxPerUnit,
+      y1: height / 2 + box.h / 2 / pxPerUnit,
+    },
     transform: `translate(${view.x} ${view.y}) scale(${view.k})`,
     zoomIn: () => zoomAt(1.4),
     zoomOut: () => zoomAt(1 / 1.4),

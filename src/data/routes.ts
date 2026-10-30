@@ -6,13 +6,20 @@ import type { Route, RouteStep } from './types';
  * на карте такой участок не соединяется линией.
  */
 const s = (
-  locationId: string, day: number, note: string, kind: RouteStep['kind'] = 'confirmed',
-  eventId?: string, revealDay = day, critical = false,
+  locationId: string,
+  day: number,
+  note: string,
+  kind: RouteStep['kind'] = 'confirmed',
+  eventId?: string,
+  revealDay = day,
+  critical = false,
 ): RouteStep => ({ locationId, day, note, kind, eventId, revealDay: Math.max(0, revealDay), critical });
 
 export const routes: Route[] = [
   {
-    id: 'route-william', characterId: 'william', title: 'Путь Вильгельма',
+    id: 'route-william',
+    characterId: 'william',
+    title: 'Путь Вильгельма',
     steps: [
       s('gate', 1, 'Прибытие; эпизод с конём аббата.', 'confirmed', 'e-arrival', 0),
       s('pilgrims-house', 1, 'Аббат приходит в келью и даёт поручение.', 'confirmed', 'e-abbot-commission', 0),
@@ -27,7 +34,13 @@ export const routes: Route[] = [
       s('kitchen', 2, 'Ход выходит в кухню.', 'confirmed', 'e-night-scriptorium'),
       s('scriptorium', 2, 'Стол Венанция, похищенная книга.', 'confirmed', 'e-night-scriptorium'),
       s('library', 2, 'Блуждание по лабиринту.', 'confirmed', 'e-first-labyrinth'),
-      s('dormitory', 3, 'Исчезновение Беренгара: где именно был Вильгельм в этот момент, неясно.', 'gap', 'e-berengar-missing'),
+      s(
+        'dormitory',
+        3,
+        'Исчезновение Беренгара: где именно был Вильгельм в этот момент, неясно.',
+        'gap',
+        'e-berengar-missing',
+      ),
       s('workshops', 3, 'Просит Николая изготовить новые линзы.', 'reconstructed', 'e-new-lenses'),
       s('balneary', 3, 'Ночью находит тело Беренгара.', 'confirmed', 'e-berengar-found'),
       s('gate', 4, 'Прибытие миноритов, затем папского посольства.', 'reconstructed', 'e-legations-arrive'),
@@ -47,7 +60,9 @@ export const routes: Route[] = [
     ],
   },
   {
-    id: 'route-adso', characterId: 'adso', title: 'Путь Адсона',
+    id: 'route-adso',
+    characterId: 'adso',
+    title: 'Путь Адсона',
     steps: [
       s('gate', 1, 'Прибытие вместе с учителем.', 'confirmed', 'e-arrival', 0),
       s('church', 1, 'Потрясение от портала.', 'confirmed', 'e-ubertino-church', 0),
@@ -72,7 +87,9 @@ export const routes: Route[] = [
     ],
   },
   {
-    id: 'route-venantius', characterId: 'venantius', title: 'Последние дни Венанция',
+    id: 'route-venantius',
+    characterId: 'venantius',
+    title: 'Последние дни Венанция',
     steps: [
       s('scriptorium', 1, 'Спор о смехе.', 'confirmed', 'e-scriptorium-laughter', 0),
       s('aedificium', 1, 'Ночью читает книгу в Эдифиции.', 'reconstructed', 'e-venantius-dies', 7, true),
@@ -81,20 +98,32 @@ export const routes: Route[] = [
     ],
   },
   {
-    id: 'route-berengar', characterId: 'berengar', title: 'Путь Беренгара',
+    id: 'route-berengar',
+    characterId: 'berengar',
+    title: 'Путь Беренгара',
     steps: [
       s('cemetery', 0, 'По его словам, видел здесь Адельма в ночь гибели.', 'reconstructed', 'e-adelmo-death', 2),
       s('scriptorium', 1, 'В скриптории при библиотекаре.', 'confirmed', 'e-scriptorium-laughter', 0),
       s('kitchen', 1, 'Находит тело Венанция.', 'reconstructed', 'e-venantius-dies', 7, true),
       s('pigsty', 1, 'Переносит тело в сосуд.', 'reconstructed', 'e-venantius-dies', 7, true),
-      s('scriptorium', 2, 'Выхватывает книгу со стола Венанция и очки Вильгельма.', 'reconstructed', 'e-night-scriptorium', 7, true),
+      s(
+        'scriptorium',
+        2,
+        'Выхватывает книгу со стола Венанция и очки Вильгельма.',
+        'reconstructed',
+        'e-night-scriptorium',
+        7,
+        true,
+      ),
       s('dormitory', 3, 'Исчезает; где он провёл день — неизвестно.', 'gap', 'e-berengar-missing'),
       s('balneary', 3, 'Умирает в купальне.', 'reconstructed', 'e-berengar-dies', 7, true),
       s('balneary', 3, 'Тело найдено той же ночью.', 'confirmed', 'e-berengar-found'),
     ],
   },
   {
-    id: 'route-severinus', characterId: 'severinus', title: 'Путь Северина',
+    id: 'route-severinus',
+    characterId: 'severinus',
+    title: 'Путь Северина',
     steps: [
       s('herb-garden', 1, 'Показывает сад Вильгельму.', 'confirmed', 'e-severinus-garden', 0),
       s('pigsty', 2, 'Осматривает тело Венанция.', 'reconstructed', 'e-venantius-found'),
@@ -104,7 +133,9 @@ export const routes: Route[] = [
     ],
   },
   {
-    id: 'route-malachi', characterId: 'malachi', title: 'Путь Малахии',
+    id: 'route-malachi',
+    characterId: 'malachi',
+    title: 'Путь Малахии',
     steps: [
       s('scriptorium', 1, 'Встречает Вильгельма в скриптории.', 'confirmed', 'e-scriptorium-laughter', 0),
       s('hospital', 5, 'Бенций видел, как он прятался в лечебнице.', 'confirmed', 'e-severinus-killed'),
@@ -113,7 +144,9 @@ export const routes: Route[] = [
     ],
   },
   {
-    id: 'route-jorge', characterId: 'jorge', title: 'Путь Хорхе',
+    id: 'route-jorge',
+    characterId: 'jorge',
+    title: 'Путь Хорхе',
     steps: [
       s('scriptorium', 1, 'Спор о смехе.', 'confirmed', 'e-scriptorium-laughter', 0),
       s('church', 5, 'Проповедь о конце времён.', 'confirmed', 'e-jorge-sermon'),
@@ -123,7 +156,9 @@ export const routes: Route[] = [
     ],
   },
   {
-    id: 'route-abbo', characterId: 'abbo', title: 'Путь аббата',
+    id: 'route-abbo',
+    characterId: 'abbo',
+    title: 'Путь аббата',
     steps: [
       s('pilgrims-house', 1, 'Приходит в келью Вильгельма и даёт поручение.', 'confirmed', 'e-abbot-commission', 0),
       s('pigsty', 2, 'У тела Венанция.', 'reconstructed', 'e-venantius-found'),
@@ -138,7 +173,9 @@ export const routes: Route[] = [
     ],
   },
   {
-    id: 'route-bernard', characterId: 'bernard', title: 'Путь Бернарда Ги',
+    id: 'route-bernard',
+    characterId: 'bernard',
+    title: 'Путь Бернарда Ги',
     steps: [
       s('gate', 4, 'Прибывает с папским посольством.', 'confirmed', 'e-legations-arrive'),
       s('refectory', 4, 'Арест Сальватора и девушки.', 'reconstructed', 'e-salvatore-arrest'),
@@ -148,7 +185,9 @@ export const routes: Route[] = [
     ],
   },
   {
-    id: 'route-remigio', characterId: 'remigio', title: 'Путь Ремигия',
+    id: 'route-remigio',
+    characterId: 'remigio',
+    title: 'Путь Ремигия',
     steps: [
       s('gate', 1, 'Ищет коня аббата.', 'confirmed', 'e-arrival', 0),
       s('hospital', 5, 'Схвачен в лаборатории.', 'confirmed', 'e-severinus-killed'),

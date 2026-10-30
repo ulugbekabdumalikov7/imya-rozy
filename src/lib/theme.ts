@@ -9,7 +9,11 @@ const THEME_COLOR: Record<Theme, string> = { dark: '#0c0b0a', light: '#edeae4' }
 const listeners = new Set<() => void>();
 
 function stored(): Theme {
-  try { return window.localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'; } catch { return 'dark'; }
+  try {
+    return window.localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark';
+  } catch {
+    return 'dark';
+  }
 }
 
 export function getTheme(): Theme {
@@ -33,13 +37,20 @@ export function setTheme(theme: Theme) {
     window.setTimeout(() => root.classList.remove('theme-switching'), 700);
   }
   applyTheme(theme);
-  try { window.localStorage.setItem(THEME_KEY, theme); } catch { /* хранилище недоступно — тема действует до перезагрузки */ }
+  try {
+    window.localStorage.setItem(THEME_KEY, theme);
+  } catch {
+    /* хранилище недоступно — тема действует до перезагрузки */
+  }
   listeners.forEach((l) => l());
 }
 
 export function useTheme(): Theme {
   return useSyncExternalStore(
-    (l) => { listeners.add(l); return () => listeners.delete(l); },
+    (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
     getTheme,
     () => 'dark',
   );

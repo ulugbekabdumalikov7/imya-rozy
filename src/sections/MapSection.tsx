@@ -1,23 +1,46 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Clock3, Footprints, Layers, Pause, Play, ScanLine, X } from 'lucide-react';
 import {
-  anchorIn, characterById, dayLabel, eventById, hotspotById, hotspotIn, isOnPlan, locationById, locations, preferredView,
-  routes, routeByCharacter, viewLabels,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Footprints,
+  Layers,
+  Pause,
+  Play,
+  ScanLine,
+  X,
+} from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import { EventCard, LocationCard } from '../components/cards';
+import { AbbeyLegend, HotspotCard, PlanFacts } from '../components/map/PlanCards';
+import { type FocusReason, type LayerKey, PlanMap } from '../components/map/PlanMap';
+import { DetailPanel, LocChip } from '../components/ui';
+import {
+  anchorIn,
+  characterById,
+  dayLabel,
+  eventById,
+  hotspotById,
+  hotspotIn,
+  isOnPlan,
+  locationById,
+  locations,
+  preferredView,
+  routeByCharacter,
+  routes,
+  viewLabels,
 } from '../data';
 import type { PlanHotspot } from '../data/plans';
 import type { MapView } from '../data/types';
-import { horizon } from '../lib/spoilers';
-import { count, EPISODES } from '../lib/ru';
-import { href, patchParams, type Route as AppRoute } from '../lib/router';
 import { dayMarks, dayThread, firstMomentOfDay, momentLabel, momentSteps, resolveMoment } from '../lib/moments';
-import { eventTitle } from '../lib/visible';
 import { reducedMotion } from '../lib/motion';
+import { href, patchParams, type Route as AppRoute } from '../lib/router';
+import { count, EPISODES } from '../lib/ru';
+import { horizon } from '../lib/spoilers';
+import { type Theme, useTheme } from '../lib/theme';
+import { eventTitle } from '../lib/visible';
 import { useSpoiler } from '../state/spoiler';
-import { useTheme, type Theme } from '../lib/theme';
-import { PlanMap, type FocusReason, type LayerKey } from './PlanMap';
-import { EventCard, LocationCard } from '../components/cards';
-import { AbbeyLegend, HotspotCard, PlanFacts } from '../components/PlanCards';
-import { DetailPanel, LocChip } from '../components/ui';
 
 const LAYERS: { key: LayerKey; label: string; hint: string }[] = [
   { key: 'arch', label: 'Контуры зон', hint: 'Обводка построек и комнат по плану' },
@@ -40,7 +63,9 @@ function loadTone(theme: Theme): Tone {
   try {
     const v = window.localStorage.getItem(theme === 'dark' ? TONE_KEY : `${TONE_KEY}:${theme}`);
     if (v === 'scan' || v === 'night') return v;
-  } catch { /* хранилище недоступно */ }
+  } catch {
+    /* хранилище недоступно */
+  }
   return theme === 'light' ? 'scan' : 'night';
 }
 
@@ -52,7 +77,11 @@ export function MapSection({ route }: { route: AppRoute }) {
   const tone = tones[theme];
   const setTone = (v: Tone) => {
     setTones((t) => ({ ...t, [theme]: v }));
-    try { window.localStorage.setItem(theme === 'dark' ? TONE_KEY : `${TONE_KEY}:${theme}`, v); } catch { /* ignore */ }
+    try {
+      window.localStorage.setItem(theme === 'dark' ? TONE_KEY : `${TONE_KEY}:${theme}`, v);
+    } catch {
+      /* ignore */
+    }
   };
 
   const prm = route.params;
@@ -83,7 +112,8 @@ export function MapSection({ route }: { route: AppRoute }) {
   const set = (patch: Record<string, string | number | null | undefined>) => patchParams(route, patch);
   const toggleLayer = (k: LayerKey) => {
     const next = new Set(layers);
-    if (next.has(k)) next.delete(k); else next.add(k);
+    if (next.has(k)) next.delete(k);
+    else next.add(k);
     set({ layers: [...next].join(',') || 'none' });
   };
 
@@ -110,13 +140,20 @@ export function MapSection({ route }: { route: AppRoute }) {
   };
   const pickRoute = (charId: string | null) => {
     if (!charId) return set({ route: null, step: null });
-    const nextLayers = new Set(layers); nextLayers.add('route');
+    const nextLayers = new Set(layers);
+    nextLayers.add('route');
     set({ route: charId, step: 0, layers: [...nextLayers].join(','), loc: null, spot: null, event: null });
   };
   const goStep = (i: number) => {
     const s = steps[i];
     if (!s) return;
-    set({ step: i, event: s.eventId ?? null, loc: s.eventId ? null : s.locationId, spot: null, view: anchorIn(view, s.locationId) ? undefined : viewFor(s.locationId) });
+    set({
+      step: i,
+      event: s.eventId ?? null,
+      loc: s.eventId ? null : s.locationId,
+      spot: null,
+      view: anchorIn(view, s.locationId) ? undefined : viewFor(s.locationId),
+    });
   };
   const openPlan = (v: MapView) => set({ view: v, loc: null, spot: null, event: null });
 
@@ -124,7 +161,14 @@ export function MapSection({ route }: { route: AppRoute }) {
     const e = moments[i];
     if (!e) return;
     const lid = e.locationId;
-    set({ at: e.id, day: null, loc: null, spot: null, event: null, view: lid && !anchorIn(view, lid) ? viewFor(lid) : undefined });
+    set({
+      at: e.id,
+      day: null,
+      loc: null,
+      spot: null,
+      event: null,
+      view: lid && !anchorIn(view, lid) ? viewFor(lid) : undefined,
+    });
   };
   const startMoments = () => {
     const first = (dayFilter !== null ? firstMomentOfDay(dayFilter, moments) : undefined) ?? moments[0];
@@ -132,17 +176,25 @@ export function MapSection({ route }: { route: AppRoute }) {
     set({ at: first.id, day: null, loc: null, spot: null, event: null });
     setControlsOpen(false);
   };
-  const stopMoments = () => { setPlaying(false); set({ at: null }); };
+  const stopMoments = () => {
+    setPlaying(false);
+    set({ at: null });
+  };
 
   // Воспроизведение: шаг за шагом до конца прочитанного, затем остановка.
   useEffect(() => {
     if (!playing || !now) return;
-    if (now.index >= moments.length - 1) { setPlaying(false); return; }
+    if (now.index >= moments.length - 1) {
+      setPlaying(false);
+      return;
+    }
     const t = window.setTimeout(() => goMoment(now.index + 1), reducedMotion() ? PLAY_MS + 800 : PLAY_MS);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, now?.index, moments.length]);
-  useEffect(() => { if (!moment) setPlaying(false); }, [moment]);
+  useEffect(() => {
+    if (!moment) setPlaying(false);
+  }, [moment]);
 
   // Что изменилось последним — от этого зависит движение камеры.
   const prev = useRef({ locId, eventId, step, spotId, at: moment?.id });
@@ -150,47 +202,82 @@ export function MapSection({ route }: { route: AppRoute }) {
   if (prev.current.at !== moment?.id && moment && !eventId && !locId) focusReason = 'step';
   else if (prev.current.step !== step && step !== null) focusReason = 'step';
   else if (prev.current.eventId !== eventId && eventId) focusReason = 'event';
-  else if ((prev.current.locId !== locId && locId) || (prev.current.spotId !== spotId && spotId)) focusReason = 'location';
+  else if ((prev.current.locId !== locId && locId) || (prev.current.spotId !== spotId && spotId))
+    focusReason = 'location';
   else if (eventId) focusReason = 'event';
   else if (step !== null) focusReason = 'step';
   // Запоминаем выбор после фиксации рендера, а не во время него: иначе двойной рендер StrictMode
   // видит уже обновлённое значение и неверно определяет причину движения камеры.
-  useEffect(() => { prev.current = { locId, eventId, step, spotId, at: moment?.id }; });
+  useEffect(() => {
+    prev.current = { locId, eventId, step, spotId, at: moment?.id };
+  });
 
   const event = eventId ? eventById.get(eventId) : undefined;
   // Выбранное место подсвечивается зоной плана; момент «Час за часом» — только ведёт камеру (у него своё кольцо и подпись).
-  const selectedLocationId = step !== null ? steps[step]?.locationId : locId ?? event?.locationId;
+  const selectedLocationId = step !== null ? steps[step]?.locationId : (locId ?? event?.locationId);
   const focusLocationId = selectedLocationId ?? moment?.locationId;
   const spot = spotId ? hotspotById.get(spotId) : undefined;
-  const selectedHotspot = spot?.plan === view ? spot : selectedLocationId ? hotspotIn(view, selectedLocationId) ?? undefined : undefined;
+  const selectedHotspot =
+    spot?.plan === view ? spot : selectedLocationId ? (hotspotIn(view, selectedLocationId) ?? undefined) : undefined;
 
-  const availableRoutes = useMemo(() => routes.filter((r) => visible(characterById.get(r.characterId)!) && r.steps.some((s) => visible(s))), [visible]);
+  const availableRoutes = useMemo(
+    () => routes.filter((r) => visible(characterById.get(r.characterId)!) && r.steps.some((s) => visible(s))),
+    [visible],
+  );
   const panelOpen = !!(locId || eventId || spot);
   const currentStep = step !== null ? steps[step] : undefined;
   const offPlan = locations.filter((l) => !isOnPlan(l.id) && visible({ revealDay: l.revealDay ?? 0 }));
 
   const locHotspot = locId ? hotspotIn(view, locId) : null;
-  const locPartOf = locHotspot && locHotspot.locationId !== locId
-    ? (locHotspot.locationId ? locationById.get(locHotspot.locationId)?.name : locHotspot.name) : undefined;
+  const locPartOf =
+    locHotspot && locHotspot.locationId !== locId
+      ? locHotspot.locationId
+        ? locationById.get(locHotspot.locationId)?.name
+        : locHotspot.name
+      : undefined;
 
   return (
     <div className="map-layout">
       <h1 className="sr-only">{viewLabels[view]}</h1>
       <div className={`map-controls${controlsOpen ? ' is-open' : ''}`} id="map-controls">
         <div className="controls-head">
-          <p className="rubric" lang="la">Locus</p>
-          <button type="button" className="icon-btn only-mobile" onClick={() => setControlsOpen(false)} aria-label="Скрыть настройки карты"><X size={18} /></button>
+          <p className="rubric" lang="la">
+            Locus
+          </p>
+          <button
+            type="button"
+            className="icon-btn only-mobile"
+            onClick={() => setControlsOpen(false)}
+            aria-label="Скрыть настройки карты"
+          >
+            <X size={18} />
+          </button>
         </div>
         <fieldset className="ctl-group">
           <legend>План</legend>
           <div className="seg seg-vertical">
             {VIEWS.map((v) => (
-              <button key={v} type="button" className={v === view ? 'is-active' : ''} aria-pressed={v === view} onClick={() => openPlan(v)}>{viewLabels[v]}</button>
+              <button
+                key={v}
+                type="button"
+                className={v === view ? 'is-active' : ''}
+                aria-pressed={v === view}
+                onClick={() => openPlan(v)}
+              >
+                {viewLabels[v]}
+              </button>
             ))}
           </div>
           <label className="check">
-            <input type="checkbox" id="plan-tone" checked={tone === 'scan'} onChange={() => setTone(tone === 'scan' ? 'night' : 'scan')} />
-            <span>Исходный скан<span className="check-hint">Показать план в цветах оригинала</span></span>
+            <input
+              type="checkbox"
+              id="plan-tone"
+              checked={tone === 'scan'}
+              onChange={() => setTone(tone === 'scan' ? 'night' : 'scan')}
+            />
+            <span>
+              Исходный скан<span className="check-hint">Показать план в цветах оригинала</span>
+            </span>
           </label>
         </fieldset>
 
@@ -198,9 +285,17 @@ export function MapSection({ route }: { route: AppRoute }) {
           <legend>Слои</legend>
           {LAYERS.map((l) => (
             <label key={l.key} className="check">
-              <input type="checkbox" id={`layer-${l.key}`} checked={layers.has(l.key)} onChange={() => toggleLayer(l.key)} />
+              <input
+                type="checkbox"
+                id={`layer-${l.key}`}
+                checked={layers.has(l.key)}
+                onChange={() => toggleLayer(l.key)}
+              />
               <span className={`legend-swatch swatch-${l.key}`} aria-hidden="true" />
-              <span>{l.label}<span className="check-hint">{l.hint}</span></span>
+              <span>
+                {l.label}
+                <span className="check-hint">{l.hint}</span>
+              </span>
             </label>
           ))}
         </fieldset>
@@ -208,56 +303,133 @@ export function MapSection({ route }: { route: AppRoute }) {
         <fieldset className="ctl-group">
           <legend>События дня</legend>
           <div className="seg seg-wrap">
-            <button type="button" className={dayFilter === null ? 'is-active' : ''} aria-pressed={dayFilter === null} onClick={() => set({ day: null })}>Все</button>
-            {[1, 2, 3, 4, 5, 6, 7].filter((d) => d <= h).map((d) => (
-              <button key={d} type="button" className={dayFilter === d ? 'is-active' : ''} aria-pressed={dayFilter === d} onClick={() => set({ day: d })} aria-label={dayLabel(d)}>{d}</button>
-            ))}
+            <button
+              type="button"
+              className={dayFilter === null ? 'is-active' : ''}
+              aria-pressed={dayFilter === null}
+              onClick={() => set({ day: null })}
+            >
+              Все
+            </button>
+            {[1, 2, 3, 4, 5, 6, 7]
+              .filter((d) => d <= h)
+              .map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className={dayFilter === d ? 'is-active' : ''}
+                  aria-pressed={dayFilter === d}
+                  onClick={() => set({ day: d })}
+                  aria-label={dayLabel(d)}
+                >
+                  {d}
+                </button>
+              ))}
           </div>
         </fieldset>
 
         <fieldset className="ctl-group">
           <legend>Маршрут героя</legend>
-          <select id="route-select" value={routeVisible?.characterId ?? ''} onChange={(e) => pickRoute(e.target.value || null)}>
+          <select
+            id="route-select"
+            value={routeVisible?.characterId ?? ''}
+            onChange={(e) => pickRoute(e.target.value || null)}
+          >
             <option value="">— не показывать —</option>
-            {availableRoutes.map((r) => <option key={r.id} value={r.characterId}>{characterById.get(r.characterId)!.name}</option>)}
+            {availableRoutes.map((r) => (
+              <option key={r.id} value={r.characterId}>
+                {characterById.get(r.characterId)!.name}
+              </option>
+            ))}
           </select>
-          <p className="small muted">Отпечатки следов — путь по тексту, контуры следов — реконструкция, «?» — где герой был, неизвестно. Эпизоды внутри Эдифиция на плане аббатства сходятся в одну точку.</p>
+          <p className="small muted">
+            Отпечатки следов — путь по тексту, контуры следов — реконструкция, «?» — где герой был, неизвестно. Эпизоды
+            внутри Эдифиция на плане аббатства сходятся в одну точку.
+          </p>
         </fieldset>
 
         <div className="legend" aria-label="Обозначения смертей">
           <p className="legend-title">Обозначения смертей</p>
           <ul>
-            <li><span className="lg lg-unresolved" aria-hidden="true">?</span> Обстоятельства не выяснены</li>
-            <li><span className="lg lg-murder" aria-hidden="true">✕</span> Убийство</li>
-            <li><span className="lg lg-other" aria-hidden="true">✝</span> Иная смерть</li>
-            <li><span className="lg lg-site" aria-hidden="true" /> Место смерти, если отличается</li>
+            <li>
+              <span className="lg lg-unresolved" aria-hidden="true">
+                ?
+              </span>{' '}
+              Обстоятельства не выяснены
+            </li>
+            <li>
+              <span className="lg lg-murder" aria-hidden="true">
+                ✕
+              </span>{' '}
+              Убийство
+            </li>
+            <li>
+              <span className="lg lg-other" aria-hidden="true">
+                ✝
+              </span>{' '}
+              Иная смерть
+            </li>
+            <li>
+              <span className="lg lg-site" aria-hidden="true" /> Место смерти, если отличается
+            </li>
           </ul>
         </div>
       </div>
 
       <div className="map-stage">
         <div className="map-toolbar">
-          <button type="button" className="btn btn-small only-mobile" onClick={() => setControlsOpen(true)} aria-expanded={controlsOpen} aria-controls="map-controls">
+          <button
+            type="button"
+            className="btn btn-small only-mobile"
+            onClick={() => setControlsOpen(true)}
+            aria-expanded={controlsOpen}
+            aria-controls="map-controls"
+          >
             <Layers size={15} aria-hidden="true" /> Слои
           </button>
           <div className="seg seg-compact" role="group" aria-label="План">
             {VIEWS.map((v) => (
-              <button key={v} type="button" className={v === view ? 'is-active' : ''} aria-pressed={v === view} onClick={() => openPlan(v)}>
+              <button
+                key={v}
+                type="button"
+                className={v === view ? 'is-active' : ''}
+                aria-pressed={v === view}
+                onClick={() => openPlan(v)}
+              >
                 {v === 'abbey' ? 'Аббатство' : 'Библиотека'}
               </button>
             ))}
           </div>
           {view === 'library' && (
-            <button type="button" className="btn btn-small" onClick={() => set({ view: 'abbey', loc: 'aedificium', spot: null, event: null })}>
-              <ArrowLeft size={14} aria-hidden="true" /> <span className="only-desktop">К Эдифицию на плане аббатства</span><span className="only-mobile">Назад</span>
+            <button
+              type="button"
+              className="btn btn-small"
+              onClick={() => set({ view: 'abbey', loc: 'aedificium', spot: null, event: null })}
+            >
+              <ArrowLeft size={14} aria-hidden="true" />{' '}
+              <span className="only-desktop">К Эдифицию на плане аббатства</span>
+              <span className="only-mobile">Назад</span>
             </button>
           )}
-          <button type="button" className={`icon-btn tone-btn only-desktop${tone === 'scan' ? ' is-on' : ''}`} onClick={() => setTone(tone === 'scan' ? 'night' : 'scan')} aria-pressed={tone === 'scan'} title="Исходный скан / ночная гамма" aria-label="Исходный скан">
+          <button
+            type="button"
+            className={`icon-btn tone-btn only-desktop${tone === 'scan' ? ' is-on' : ''}`}
+            onClick={() => setTone(tone === 'scan' ? 'night' : 'scan')}
+            aria-pressed={tone === 'scan'}
+            title="Исходный скан / ночная гамма"
+            aria-label="Исходный скан"
+          >
             <ScanLine size={16} />
           </button>
-          <button type="button" className={`btn btn-small moment-toggle${moment ? ' is-on' : ''}`} onClick={() => (moment ? stopMoments() : startMoments())}
-            aria-pressed={!!moment} title="Пройти роман по часам: что где происходит и что уже случилось к этому моменту">
-            <Clock3 size={15} aria-hidden="true" /> <span className="only-desktop">Час за часом</span><span className="only-mobile">Часы</span>
+          <button
+            type="button"
+            className={`btn btn-small moment-toggle${moment ? ' is-on' : ''}`}
+            onClick={() => (moment ? stopMoments() : startMoments())}
+            aria-pressed={!!moment}
+            title="Пройти роман по часам: что где происходит и что уже случилось к этому моменту"
+          >
+            <Clock3 size={15} aria-hidden="true" /> <span className="only-desktop">Час за часом</span>
+            <span className="only-mobile">Часы</span>
           </button>
           <p className="map-view-title only-desktop">{dayFilter && !moment ? dayLabel(dayFilter) : ''}</p>
         </div>
@@ -285,60 +457,150 @@ export function MapSection({ route }: { route: AppRoute }) {
         {moment && now && (
           <div className="time-bar" role="region" aria-label="Час за часом">
             <div className="time-row">
-              <button type="button" className="icon-btn time-play" onClick={() => setPlaying((v) => !v)} disabled={!playing && now.index >= moments.length - 1}
-                aria-label={playing ? 'Пауза' : 'Воспроизвести по часам'} aria-pressed={playing}>
+              <button
+                type="button"
+                className="icon-btn time-play"
+                onClick={() => setPlaying((v) => !v)}
+                disabled={!playing && now.index >= moments.length - 1}
+                aria-label={playing ? 'Пауза' : 'Воспроизвести по часам'}
+                aria-pressed={playing}
+              >
                 {playing ? <Pause size={18} aria-hidden="true" /> : <Play size={18} aria-hidden="true" />}
               </button>
-              <button type="button" className="icon-btn" disabled={now.index === 0} onClick={() => { setPlaying(false); goMoment(now.index - 1); }} aria-label="Предыдущий момент"><ChevronLeft size={18} /></button>
-              <button type="button" className="icon-btn" disabled={now.index >= moments.length - 1} onClick={() => { setPlaying(false); goMoment(now.index + 1); }} aria-label="Следующий момент"><ChevronRight size={18} /></button>
+              <button
+                type="button"
+                className="icon-btn"
+                disabled={now.index === 0}
+                onClick={() => {
+                  setPlaying(false);
+                  goMoment(now.index - 1);
+                }}
+                aria-label="Предыдущий момент"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                disabled={now.index >= moments.length - 1}
+                onClick={() => {
+                  setPlaying(false);
+                  goMoment(now.index + 1);
+                }}
+                aria-label="Следующий момент"
+              >
+                <ChevronRight size={18} />
+              </button>
               <div className="time-text" aria-live="polite">
-                <span className="time-when">{momentLabel(moment)}{moment.locationId ? ` · ${locationById.get(moment.locationId)!.name}` : ''} · {now.index + 1} / {moments.length}</span>
+                <span className="time-when">
+                  {momentLabel(moment)}
+                  {moment.locationId ? ` · ${locationById.get(moment.locationId)!.name}` : ''} · {now.index + 1} /{' '}
+                  {moments.length}
+                </span>
                 <strong className="time-title">{eventTitle(moment, spoiler)}</strong>
               </div>
-              <button type="button" className="icon-btn" onClick={stopMoments} aria-label="Закрыть «Час за часом»"><X size={16} /></button>
+              <button type="button" className="icon-btn" onClick={stopMoments} aria-label="Закрыть «Час за часом»">
+                <X size={16} />
+              </button>
             </div>
             <div className="time-scale">
-              <input type="range" className="time-range" min={0} max={Math.max(0, moments.length - 1)} step={1} value={now.index}
-                onChange={(e) => { setPlaying(false); goMoment(Number(e.target.value)); }}
-                aria-label="Момент романа" aria-valuetext={`${momentLabel(moment)}: ${eventTitle(moment, spoiler)}`}
-                style={{ ['--p' as string]: `${moments.length > 1 ? (now.index / (moments.length - 1)) * 100 : 0}%` }} />
+              <input
+                type="range"
+                className="time-range"
+                min={0}
+                max={Math.max(0, moments.length - 1)}
+                step={1}
+                value={now.index}
+                onChange={(e) => {
+                  setPlaying(false);
+                  goMoment(Number(e.target.value));
+                }}
+                aria-label="Момент романа"
+                aria-valuetext={`${momentLabel(moment)}: ${eventTitle(moment, spoiler)}`}
+                style={{ ['--p' as string]: `${moments.length > 1 ? (now.index / (moments.length - 1)) * 100 : 0}%` }}
+              />
               <div className="time-days" aria-hidden="true">
                 {dayMarks(moments).map((m) => (
-                  <button key={m.day} type="button" tabIndex={-1} className={moment.day === m.day ? 'is-current' : ''}
+                  <button
+                    key={m.day}
+                    type="button"
+                    tabIndex={-1}
+                    className={moment.day === m.day ? 'is-current' : ''}
                     style={{ left: `${moments.length > 1 ? (m.index / (moments.length - 1)) * 100 : 0}%` }}
-                    onClick={() => { setPlaying(false); goMoment(m.index); }}>{dayShort(m.day)}</button>
+                    onClick={() => {
+                      setPlaying(false);
+                      goMoment(m.index);
+                    }}
+                  >
+                    {dayShort(m.day)}
+                  </button>
                 ))}
               </div>
             </div>
             <div className="time-meta">
               <span className="time-desc">{moment.description}</span>
               <span className="time-links">
-                <button type="button" className="link-btn" onClick={() => { setPlaying(false); pickEvent(moment.id); }}>Подробнее</button>
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={() => {
+                    setPlaying(false);
+                    pickEvent(moment.id);
+                  }}
+                >
+                  Подробнее
+                </button>
                 <a href={href('timeline', { d: moment.day, event: moment.id })}>В хронологии</a>
-                {moment.day >= 1 && moment.day <= 7 && <a href={href('relations', { upto: moment.day })}>Связи к этому дню</a>}
+                {moment.day >= 1 && moment.day <= 7 && (
+                  <a href={href('relations', { upto: moment.day })}>Связи к этому дню</a>
+                )}
               </span>
             </div>
           </div>
         )}
 
         {routeVisible && layers.has('route') && !moment && (
-          <div className="route-bar" role="region" aria-label={`Маршрут: ${characterById.get(routeVisible.characterId)!.short}`}>
+          <div
+            className="route-bar"
+            role="region"
+            aria-label={`Маршрут: ${characterById.get(routeVisible.characterId)!.short}`}
+          >
             <Footprints size={16} aria-hidden="true" />
-            <button type="button" className="icon-btn" disabled={!step} onClick={() => goStep((step ?? 0) - 1)} aria-label="Предыдущий эпизод"><ChevronLeft size={18} /></button>
+            <button
+              type="button"
+              className="icon-btn"
+              disabled={!step}
+              onClick={() => goStep((step ?? 0) - 1)}
+              aria-label="Предыдущий эпизод"
+            >
+              <ChevronLeft size={18} />
+            </button>
             <div className="route-bar-text">
               <strong>{step !== null ? `${step + 1} / ${steps.length}` : count(steps.length, EPISODES)}</strong>
               {currentStep && (
                 <span>
                   {dayLabel(currentStep.day)} · {locationById.get(currentStep.locationId)!.name} — {currentStep.note}
-                  {currentStep.kind !== 'confirmed' && <em className="route-kind"> ({currentStep.kind === 'gap' ? 'пропуск в тексте' : 'реконструкция'})</em>}
+                  {currentStep.kind !== 'confirmed' && (
+                    <em className="route-kind">
+                      {' '}
+                      ({currentStep.kind === 'gap' ? 'пропуск в тексте' : 'реконструкция'})
+                    </em>
+                  )}
                   {!isOnPlan(currentStep.locationId) && <em className="route-kind"> (места нет на планах)</em>}
                 </span>
               )}
             </div>
-            <button type="button" className="btn btn-small btn-accent" disabled={step !== null && step >= steps.length - 1} onClick={() => goStep(step === null ? 0 : step + 1)}>
+            <button
+              type="button"
+              className="btn btn-small btn-accent"
+              disabled={step !== null && step >= steps.length - 1}
+              onClick={() => goStep(step === null ? 0 : step + 1)}
+            >
               Следующий эпизод <ChevronRight size={16} aria-hidden="true" />
             </button>
-            <button type="button" className="icon-btn" onClick={() => pickRoute(null)} aria-label="Скрыть маршрут"><X size={16} /></button>
+            <button type="button" className="icon-btn" onClick={() => pickRoute(null)} aria-label="Скрыть маршрут">
+              <X size={16} />
+            </button>
           </div>
         )}
       </div>
@@ -348,8 +610,16 @@ export function MapSection({ route }: { route: AppRoute }) {
           <EventCard key={event.id} id={event.id} context="map" onPickEvent={pickEvent} onPickLocation={pickLocation} />
         ) : locId ? (
           <div key={locId}>
-            <LocationCard id={locId} onPickEvent={pickEvent} onPickLocation={pickLocation} onPickRoute={pickRoute} onOpenView={openPlan}
-              planBlock={locHotspot ? <PlanFacts h={locHotspot} asPartOf={locPartOf} onOpenPlan={openPlan} /> : undefined} />
+            <LocationCard
+              id={locId}
+              onPickEvent={pickEvent}
+              onPickLocation={pickLocation}
+              onPickRoute={pickRoute}
+              onOpenView={openPlan}
+              planBlock={
+                locHotspot ? <PlanFacts h={locHotspot} asPartOf={locPartOf} onOpenPlan={openPlan} /> : undefined
+              }
+            />
           </div>
         ) : spot ? (
           <HotspotCard key={spot.id} h={spot} onOpenPlan={openPlan} onPickLocation={pickLocation} />
@@ -357,22 +627,37 @@ export function MapSection({ route }: { route: AppRoute }) {
       </DetailPanel>
       {!panelOpen && (
         <aside className="map-hint" aria-label="Подсказка">
-          <p className="rubric" lang="la">Ad lectorem</p>
+          <p className="rubric" lang="la">
+            Ad lectorem
+          </p>
           {view === 'abbey' ? (
             <>
-              <p>Это план из книги. Каждая постройка, сад и участок местности — отдельная зона: нажмите на неё, чтобы увидеть надпись на плане, описание и связанные события. Эдифиций открывает план библиотеки.</p>
+              <p>
+                Это план из книги. Каждая постройка, сад и участок местности — отдельная зона: нажмите на неё, чтобы
+                увидеть надпись на плане, описание и связанные события. Эдифиций открывает план библиотеки.
+              </p>
               <AbbeyLegend />
             </>
           ) : (
             <>
-              <p>План верхнего этажа Эдифиция: 56 комнат, у 54 есть буква. Буквы, нарисованные на плане красным, в ночной гамме окрашены бордовым. Подписи стран — так, как они напечатаны на плане.</p>
-              <p className="small muted">Дверные проёмы на плане показаны разрывами в стенах; атлас их не пересказывает и не прокладывает пути между комнатами.</p>
+              <p>
+                План верхнего этажа Эдифиция: 56 комнат, у 54 есть буква. Буквы, нарисованные на плане красным, в ночной
+                гамме окрашены бордовым. Подписи стран — так, как они напечатаны на плане.
+              </p>
+              <p className="small muted">
+                Дверные проёмы на плане показаны разрывами в стенах; атлас их не пересказывает и не прокладывает пути
+                между комнатами.
+              </p>
             </>
           )}
           {offPlan.length > 0 && (
             <div className="chip-block">
               <h4>Нет на планах</h4>
-              <div className="chips">{offPlan.map((l) => <LocChip key={l.id} id={l.id} onPick={pickLocation} />)}</div>
+              <div className="chips">
+                {offPlan.map((l) => (
+                  <LocChip key={l.id} id={l.id} onPick={pickLocation} />
+                ))}
+              </div>
             </div>
           )}
           <p className="small muted">Колесо мыши или щипок — масштаб, перетаскивание — перемещение.</p>

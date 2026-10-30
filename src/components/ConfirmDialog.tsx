@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 
 interface Props {
   title: string;
@@ -21,13 +21,26 @@ export function ConfirmDialog({ title, children, confirmLabel, cancelLabel, onCo
 
   return (
     <div className="dialog-backdrop" onClick={onCancel}>
-      <div className="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dlg-title" aria-describedby="dlg-body" onClick={(e) => e.stopPropagation()}>
-        <p className="rubric" lang="la">Cave lector</p>
+      <div
+        className="dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="dlg-title"
+        aria-describedby="dlg-body"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="rubric" lang="la">
+          Cave lector
+        </p>
         <h2 id="dlg-title">{title}</h2>
         <p id="dlg-body">{children}</p>
         <div className="dialog-actions">
-          <button ref={cancelRef} type="button" className="btn" onClick={onCancel}>{cancelLabel}</button>
-          <button type="button" className="btn btn-danger" onClick={onConfirm}>{confirmLabel}</button>
+          <button ref={cancelRef} type="button" className="btn" onClick={onCancel}>
+            {cancelLabel}
+          </button>
+          <button type="button" className="btn btn-danger" onClick={onConfirm}>
+            {confirmLabel}
+          </button>
         </div>
       </div>
     </div>

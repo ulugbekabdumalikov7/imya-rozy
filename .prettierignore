@@ -1,0 +1,11 @@
+dist
+dist-single
+coverage
+node_modules
+package-lock.json
+public
+src/assets
+*.md
+.wrangler
+*.css
+*.jsonc

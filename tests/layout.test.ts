@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
+import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(join(__dirname, '..', 'src', 'styles.css'), 'utf8');
 
@@ -36,12 +37,16 @@ describe('вёрстка для телефона', () => {
 
   it('во всплывающем окне три режима — одна ровная строка (окно достаточно широкое, перенос только внутри ячейки)', () => {
     expect(css).toMatch(/\.spoiler-pop \{[^}]*width: min\(470px/);
-    expect(css).toMatch(/\.spoiler-pop \.spoiler-picker \.seg \{ display: grid; grid-template-columns: repeat\(3, auto\)/);
+    expect(css).toMatch(
+      /\.spoiler-pop \.spoiler-picker \.seg \{ display: grid; grid-template-columns: repeat\(3, auto\)/,
+    );
   });
 
   it('режимы спойлеров на узком экране стоят столбиком, а не переносятся с пустой ячейкой', () => {
     // правило для телефона должно перебивать и правило всплывающего окна (та же или большая специфичность)
-    expect(css).toMatch(/@media \(max-width: 560px\) \{\s*\.spoiler-picker \.seg, \.spoiler-pop \.spoiler-picker \.seg \{ display: flex; flex-direction: column;/);
+    expect(css).toMatch(
+      /@media \(max-width: 560px\) \{\s*\.spoiler-picker \.seg, \.spoiler-pop \.spoiler-picker \.seg \{ display: flex; flex-direction: column;/,
+    );
   });
 });
 
@@ -50,7 +55,16 @@ describe('светлая тема', () => {
   const light = css.match(/:root\[data-theme="light"\] \{([^}]+)\}/)?.[1] ?? '';
 
   it('переопределяет базовую палитру и все поверхности', () => {
-    for (const token of ['--night', '--bone', '--ash', '--surface', '--halo', '--bar-bg', '--backdrop', '--spotlight']) {
+    for (const token of [
+      '--night',
+      '--bone',
+      '--ash',
+      '--surface',
+      '--halo',
+      '--bar-bg',
+      '--backdrop',
+      '--spotlight',
+    ]) {
       expect(light, token).toMatch(new RegExp(`${token}:`));
     }
     expect(light).toContain('color-scheme: light');

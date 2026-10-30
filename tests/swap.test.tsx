@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, createElement, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { DURATION, useSwap } from '../src/lib/motion';
 
 // React 18: сообщаем, что обновления идут внутри act()
@@ -28,7 +29,11 @@ beforeEach(() => {
   root = createRoot(host);
   act(() => root.render(createElement(Timeline)));
 });
-afterEach(() => { act(() => root.unmount()); host.remove(); vi.useRealTimers(); });
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
+  vi.useRealTimers();
+});
 
 describe('useSwap — смена содержимого с уходом', () => {
   it('после смены дня старый список уходит, затем появляется новый (раньше фаза «уход» не заканчивалась)', () => {
@@ -36,7 +41,9 @@ describe('useSwap — смена содержимого с уходом', () => 
     act(() => probe.setDay(3));
     expect(probe.phase).toBe('out');
     expect(probe.shown).toEqual(['событие дня 1']); // пока уходит — показываем старое
-    act(() => { vi.advanceTimersByTime(DURATION.fast + 10); });
+    act(() => {
+      vi.advanceTimersByTime(DURATION.fast + 10);
+    });
     expect(probe.phase).toBe('in');
     expect(probe.shown).toEqual(['событие дня 3']);
   });
@@ -48,17 +55,30 @@ describe('useSwap — смена содержимого с уходом', () => 
 
   it('быстрые клики: показывается последний выбор', () => {
     act(() => probe.setDay(2));
-    act(() => { vi.advanceTimersByTime(40); probe.setDay(5); });
-    act(() => { vi.advanceTimersByTime(40); probe.setDay(4); });
-    act(() => { vi.advanceTimersByTime(DURATION.fast + 10); });
+    act(() => {
+      vi.advanceTimersByTime(40);
+      probe.setDay(5);
+    });
+    act(() => {
+      vi.advanceTimersByTime(40);
+      probe.setDay(4);
+    });
+    act(() => {
+      vi.advanceTimersByTime(DURATION.fast + 10);
+    });
     expect(probe.phase).toBe('in');
     expect(probe.shown).toEqual(['событие дня 4']);
   });
 
   it('быстро туда и обратно к исходному ключу — уход всё равно завершается', () => {
     act(() => probe.setDay(2));
-    act(() => { vi.advanceTimersByTime(40); probe.setDay(1); });
-    act(() => { vi.advanceTimersByTime(DURATION.fast + 10); });
+    act(() => {
+      vi.advanceTimersByTime(40);
+      probe.setDay(1);
+    });
+    act(() => {
+      vi.advanceTimersByTime(DURATION.fast + 10);
+    });
     expect(probe.phase).toBe('in');
     expect(probe.shown).toEqual(['событие дня 1']);
   });
