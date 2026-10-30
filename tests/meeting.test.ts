@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+
+import { describe, expect, it } from 'vitest';
+
 import { anchorIn, eventById, locationById } from '../src/data';
 import { isVisible } from '../src/lib/spoilers';
 import { MEETING_EVENT_ID, MEETING_SCENE_MS, meetingPoint } from '../src/sections/MeetingRose';

@@ -7,7 +7,8 @@ const dir = process.argv[2] ?? 'dist';
 const errors = [];
 const fail = (m) => errors.push(m);
 
-const files = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? files(join(d, f)) : [join(d, f)]));
+const files = (d) =>
+  readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? files(join(d, f)) : [join(d, f)]));
 
 if (!existsSync(join(dir, 'index.html'))) {
   console.error(`✗ ${dir}/index.html не найден — сначала выполните npm run build`);
@@ -18,15 +19,24 @@ const html = readFileSync(join(dir, 'index.html'), 'utf8');
 
 // 1. Каждый ресурс, на который ссылается index.html, существует и адресован от корня.
 for (const [, ref] of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
-  if (/^https?:\/\//.test(ref)) { fail(`внешний ресурс в index.html: ${ref}`); continue; }
-  if (!ref.startsWith('/')) { fail(`относительный путь в index.html (сломается на вложенных адресах): ${ref}`); continue; }
+  if (/^https?:\/\//.test(ref)) {
+    fail(`внешний ресурс в index.html: ${ref}`);
+    continue;
+  }
+  if (!ref.startsWith('/')) {
+    fail(`относительный путь в index.html (сломается на вложенных адресах): ${ref}`);
+    continue;
+  }
   if (!existsSync(join(dir, ref))) fail(`index.html ссылается на отсутствующий файл: ${ref}`);
 }
 // 2. Ссылки внутри CSS (шрифты, картинки) ведут на существующие файлы.
 for (const css of all.filter((f) => f.endsWith('.css'))) {
   for (const [, ref] of readFileSync(css, 'utf8').matchAll(/url\(["']?([^"')]+)["']?\)/g)) {
     if (ref.startsWith('data:') || ref.startsWith('#') || ref.startsWith('%23')) continue; // встроенные данные и ссылки на SVG-фильтры
-    if (/^https?:\/\//.test(ref)) { fail(`внешний ресурс в ${relative(dir, css)}: ${ref}`); continue; }
+    if (/^https?:\/\//.test(ref)) {
+      fail(`внешний ресурс в ${relative(dir, css)}: ${ref}`);
+      continue;
+    }
     const target = ref.startsWith('/') ? join(dir, ref) : join(css, '..', ref);
     if (!existsSync(target)) fail(`${relative(dir, css)} ссылается на отсутствующий файл: ${ref}`);
   }
@@ -35,7 +45,8 @@ for (const css of all.filter((f) => f.endsWith('.css'))) {
 for (const js of all.filter((f) => f.endsWith('.js'))) {
   const src = readFileSync(js, 'utf8');
   for (const [m] of src.matchAll(/["'`]https?:\/\/(?!www\.w3\.org|reactjs\.org|react\.dev)[^"'`\s]+/g)) {
-    if (/fetch|import/.test(src.slice(Math.max(0, src.indexOf(m) - 40), src.indexOf(m)))) fail(`${relative(dir, js)}: запрос к стороннему адресу ${m}`);
+    if (/fetch|import/.test(src.slice(Math.max(0, src.indexOf(m) - 40), src.indexOf(m))))
+      fail(`${relative(dir, js)}: запрос к стороннему адресу ${m}`);
   }
 }
 // 4. Заголовки Cloudflare Pages на месте.
@@ -43,7 +54,8 @@ const headersPath = join(dir, '_headers');
 if (!existsSync(headersPath)) fail('нет файла _headers (кэш и заголовки безопасности)');
 else {
   const h = readFileSync(headersPath, 'utf8');
-  for (const need of ['Content-Security-Policy', 'X-Content-Type-Options', '/assets/*', 'immutable']) if (!h.includes(need)) fail(`в _headers нет «${need}»`);
+  for (const need of ['Content-Security-Policy', 'X-Content-Type-Options', '/assets/*', 'immutable'])
+    if (!h.includes(need)) fail(`в _headers нет «${need}»`);
 }
 // 4б. PWA: service worker, его список файлов и манифест с иконками.
 const swPath = join(dir, 'sw.js');

@@ -25,30 +25,85 @@ export function PeopleBadge({ x, y, unit, people, open, placeName, onToggle }: P
   const label = `Здесь бывали: ${people.map((c) => c.short).join(', ')}`;
   return (
     <g transform={`translate(${x} ${y})`} className={`marker marker-people${open ? ' is-open' : ''}`}>
-      <g role="button" tabIndex={0} aria-expanded={open} aria-label={`${placeName}. ${label}`}
-        onClick={(e) => { e.stopPropagation(); onToggle(); }}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}>
+      <g
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        aria-label={`${placeName}. ${label}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+      >
         <title>{label}</title>
         <rect x={-w / 2 - 4 * unit} y={-h / 2 - 4 * unit} width={w + 8 * unit} height={h + 8 * unit} className="hit" />
-        <rect x={-w / 2} y={-h / 2} width={w} height={h} rx={h / 2} className="people-pill" style={{ strokeWidth: unit }} />
-        <path d={PERSON} transform={`translate(${-w / 2 + 9 * unit} ${0.4 * unit}) scale(${unit})`} className="people-icon" />
-        <text x={-w / 2 + 16 * unit} style={{ fontSize: 10.5 * unit }} dominantBaseline="central" className="people-count">{n}</text>
+        <rect
+          x={-w / 2}
+          y={-h / 2}
+          width={w}
+          height={h}
+          rx={h / 2}
+          className="people-pill"
+          style={{ strokeWidth: unit }}
+        />
+        <path
+          d={PERSON}
+          transform={`translate(${-w / 2 + 9 * unit} ${0.4 * unit}) scale(${unit})`}
+          className="people-icon"
+        />
+        <text
+          x={-w / 2 + 16 * unit}
+          style={{ fontSize: 10.5 * unit }}
+          dominantBaseline="central"
+          className="people-count"
+        >
+          {n}
+        </text>
       </g>
     </g>
   );
 }
 
 /** Окошко «Здесь бывали»: рисуется поверх всех слоёв плана, в точке плашки (x, y). */
-export function PeoplePopover({ unit, people, below, x, y, minX, maxX, onOpenPlace }: {
-  unit: number; people: Character[]; below: boolean; x: number; y: number; minX: number; maxX: number; onOpenPlace: () => void;
+export function PeoplePopover({
+  unit,
+  people,
+  below,
+  x,
+  y,
+  minX,
+  maxX,
+  onOpenPlace,
+}: {
+  unit: number;
+  people: Character[];
+  below: boolean;
+  x: number;
+  y: number;
+  minX: number;
+  maxX: number;
+  onOpenPlace: () => void;
 }) {
   // в окошке — все имена: в нём и смысл (ограничение строк нужно только подписи под кольцом «Час за часом»)
-  const rows = nameRows(people.map((c) => ({ id: c.id, name: c.short, lead: c.group === 'investigators' })), Infinity);
+  const rows = nameRows(
+    people.map((c) => ({ id: c.id, name: c.short, lead: c.group === 'investigators' })),
+    Infinity,
+  );
   const fs = 12 * unit;
   const lineH = 16 * unit;
   const charW = fs * 0.56; // средняя ширина буквы Alegreya Sans
   const head = `Здесь бывали · ${people.length}`;
-  const longest = Math.max(head.length, 'О месте →'.length, ...rows.map((r) => r.map((n) => n.name).join(' · ').length));
+  const longest = Math.max(
+    head.length,
+    'О месте →'.length,
+    ...rows.map((r) => r.map((n) => n.name).join(' · ').length),
+  );
   const pad = 10 * unit;
   const w = longest * charW + pad * 2;
   const hgt = pad * 2 + lineH * (rows.length + 2) - 4 * unit;
@@ -58,11 +113,25 @@ export function PeoplePopover({ unit, people, below, x, y, minX, maxX, onOpenPla
   if (x + dx + w > maxX) dx = maxX - x - w;
   const dy = below ? 16 * unit : -16 * unit - hgt;
   return (
-    <g className="people-pop" transform={`translate(${x + dx} ${y + dy})`} onClick={(e) => e.stopPropagation()} role="dialog" aria-label={head}>
+    <g
+      className="people-pop"
+      transform={`translate(${x + dx} ${y + dy})`}
+      onClick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-label={head}
+    >
       <rect width={w} height={hgt} rx={3 * unit} className="people-pop-bg" style={{ strokeWidth: unit }} />
-      <text x={pad} y={pad + fs * 0.85} style={{ fontSize: fs * 0.82 }} className="people-pop-head">{head}</text>
+      <text x={pad} y={pad + fs * 0.85} style={{ fontSize: fs * 0.82 }} className="people-pop-head">
+        {head}
+      </text>
       {rows.map((row, i) => (
-        <text key={i} x={pad} y={pad + fs * 0.85 + lineH * (i + 1)} style={{ fontSize: fs }} className="people-pop-names">
+        <text
+          key={i}
+          x={pad}
+          y={pad + fs * 0.85 + lineH * (i + 1)}
+          style={{ fontSize: fs }}
+          className="people-pop-names"
+        >
           {row.map((n, j) => (
             <tspan key={n.id}>
               {j > 0 && <tspan className="moment-sep"> · </tspan>}
@@ -71,8 +140,20 @@ export function PeoplePopover({ unit, people, below, x, y, minX, maxX, onOpenPla
           ))}
         </text>
       ))}
-      <text x={pad} y={pad + fs * 0.85 + lineH * (rows.length + 1)} style={{ fontSize: fs * 0.88 }} className="people-pop-link"
-        role="button" tabIndex={0} onClick={onOpenPlace} onKeyDown={(e) => { if (e.key === 'Enter') onOpenPlace(); }}>О месте →</text>
+      <text
+        x={pad}
+        y={pad + fs * 0.85 + lineH * (rows.length + 1)}
+        style={{ fontSize: fs * 0.88 }}
+        className="people-pop-link"
+        role="button"
+        tabIndex={0}
+        onClick={onOpenPlace}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') onOpenPlace();
+        }}
+      >
+        О месте →
+      </text>
     </g>
   );
 }

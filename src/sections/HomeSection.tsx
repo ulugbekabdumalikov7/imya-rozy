@@ -1,23 +1,43 @@
-import { useEffect, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+import { SpoilerPicker } from '../components/SpoilerControl';
 import { eventsSorted, hourLabels } from '../data';
 import type { CanonicalHour } from '../data/types';
-import { href, navigate } from '../lib/router';
 import { DURATION, reducedMotion, seenBefore } from '../lib/motion';
+import { href, navigate } from '../lib/router';
 import { eventTitle } from '../lib/visible';
 import { useSpoiler } from '../state/spoiler';
-import { SpoilerPicker } from '../components/SpoilerControl';
 
 const HOURS: CanonicalHour[] = ['matins', 'lauds', 'prime', 'terce', 'sext', 'nones', 'vespers', 'compline'];
-const LATIN_HOURS: Record<string, string> = { matins: 'Matutinum', lauds: 'Laudes', prime: 'Prima', terce: 'Tertia', sext: 'Sexta', nones: 'Nona', vespers: 'Vesperae', compline: 'Completorium' };
+const LATIN_HOURS: Record<string, string> = {
+  matins: 'Matutinum',
+  lauds: 'Laudes',
+  prime: 'Prima',
+  terce: 'Tertia',
+  sext: 'Sexta',
+  nones: 'Nona',
+  vespers: 'Vesperae',
+  compline: 'Completorium',
+};
 
 const SECTIONS = [
-  { to: 'map', latin: 'Locus', title: 'Карта аббатства', text: 'План аббатства и план библиотеки, места смертей и маршруты героев.' },
+  {
+    to: 'map',
+    latin: 'Locus',
+    title: 'Карта аббатства',
+    text: 'План аббатства и план библиотеки, места смертей и маршруты героев.',
+  },
   { to: 'heroes', latin: 'Personae', title: 'Герои', text: 'Досье монахов, гостей и судей.' },
   { to: 'relations', latin: 'Fata', title: 'Судьбы и связи', text: 'Отношения по дням и сравнение двух судеб.' },
   { to: 'timeline', latin: 'Tempus', title: 'Ход расследования', text: 'Семь дней по часам службы.' },
   { to: 'clues', latin: 'Indicia', title: 'Улики и версии', text: 'Что подтверждает догадку, а что её опровергает.' },
-  { to: 'history', latin: 'Historia', title: 'Исторический контекст', text: 'Папа, император, бедность, инквизиция, Аристотель.' },
+  {
+    to: 'history',
+    latin: 'Historia',
+    title: 'Исторический контекст',
+    text: 'Папа, император, бедность, инквизиция, Аристотель.',
+  },
 ];
 
 /** Линии архитектурной схемы для вступления (условный силуэт аббатства на горе). */
@@ -46,7 +66,9 @@ export function HomeSection() {
   const { spoiler, visible } = useSpoiler();
   const visibleEvents = eventsSorted.filter((e) => visible(e));
   // первый визит — полное вступление; каждый следующий — короткое: линии аббатства прорисовываются заново, текст уже на месте
-  const [mode] = useState<'playing' | 'return' | 'rest'>(() => (reducedMotion() ? 'rest' : seenBefore('intro') ? 'return' : 'playing'));
+  const [mode] = useState<'playing' | 'return' | 'rest'>(() =>
+    reducedMotion() ? 'rest' : seenBefore('intro') ? 'return' : 'playing',
+  );
   const [phase, setPhase] = useState<'playing' | 'return' | 'rest' | 'entering'>(mode);
 
   useEffect(() => {
@@ -60,11 +82,18 @@ export function HomeSection() {
   useEffect(() => {
     let alive = true;
     try {
-      document.fonts?.load('500 1em "Cormorant Garamond"', 'И')
-        .then((faces) => { if (alive && faces.length) setStems(measureStems() ?? DEFAULT_STEMS); })
+      document.fonts
+        ?.load('500 1em "Cormorant Garamond"', 'И')
+        .then((faces) => {
+          if (alive && faces.length) setStems(measureStems() ?? DEFAULT_STEMS);
+        })
         .catch(() => undefined);
-    } catch { /* API шрифтов недоступен — обходимся без потёков */ }
-    return () => { alive = false; };
+    } catch {
+      /* API шрифтов недоступен — обходимся без потёков */
+    }
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const enter = (e: React.MouseEvent) => {
@@ -80,32 +109,59 @@ export function HomeSection() {
         <svg className="intro-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <g transform="translate(0 120)">
             {ARCH.map((a, i) => (
-              <path key={i} d={a.d} pathLength={1} className={`intro-arch${a.faint ? ' faint' : ''}`} style={{ ['--d' as string]: i }} />
+              <path
+                key={i}
+                d={a.d}
+                pathLength={1}
+                className={`intro-arch${a.faint ? ' faint' : ''}`}
+                style={{ ['--d' as string]: i }}
+              />
             ))}
             <path d={ROUTE} pathLength={1} className="intro-route" />
             <circle cx="846" cy="372" r="4" className="intro-dot" />
           </g>
         </svg>
         <div className="intro-text">
-          <p className="intro-it" lang="it">IL NOME DELLA ROSA</p>
-          <h1 id="intro-title" className="intro-ru" aria-label="Имя розы"><span aria-hidden="true"><span className="cap">И{stems && <BloodDrip mode={mode === 'playing' ? 'intro' : 'return'} stems={stems} />}</span>мя розы</span></h1>
+          <p className="intro-it" lang="it">
+            IL NOME DELLA ROSA
+          </p>
+          <h1 id="intro-title" className="intro-ru" aria-label="Имя розы">
+            <span aria-hidden="true">
+              <span className="cap">
+                И{stems && <BloodDrip mode={mode === 'playing' ? 'intro' : 'return'} stems={stems} />}
+              </span>
+              мя розы
+            </span>
+          </h1>
           <p className="intro-sub">Атлас тайн аббатства</p>
           <p className="intro-lede">
-            Северная Италия, конец ноября 1327 года. В богатом бенедиктинском аббатстве накануне погиб молодой монах. У францисканца Вильгельма Баскервильского и его ученика Адсона — семь дней и библиотека, куда нельзя входить.
+            Северная Италия, конец ноября 1327 года. В богатом бенедиктинском аббатстве накануне погиб молодой монах. У
+            францисканца Вильгельма Баскервильского и его ученика Адсона — семь дней и библиотека, куда нельзя входить.
           </p>
           <div className="intro-cta">
-            <a className="btn btn-accent btn-large" href={href('map')} onClick={enter}>Войти в аббатство <ArrowRight size={18} aria-hidden="true" /></a>
-            <a className="btn btn-large" href={href('heroes/william')}>Начать с Вильгельма</a>
+            <a className="btn btn-accent btn-large" href={href('map')} onClick={enter}>
+              Войти в аббатство <ArrowRight size={18} aria-hidden="true" />
+            </a>
+            <a className="btn btn-large" href={href('heroes/william')}>
+              Начать с Вильгельма
+            </a>
           </div>
         </div>
-        {phase === 'playing' && <button type="button" className="intro-skip" onClick={() => setPhase('rest')}>Пропустить вступление</button>}
+        {phase === 'playing' && (
+          <button type="button" className="intro-skip" onClick={() => setPhase('rest')}>
+            Пропустить вступление
+          </button>
+        )}
       </section>
 
       <div className="home-body">
         <section className="home-mode" aria-labelledby="mode-h">
           <div>
             <h2 id="mode-h">Сколько вы уже прочитали?</h2>
-            <p>«Имя розы» — детектив. Выберите режим, и атлас покажет ровно столько, сколько вы знаете. Карта, связи и улики подстроятся под него. Изменить режим можно в любой момент в шапке.</p>
+            <p>
+              «Имя розы» — детектив. Выберите режим, и атлас покажет ровно столько, сколько вы знаете. Карта, связи и
+              улики подстроятся под него. Изменить режим можно в любой момент в шапке.
+            </p>
           </div>
           <SpoilerPicker />
         </section>
@@ -114,7 +170,9 @@ export function HomeSection() {
           <nav className="home-sections" aria-label="Разделы атласа">
             {SECTIONS.map((s) => (
               <a key={s.to} className="home-link" href={href(s.to)}>
-                <span className="rubric" lang="la">{s.latin}</span>
+                <span className="rubric" lang="la">
+                  {s.latin}
+                </span>
                 <span className="home-link-title">{s.title}</span>
                 <span className="home-link-text">{s.text}</span>
               </a>
@@ -123,27 +181,53 @@ export function HomeSection() {
 
           <figure className="horarium" aria-labelledby="horarium-cap">
             <figcaption id="horarium-cap">
-              <span className="rubric" lang="la">Horarium</span> Семь дней по часам службы. Отмечено то, что известно {spoiler.mode === 'safe' ? 'без спойлеров' : spoiler.mode === 'progress' ? `к концу ${['', 'первого', 'второго', 'третьего', 'четвёртого', 'пятого', 'шестого', 'седьмого'][spoiler.day]} дня` : 'во всём расследовании'}; бордовым — смерти.
+              <span className="rubric" lang="la">
+                Horarium
+              </span>{' '}
+              Семь дней по часам службы. Отмечено то, что известно{' '}
+              {spoiler.mode === 'safe'
+                ? 'без спойлеров'
+                : spoiler.mode === 'progress'
+                  ? `к концу ${['', 'первого', 'второго', 'третьего', 'четвёртого', 'пятого', 'шестого', 'седьмого'][spoiler.day]} дня`
+                  : 'во всём расследовании'}
+              ; бордовым — смерти.
             </figcaption>
             <div className="horarium-scroll">
               <table className="horarium-grid">
                 <thead>
-                  <tr><th scope="col"><span className="sr-only">Час</span></th>{[1, 2, 3, 4, 5, 6, 7].map((d) => <th key={d} scope="col">{['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][d - 1]}</th>)}</tr>
+                  <tr>
+                    <th scope="col">
+                      <span className="sr-only">Час</span>
+                    </th>
+                    {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                      <th key={d} scope="col">
+                        {['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][d - 1]}
+                      </th>
+                    ))}
+                  </tr>
                 </thead>
                 <tbody>
                   {HOURS.map((h) => (
                     <tr key={h}>
-                      <th scope="row" title={hourLabels[h]} lang="la">{LATIN_HOURS[h]}</th>
+                      <th scope="row" title={hourLabels[h]} lang="la">
+                        {LATIN_HOURS[h]}
+                      </th>
                       {[1, 2, 3, 4, 5, 6, 7].map((d) => {
                         const evs = visibleEvents.filter((e) => e.day === d && e.hour === h);
                         const death = evs.some((e) => e.kinds.includes('death'));
                         return (
                           <td key={d}>
                             {evs.length > 0 ? (
-                              <a href={href('timeline', { event: evs[0]!.id })} className={`hcell${death ? ' is-death' : ''}`} title={evs.map((e) => eventTitle(e, spoiler)).join('; ')}>
+                              <a
+                                href={href('timeline', { event: evs[0]!.id })}
+                                className={`hcell${death ? ' is-death' : ''}`}
+                                title={evs.map((e) => eventTitle(e, spoiler)).join('; ')}
+                              >
                                 <span className="sr-only">{`День ${d}, ${hourLabels[h]}: ${evs.map((e) => eventTitle(e, spoiler)).join('; ')}`}</span>
                               </a>
-                            ) : <span className="hcell is-empty" aria-hidden="true" />}
+                            ) : (
+                              <span className="hcell is-empty" aria-hidden="true" />
+                            )}
                           </td>
                         );
                       })}
@@ -168,7 +252,10 @@ export function HomeSection() {
  */
 /** Кровь на «И»: `intro` — медленно, после вступления (первый визит); `return` — сразу, при каждом возвращении на главную. */
 /** Середины двух вертикальных штрихов «И» в сотых долях кегля (= единицы viewBox потёков) от начала буквы. */
-interface Stems { a: number; b: number }
+interface Stems {
+  a: number;
+  b: number;
+}
 /** Где потёки нарисованы в самом SVG. */
 const DEFAULT_STEMS: Stems = { a: 15.9, b: 60.5 };
 
@@ -181,7 +268,8 @@ function measureStems(): Stems | null {
   try {
     const S = 200;
     const c = document.createElement('canvas');
-    c.width = S; c.height = S;
+    c.width = S;
+    c.height = S;
     const ctx = c.getContext('2d', { willReadFrequently: true });
     if (!ctx) return null;
     ctx.font = `500 ${S}px "Cormorant Garamond"`;
@@ -193,7 +281,10 @@ function measureStems(): Stems | null {
     for (let x = 0; x <= S; x++) {
       const ink = x < S && row[x * 4 + 3]! > 128;
       if (ink && start < 0) start = x;
-      if (!ink && start >= 0) { runs.push([start, x - 1]); start = -1; }
+      if (!ink && start >= 0) {
+        runs.push([start, x - 1]);
+        start = -1;
+      }
     }
     if (runs.length < 2) return null;
     const mid = ([l, r]: [number, number]) => ((l + r + 1) / 2 / S) * 100;
@@ -205,13 +296,22 @@ function measureStems(): Stems | null {
     let bottom = y;
     for (let yy = y; yy < S; yy++) {
       let any = false;
-      for (let x = Math.max(0, l - 2); x <= Math.min(S - 1, r + 2); x++) if (inkAt(x, yy)) { any = true; break; }
+      for (let x = Math.max(0, l - 2); x <= Math.min(S - 1, r + 2); x++)
+        if (inkAt(x, yy)) {
+          any = true;
+          break;
+        }
       if (!any) break;
       bottom = yy;
     }
-    let sum = 0, n = 0;
+    let sum = 0,
+      n = 0;
     for (let yy = bottom - 3; yy <= bottom; yy++) {
-      for (let x = Math.max(0, l - 2); x <= Math.min(S - 1, r + 2); x++) if (inkAt(x, yy)) { sum += x + 0.5; n++; }
+      for (let x = Math.max(0, l - 2); x <= Math.min(S - 1, r + 2); x++)
+        if (inkAt(x, yy)) {
+          sum += x + 0.5;
+          n++;
+        }
     }
     const tip = n ? (sum / n / S) * 100 : mid(runs[0]!);
     // потёк — середина между острием и осью штриха: и сходит с острия, и не выглядит скошенным
@@ -251,16 +351,22 @@ function BloodDrip({ mode, stems }: { mode: 'intro' | 'return'; stems: Stems }) 
 
       {/* левый штрих: длинный потёк */}
       <g className="drip-run drip-run-a" transform={`translate(${da} -2)`}>
-        <path mask="url(#drip-reveal-a)" fill="url(#blood-run)"
-          d="M12.2 -1.2 C12.2 5, 13.9 8.5, 14.3 15 L14.7 37 C14.8 41.5, 13.1 43.6, 13.1 47.2 A2.85 2.85 0 1 0 18.7 47.2 C18.7 43.6, 17 41.5, 17.1 37 L17.5 15 C17.9 8.5, 19.6 5, 19.6 -1.2 Z" />
+        <path
+          mask="url(#drip-reveal-a)"
+          fill="url(#blood-run)"
+          d="M12.2 -1.2 C12.2 5, 13.9 8.5, 14.3 15 L14.7 37 C14.8 41.5, 13.1 43.6, 13.1 47.2 A2.85 2.85 0 1 0 18.7 47.2 C18.7 43.6, 17 41.5, 17.1 37 L17.5 15 C17.9 8.5, 19.6 5, 19.6 -1.2 Z"
+        />
         <path mask="url(#drip-reveal-a)" className="drip-gloss" d="M15.2 6 L15.3 35" />
         <circle className="drip-head drip-head-a" cx="15.9" cy="0" r="2.6" fill="url(#blood-bead)" />
       </g>
 
       {/* правый штрих: короткий потёк */}
       <g className="drip-run drip-run-b" transform={`translate(${db} -2)`}>
-        <path mask="url(#drip-reveal-b)" fill="url(#blood-run)"
-          d="M57.3 -1.2 C57.3 4, 58.9 6.5, 59.1 11 L59.4 26 C59.5 29.5, 58.2 31, 58.2 33.6 A2.3 2.3 0 1 0 62.8 33.6 C62.8 31, 61.5 29.5, 61.6 26 L61.9 11 C62.1 6.5, 63.7 4, 63.7 -1.2 Z" />
+        <path
+          mask="url(#drip-reveal-b)"
+          fill="url(#blood-run)"
+          d="M57.3 -1.2 C57.3 4, 58.9 6.5, 59.1 11 L59.4 26 C59.5 29.5, 58.2 31, 58.2 33.6 A2.3 2.3 0 1 0 62.8 33.6 C62.8 31, 61.5 29.5, 61.6 26 L61.9 11 C62.1 6.5, 63.7 4, 63.7 -1.2 Z"
+        />
         <circle className="drip-head drip-head-b" cx="60.5" cy="0" r="2.1" fill="url(#blood-bead)" />
       </g>
 

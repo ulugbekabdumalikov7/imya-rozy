@@ -1,23 +1,34 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
 import { Minus, Plus, RotateCcw } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+
+import abbeyPlanUrl from '../assets/abbey-plan.webp';
+import libraryPlanUrl from '../assets/library-plan.webp';
 import {
-  anchorIn, characterById, clues, dayLabel, deaths, eventById, events, hotspotAnchor, hotspotIn, locationById, plans, routeByCharacter,
+  anchorIn,
+  characterById,
+  clues,
+  dayLabel,
+  deaths,
+  eventById,
+  events,
+  hotspotAnchor,
+  hotspotIn,
+  locationById,
+  plans,
+  routeByCharacter,
 } from '../data';
 import { LIBRARY_PASSAGE_MARK, LIBRARY_RED_GLYPHS } from '../data/planGeometry';
 import type { PlanHotspot } from '../data/plans';
 import type { MapView, Route, RouteStep, StoryEvent } from '../data/types';
-import { usePanZoom } from '../lib/usePanZoom';
-import { firstTimeThisSession, reducedMotion } from '../lib/motion';
-import { deathView, type DeathView } from '../lib/visible';
-import { useSpoiler } from '../state/spoiler';
+import { FOOT_PATH, type Footprint, footprints } from '../lib/footsteps';
 import { happenedBy } from '../lib/moments';
-import { eventTitle } from '../lib/visible';
+import { firstTimeThisSession, reducedMotion } from '../lib/motion';
+import { usePanZoom } from '../lib/usePanZoom';
+import { type DeathView, deathView, eventTitle } from '../lib/visible';
+import { useSpoiler } from '../state/spoiler';
+import { MEETING_EVENT_ID, MEETING_SCENE_DELAY_MS, MEETING_SCENE_MS, MeetingMarker, MeetingScene } from './MeetingRose';
 import { MomentLayer } from './MomentLayer';
 import { PeopleBadge, PeoplePopover } from './PeopleBadge';
-import { MEETING_EVENT_ID, MEETING_SCENE_DELAY_MS, MEETING_SCENE_MS, MeetingMarker, MeetingScene } from './MeetingRose';
-import abbeyPlanUrl from '../assets/abbey-plan.webp';
-import { FOOT_PATH, footprints, type Footprint } from '../lib/footsteps';
-import libraryPlanUrl from '../assets/library-plan.webp';
 
 const IMAGES: Record<MapView, string> = { abbey: abbeyPlanUrl, library: libraryPlanUrl };
 
@@ -48,7 +59,13 @@ interface Props {
   momentLabel?: string;
 }
 
-const isMobile = () => { try { return window.matchMedia('(max-width: 900px)').matches; } catch { return false; } };
+const isMobile = () => {
+  try {
+    return window.matchMedia('(max-width: 900px)').matches;
+  } catch {
+    return false;
+  }
+};
 const pts = (poly: [number, number][]) => poly.map((p) => p.join(',')).join(' ');
 /** Порядок отрисовки: местность и открытые пространства — под постройками. */
 const LAYER_ORDER: Record<PlanHotspot['kind'], number> = { terrain: 0, open: 1, opening: 2, building: 3, room: 3 };
@@ -64,31 +81,50 @@ export function PlanMap(p: Props) {
   const [hoverId, setHoverId] = useState<string | null>(null);
   // «Здесь бывали»: открытое окошко слоя «Персонажи» (id зоны плана)
   const [peopleOpen, setPeopleOpen] = useState<string | null>(null);
-  useEffect(() => { setPeopleOpen(null); }, [p.focusKey, p.view]);
+  useEffect(() => {
+    setPeopleOpen(null);
+  }, [p.focusKey, p.view]);
   useEffect(() => {
     if (!peopleOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setPeopleOpen(null); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPeopleOpen(null);
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [peopleOpen]);
 
   // Проявление плана: полное — при первом открытии за сессию, короткое — при смене плана.
-  const [drawMode] = useState(() => (reducedMotion() ? 'none' : firstTimeThisSession('map-draw') ? 'drawing' : 'settling'));
+  const [drawMode] = useState(() =>
+    reducedMotion() ? 'none' : firstTimeThisSession('map-draw') ? 'drawing' : 'settling',
+  );
   const settleDelay = drawMode === 'drawing' ? 1400 : drawMode === 'settling' ? 300 : 0;
 
   // Встреча Адсона и девушки: знак-роза на плане аббатства и короткая сцена при её открытии.
   const meetingEvent = eventById.get(MEETING_EVENT_ID);
   // в «Час за часом» роза появляется только после самой встречи
-  const meetingShown = p.view === 'abbey' && !!meetingEvent && visible(meetingEvent) && (!p.moment || meetingEvent.sequence <= p.moment.sequence);
+  const meetingShown =
+    p.view === 'abbey' &&
+    !!meetingEvent &&
+    visible(meetingEvent) &&
+    (!p.moment || meetingEvent.sequence <= p.moment.sequence);
   const meetingSelected = meetingShown && p.selectedEventId === MEETING_EVENT_ID;
   const [sceneKey, setSceneKey] = useState(0);
   const [scenePlaying, setScenePlaying] = useState(false);
   useEffect(() => {
     // каждое новое открытие встречи проигрывает сцену заново; при уменьшении движения сцены нет
-    if (!meetingSelected || reducedMotion()) { setScenePlaying(false); return; }
-    const start = window.setTimeout(() => { setSceneKey((k) => k + 1); setScenePlaying(true); }, MEETING_SCENE_DELAY_MS);
+    if (!meetingSelected || reducedMotion()) {
+      setScenePlaying(false);
+      return;
+    }
+    const start = window.setTimeout(() => {
+      setSceneKey((k) => k + 1);
+      setScenePlaying(true);
+    }, MEETING_SCENE_DELAY_MS);
     const end = window.setTimeout(() => setScenePlaying(false), MEETING_SCENE_DELAY_MS + MEETING_SCENE_MS);
-    return () => { window.clearTimeout(start); window.clearTimeout(end); };
+    return () => {
+      window.clearTimeout(start);
+      window.clearTimeout(end);
+    };
   }, [meetingSelected]);
 
   const hotspots = useMemo(() => [...plan.hotspots].sort((a, b) => LAYER_ORDER[a.kind] - LAYER_ORDER[b.kind]), [plan]);
@@ -106,11 +142,18 @@ export function PlanMap(p: Props) {
   const firstFocus = useRef(true);
   useEffect(() => {
     const a = p.focusLocationId ? anchorIn(p.view, p.focusLocationId) : selected ? hotspotAnchor(selected) : null;
-    if (!a) { firstFocus.current = false; return; }
+    if (!a) {
+      firstFocus.current = false;
+      return;
+    }
     const mobileSheet = isMobile() && p.panelOpen;
     // на компьютере полоса «Час за часом» закрывает низ карты — место момента поднимаем выше центра
     const momentBar = !!p.moment && !p.panelOpen && !isMobile();
-    const oy = mobileSheet ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.36 : momentBar ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.22 : 0;
+    const oy = mobileSheet
+      ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.36
+      : momentBar
+        ? (pz.visibleBox.y1 - pz.visibleBox.y0) * 0.22
+        : 0;
     const go = () => {
       if (p.focusReason === 'event') pz.focus(a[0], a[1], 2, 950, false, oy);
       else if (p.focusReason === 'step') pz.focus(a[0], a[1], 1.5, 800, false, oy);
@@ -130,7 +173,10 @@ export function PlanMap(p: Props) {
   const timeOk = happenedBy(p.moment);
   const momentKey = p.moment?.id ?? '';
 
-  const deathViews = useMemo(() => deaths.map((d) => deathView(d, spoiler)).filter((v): v is DeathView => !!v), [spoiler]);
+  const deathViews = useMemo(
+    () => deaths.map((d) => deathView(d, spoiler)).filter((v): v is DeathView => !!v),
+    [spoiler],
+  );
 
   const peopleAt = useMemo(() => {
     const m = new Map<string, Set<string>>();
@@ -177,26 +223,36 @@ export function PlanMap(p: Props) {
         v,
         x: base[0] + 14 * unit + n * 22 * unit,
         y: base[1] - 14 * unit,
-        site: a && site && (site[0] !== a[0] || site[1] !== a[1]) ? { x: site[0] + 12 * unit, y: site[1] + 12 * unit } : undefined,
+        site:
+          a && site && (site[0] !== a[0] || site[1] !== a[1])
+            ? { x: site[0] + 12 * unit, y: site[1] + 12 * unit }
+            : undefined,
       });
     }
     return out.sort((a, b) => a.v.death.day - b.v.death.day);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deathViews, p.view, p.dayFilter, unit, momentKey]);
 
-  const routeStyle = p.route?.characterId === 'william' ? 'route-lead' : p.route?.characterId === 'adso' ? 'route-follower' : 'route-default';
+  const routeStyle =
+    p.route?.characterId === 'william'
+      ? 'route-lead'
+      : p.route?.characterId === 'adso'
+        ? 'route-follower'
+        : 'route-default';
   const ghost = p.route?.characterId === 'adso' ? routeByCharacter.get('william') : undefined;
   const segMs = Math.min(420, Math.max(110, 4200 / Math.max(1, visibleSteps.length)));
   const routeKey = `${p.route?.id}|${p.view}|${spoiler.mode}${spoiler.day}`;
 
-  const click = (fn: () => void) => () => { if (!pz.wasDrag()) fn(); };
+  const click = (fn: () => void) => () => {
+    if (!pz.wasDrag()) fn();
+  };
   const drawClass = drawMode === 'drawing' ? 'is-drawing' : drawMode === 'settling' ? 'is-settling' : '';
 
   // Подпись зоны при наведении/выборе: буква с плана и название.
   const label = (h: PlanHotspot) => {
     const loc = h.locationId ? locationById.get(h.locationId) : undefined;
     const known = !h.revealDay || visible({ revealDay: h.revealDay });
-    const name = known ? h.name : h.safeName ?? h.name;
+    const name = known ? h.name : (h.safeName ?? h.name);
     const atlasName = loc && known && visible({ revealDay: loc.revealDay ?? 0 }) ? loc.name : undefined;
     if (!h.printed) return { title: atlasName ?? name, sub: atlasName && atlasName !== name ? name : undefined };
     // У зоны с буквой главное — буква и название по легенде плана;
@@ -218,12 +274,17 @@ export function PlanMap(p: Props) {
         role="group"
         aria-label={p.view === 'abbey' ? 'План аббатства' : 'План библиотеки'}
         {...pz.handlers}
-        onClick={() => { if (peopleOpen) setPeopleOpen(null); }} // нажатие мимо окошка «Здесь бывали» закрывает его
+        onClick={() => {
+          if (peopleOpen) setPeopleOpen(null);
+        }} // нажатие мимо окошка «Здесь бывали» закрывает его
       >
         <defs>
           <filter id="tone-night" colorInterpolationFilters="sRGB">
             {/* Ночная гамма: яркость → инверсия; бумага становится чернотой, чернила — костью. */}
-            <feColorMatrix type="matrix" values="-0.28 -0.55 -0.1 0 0.93  -0.27 -0.53 -0.1 0 0.9  -0.25 -0.5 -0.1 0 0.85  0 0 0 1 0" />
+            <feColorMatrix
+              type="matrix"
+              values="-0.28 -0.55 -0.1 0 0.93  -0.27 -0.53 -0.1 0 0.9  -0.25 -0.5 -0.1 0 0.85  0 0 0 1 0"
+            />
             <feComponentTransfer>
               <feFuncR type="gamma" amplitude="1" exponent="1.35" offset="0" />
               <feFuncG type="gamma" amplitude="1" exponent="1.35" offset="0" />
@@ -231,33 +292,62 @@ export function PlanMap(p: Props) {
             </feComponentTransfer>
           </filter>
           {/* край скана (корешок, тень) в ночной гамме становится светлой рамкой — обрезаем его */}
-          <clipPath id={`scan-edge-${p.view}`}><rect x={10} y={8} width={W - 20} height={H - 16} /></clipPath>
+          <clipPath id={`scan-edge-${p.view}`}>
+            <rect x={10} y={8} width={W - 20} height={H - 16} />
+          </clipPath>
         </defs>
         <rect x={-W} y={-H} width={W * 3} height={H * 3} className="plan-ground" />
         <g transform={pz.transform}>
           <g key={p.view} className={drawClass}>
-            <image href={IMAGES[p.view]} x={0} y={0} width={W} height={H} className="plan-image"
+            <image
+              href={IMAGES[p.view]}
+              x={0}
+              y={0}
+              width={W}
+              height={H}
+              className="plan-image"
               filter={p.tone === 'night' ? 'url(#tone-night)' : undefined}
-              clipPath={p.tone === 'night' && p.view === 'abbey' ? `url(#scan-edge-${p.view})` : undefined} preserveAspectRatio="none" />
+              clipPath={p.tone === 'night' && p.view === 'abbey' ? `url(#scan-edge-${p.view})` : undefined}
+              preserveAspectRatio="none"
+            />
 
             {/* Красные буквы плана библиотеки: в ночной гамме окрашиваются в бордовый поверх исходных пикселей. */}
             {p.view === 'library' && p.tone === 'night' && (
               <g className="glyph-tint" aria-hidden="true">
-                {LIBRARY_RED_GLYPHS.map((g, i) => <rect key={i} x={g.x - 1} y={g.y - 1} width={g.w + 2} height={g.h + 2} />)}
-                <rect x={LIBRARY_PASSAGE_MARK.x} y={LIBRARY_PASSAGE_MARK.y} width={LIBRARY_PASSAGE_MARK.w} height={LIBRARY_PASSAGE_MARK.h} />
+                {LIBRARY_RED_GLYPHS.map((g, i) => (
+                  <rect key={i} x={g.x - 1} y={g.y - 1} width={g.w + 2} height={g.h + 2} />
+                ))}
+                <rect
+                  x={LIBRARY_PASSAGE_MARK.x}
+                  y={LIBRARY_PASSAGE_MARK.y}
+                  width={LIBRARY_PASSAGE_MARK.w}
+                  height={LIBRARY_PASSAGE_MARK.h}
+                />
               </g>
             )}
 
             {/* Обводка зон проявляется линией при первом открытии */}
             {drawClass === 'is-drawing' && (
               <g aria-hidden="true">
-                {hotspots.map((h, i) => <polygon key={`s-${h.id}`} points={pts(h.poly)} className="sketch" pathLength={1} style={{ ['--d' as string]: i % 24 }} />)}
+                {hotspots.map((h, i) => (
+                  <polygon
+                    key={`s-${h.id}`}
+                    points={pts(h.poly)}
+                    className="sketch"
+                    pathLength={1}
+                    style={{ ['--d' as string]: i % 24 }}
+                  />
+                ))}
               </g>
             )}
 
             {/* Затемнение всего плана, кроме выбранной зоны */}
             {selected && (
-              <path className="spotlight" fillRule="evenodd" d={`M${-W} ${-H}H${W * 2}V${H * 2}H${-W}Z M${selected.poly.map((q) => q.join(' ')).join(' L')}Z`} />
+              <path
+                className="spotlight"
+                fillRule="evenodd"
+                d={`M${-W} ${-H}H${W * 2}V${H * 2}H${-W}Z M${selected.poly.map((q) => q.join(' ')).join(' L')}Z`}
+              />
             )}
 
             <g className={`rooms${hoverId ? ' has-hover' : ''}`}>
@@ -279,7 +369,12 @@ export function PlanMap(p: Props) {
                     onFocus={() => setHoverId(h.id)}
                     onBlur={() => setHoverId((x) => (x === h.id ? null : x))}
                     onClick={click(() => p.onPickHotspot(h))}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); p.onPickHotspot(h); } }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        p.onPickHotspot(h);
+                      }
+                    }}
                   />
                 );
               })}
@@ -293,9 +388,18 @@ export function PlanMap(p: Props) {
                     if (!h) return null;
                     const a = hotspotAnchor(h);
                     return (
-                      <PeopleBadge key={id} x={a[0] - 18 * unit} y={a[1] + 14 * unit} unit={unit}
-                        people={[...set].map((c) => characterById.get(c)!)} open={peopleOpen === id} placeName={label(h).title}
-                        onToggle={() => { if (!pz.wasDrag()) setPeopleOpen((cur) => (cur === id ? null : id)); }} />
+                      <PeopleBadge
+                        key={id}
+                        x={a[0] - 18 * unit}
+                        y={a[1] + 14 * unit}
+                        unit={unit}
+                        people={[...set].map((c) => characterById.get(c)!)}
+                        open={peopleOpen === id}
+                        placeName={label(h).title}
+                        onToggle={() => {
+                          if (!pz.wasDrag()) setPeopleOpen((cur) => (cur === id ? null : id));
+                        }}
+                      />
                     );
                   })}
                 </g>
@@ -309,10 +413,17 @@ export function PlanMap(p: Props) {
                     const a = hotspotAnchor(h);
                     const s = 8 * unit;
                     return (
-                      <g key={id} transform={`translate(${a[0] + 8 * unit} ${a[1] + 16 * unit})`} onClick={click(() => p.onPickHotspot(h))} className="marker marker-clue">
+                      <g
+                        key={id}
+                        transform={`translate(${a[0] + 8 * unit} ${a[1] + 16 * unit})`}
+                        onClick={click(() => p.onPickHotspot(h))}
+                        className="marker marker-clue"
+                      >
                         <title>{`Улики и предметы: ${n}`}</title>
                         <rect x={-s} y={-s} width={2 * s} height={2 * s} transform="rotate(45)" />
-                        <text style={{ fontSize: 9.5 * unit }} textAnchor="middle" dominantBaseline="central">{n}</text>
+                        <text style={{ fontSize: 9.5 * unit }} textAnchor="middle" dominantBaseline="central">
+                          {n}
+                        </text>
                       </g>
                     );
                   })}
@@ -320,8 +431,11 @@ export function PlanMap(p: Props) {
               )}
 
               {p.layers.has('investigation') && p.layers.has('deaths') && deathMarkers.length > 1 && (
-                <polyline className="investigation-thread" points={deathMarkers.map((m) => `${m.x},${m.y}`).join(' ')}
-                  style={{ strokeWidth: 1.4 * unit, strokeDasharray: `${5 * unit} ${5 * unit}` }} />
+                <polyline
+                  className="investigation-thread"
+                  points={deathMarkers.map((m) => `${m.x},${m.y}`).join(' ')}
+                  style={{ strokeWidth: 1.4 * unit, strokeDasharray: `${5 * unit} ${5 * unit}` }}
+                />
               )}
 
               {p.layers.has('deaths') && (
@@ -329,15 +443,34 @@ export function PlanMap(p: Props) {
                   {deathMarkers.map((m, idx) => {
                     const victim = characterById.get(m.v.death.characterId)!;
                     const sel = p.selectedEventId === m.v.death.eventId;
-                    const kindLabel = m.v.marker === 'unresolved' ? 'обстоятельства не выяснены' : m.v.marker === 'murder' ? 'убийство' : 'иная смерть';
+                    const kindLabel =
+                      m.v.marker === 'unresolved'
+                        ? 'обстоятельства не выяснены'
+                        : m.v.marker === 'murder'
+                          ? 'убийство'
+                          : 'иная смерть';
                     return (
                       <g key={m.v.death.id}>
                         {m.site && (
                           <>
-                            <line x1={m.x} y1={m.y} x2={m.site.x} y2={m.site.y} className="death-link" style={{ strokeWidth: unit, strokeDasharray: `${3 * unit} ${4 * unit}` }} />
-                            <g transform={`translate(${m.site.x} ${m.site.y})`} className="marker marker-death-site" onClick={click(() => p.onPickEvent(m.v.death.eventId))}>
+                            <line
+                              x1={m.x}
+                              y1={m.y}
+                              x2={m.site.x}
+                              y2={m.site.y}
+                              className="death-link"
+                              style={{ strokeWidth: unit, strokeDasharray: `${3 * unit} ${4 * unit}` }}
+                            />
+                            <g
+                              transform={`translate(${m.site.x} ${m.site.y})`}
+                              className="marker marker-death-site"
+                              onClick={click(() => p.onPickEvent(m.v.death.eventId))}
+                            >
                               <title>{`${victim.short}: место смерти`}</title>
-                              <circle r={8 * unit} style={{ strokeWidth: 1.2 * unit, strokeDasharray: `${2.5 * unit} ${2 * unit}` }} />
+                              <circle
+                                r={8 * unit}
+                                style={{ strokeWidth: 1.2 * unit, strokeDasharray: `${2.5 * unit} ${2 * unit}` }}
+                              />
                               <circle r={2.5 * unit} className="dot" />
                             </g>
                           </>
@@ -349,16 +482,30 @@ export function PlanMap(p: Props) {
                           tabIndex={0}
                           aria-label={`${victim.short}: ${kindLabel}, ${dayLabel(m.v.death.day).toLowerCase()}`}
                           onClick={click(() => p.onPickEvent(m.v.death.eventId))}
-                          onKeyDown={(e) => { if (e.key === 'Enter') p.onPickEvent(m.v.death.eventId); }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') p.onPickEvent(m.v.death.eventId);
+                          }}
                           style={{ ['--pd' as string]: `${idx * 0.9}s` }}
                         >
                           <circle r={14 * unit} className="hit" />
                           <circle r={7 * unit} className="pulse" style={{ strokeWidth: unit }} />
                           <circle r={13 * unit} className="halo" style={{ strokeWidth: unit }} />
-                          <g className="death-core"><DeathGlyph kind={m.v.marker} u={unit} /></g>
-                          <text x={16 * unit} y={0} style={{ fontSize: 11.5 * unit }} dominantBaseline="middle" className="marker-label">
-                            {p.layers.has('investigation') ? `${idx + 1}. ` : ''}{victim.short}
-                            <tspan className="ml-day"> · {m.v.death.day === 0 ? 'до прибытия' : `д. ${m.v.death.day}`}</tspan>
+                          <g className="death-core">
+                            <DeathGlyph kind={m.v.marker} u={unit} />
+                          </g>
+                          <text
+                            x={16 * unit}
+                            y={0}
+                            style={{ fontSize: 11.5 * unit }}
+                            dominantBaseline="middle"
+                            className="marker-label"
+                          >
+                            {p.layers.has('investigation') ? `${idx + 1}. ` : ''}
+                            {victim.short}
+                            <tspan className="ml-day">
+                              {' '}
+                              · {m.v.death.day === 0 ? 'до прибытия' : `д. ${m.v.death.day}`}
+                            </tspan>
                           </text>
                         </g>
                       </g>
@@ -367,61 +514,119 @@ export function PlanMap(p: Props) {
                 </g>
               )}
 
-              {p.layers.has('route') && ghost && <RouteLines key={`ghost-${routeKey}`} steps={ghost.steps.filter((s) => visible(s))} view={p.view} unit={unit} cls="route-ghost" animate={false} segMs={0} current={null} />}
+              {p.layers.has('route') && ghost && (
+                <RouteLines
+                  key={`ghost-${routeKey}`}
+                  steps={ghost.steps.filter((s) => visible(s))}
+                  view={p.view}
+                  unit={unit}
+                  cls="route-ghost"
+                  animate={false}
+                  segMs={0}
+                  current={null}
+                />
+              )}
               {p.layers.has('route') && p.route && (
-                <RouteLines key={routeKey} steps={visibleSteps} view={p.view} unit={unit} cls={routeStyle} animate={!reducedMotion()} segMs={segMs} current={p.routeStep} startDelay={settleDelay} />
+                <RouteLines
+                  key={routeKey}
+                  steps={visibleSteps}
+                  view={p.view}
+                  unit={unit}
+                  cls={routeStyle}
+                  animate={!reducedMotion()}
+                  segMs={segMs}
+                  current={p.routeStep}
+                  startDelay={settleDelay}
+                />
               )}
 
-
-              {meetingSelected && scenePlaying && <MeetingScene key={sceneKey} uid={String(sceneKey)} unit={unit} width={W} height={H} />}
+              {meetingSelected && scenePlaying && (
+                <MeetingScene key={sceneKey} uid={String(sceneKey)} unit={unit} width={W} height={H} />
+              )}
               {meetingShown && (
-                <MeetingMarker unit={unit} selected={meetingSelected}
-                  onPick={click(() => p.onPickEvent(MEETING_EVENT_ID))} onActivate={() => p.onPickEvent(MEETING_EVENT_ID)} />
+                <MeetingMarker
+                  unit={unit}
+                  selected={meetingSelected}
+                  onPick={click(() => p.onPickEvent(MEETING_EVENT_ID))}
+                  onActivate={() => p.onPickEvent(MEETING_EVENT_ID)}
+                />
               )}
 
               {/* момент — поверх розы: имена участников не должны прятаться под знаком */}
               {p.moment && (
-                <MomentLayer view={p.view} unit={unit} moment={p.moment} thread={p.momentThread ?? [p.moment]} label={p.momentLabel ?? ''}
-                  title={(e) => eventTitle(e, spoiler)} isVisibleCharacter={(id) => visible(characterById.get(id)!)}
-                  onPick={(id) => p.onPickEvent(id)} />
+                <MomentLayer
+                  view={p.view}
+                  unit={unit}
+                  moment={p.moment}
+                  thread={p.momentThread ?? [p.moment]}
+                  label={p.momentLabel ?? ''}
+                  title={(e) => eventTitle(e, spoiler)}
+                  isVisibleCharacter={(id) => visible(characterById.get(id)!)}
+                  onPick={(id) => p.onPickEvent(id)}
+                />
               )}
             </g>
 
             {/* «Здесь бывали» — поверх всех слоёв */}
-            {peopleOpen && p.layers.has('people') && (() => {
-              const h = hotspots.find((x) => x.id === peopleOpen);
-              const set = peopleAt.get(peopleOpen);
-              if (!h || !set) return null;
-              const a = hotspotAnchor(h);
-              const bx = a[0] - 18 * unit;
-              const by = a[1] + 14 * unit;
-              return (
-                <PeoplePopover unit={unit} people={[...set].map((c) => characterById.get(c)!)} x={bx} y={by}
-                  below={by < H * 0.3} minX={8 * unit} maxX={W - 8 * unit}
-                  onOpenPlace={() => { setPeopleOpen(null); p.onPickHotspot(h); }} />
-              );
-            })()}
+            {peopleOpen &&
+              p.layers.has('people') &&
+              (() => {
+                const h = hotspots.find((x) => x.id === peopleOpen);
+                const set = peopleAt.get(peopleOpen);
+                if (!h || !set) return null;
+                const a = hotspotAnchor(h);
+                const bx = a[0] - 18 * unit;
+                const by = a[1] + 14 * unit;
+                return (
+                  <PeoplePopover
+                    unit={unit}
+                    people={[...set].map((c) => characterById.get(c)!)}
+                    x={bx}
+                    y={by}
+                    below={by < H * 0.3}
+                    minX={8 * unit}
+                    maxX={W - 8 * unit}
+                    onOpenPlace={() => {
+                      setPeopleOpen(null);
+                      p.onPickHotspot(h);
+                    }}
+                  />
+                );
+              })()}
 
             {/* Подпись зоны под курсором или выбранной */}
-            {tip && (() => {
-              const a = hotspotAnchor(tip);
-              const lb = label(tip);
-              const fs = 13 * unit;
-              return (
-                <g className="spot-tip" aria-hidden="true" transform={`translate(${a[0]} ${a[1] - 22 * unit})`}>
-                  <text className="tip-title" textAnchor="middle" style={{ fontSize: fs }}>{lb.title}</text>
-                  {lb.sub && <text className="tip-sub" textAnchor="middle" y={fs * 1.15} style={{ fontSize: fs * 0.8 }}>{lb.sub}</text>}
-                </g>
-              );
-            })()}
+            {tip &&
+              (() => {
+                const a = hotspotAnchor(tip);
+                const lb = label(tip);
+                const fs = 13 * unit;
+                return (
+                  <g className="spot-tip" aria-hidden="true" transform={`translate(${a[0]} ${a[1] - 22 * unit})`}>
+                    <text className="tip-title" textAnchor="middle" style={{ fontSize: fs }}>
+                      {lb.title}
+                    </text>
+                    {lb.sub && (
+                      <text className="tip-sub" textAnchor="middle" y={fs * 1.15} style={{ fontSize: fs * 0.8 }}>
+                        {lb.sub}
+                      </text>
+                    )}
+                  </g>
+                );
+              })()}
           </g>
         </g>
       </svg>
 
       <div className="map-zoom" role="group" aria-label="Масштаб">
-        <button type="button" className="icon-btn" onClick={pz.zoomIn} aria-label="Приблизить"><Plus size={18} /></button>
-        <button type="button" className="icon-btn" onClick={pz.zoomOut} aria-label="Отдалить"><Minus size={18} /></button>
-        <button type="button" className="icon-btn" onClick={pz.reset} aria-label="Исходный масштаб"><RotateCcw size={16} /></button>
+        <button type="button" className="icon-btn" onClick={pz.zoomIn} aria-label="Приблизить">
+          <Plus size={18} />
+        </button>
+        <button type="button" className="icon-btn" onClick={pz.zoomOut} aria-label="Отдалить">
+          <Minus size={18} />
+        </button>
+        <button type="button" className="icon-btn" onClick={pz.reset} aria-label="Исходный масштаб">
+          <RotateCcw size={16} />
+        </button>
       </div>
     </div>
   );
@@ -431,10 +636,29 @@ export function PlanMap(p: Props) {
  * Маршрут: следы героя идут по той же кривой, что связывала эпизоды, шаг за шагом;
  * кружок эпизода появляется, когда к нему подходят следы.
  */
-function RouteLines({ steps, view, unit, cls, animate, segMs, current, startDelay = 0 }: {
-  steps: RouteStep[]; view: MapView; unit: number; cls: string; animate: boolean; segMs: number; current: number | null; startDelay?: number;
+function RouteLines({
+  steps,
+  view,
+  unit,
+  cls,
+  animate,
+  segMs,
+  current,
+  startDelay = 0,
+}: {
+  steps: RouteStep[];
+  view: MapView;
+  unit: number;
+  cls: string;
+  animate: boolean;
+  segMs: number;
+  current: number | null;
+  startDelay?: number;
 }) {
-  const ptsList = steps.map((s) => { const a = anchorIn(view, s.locationId); return a ? { ...s, x: a[0], y: a[1] } : null; });
+  const ptsList = steps.map((s) => {
+    const a = anchorIn(view, s.locationId);
+    return a ? { ...s, x: a[0], y: a[1] } : null;
+  });
   const ghost = cls === 'route-ghost';
   // Размер следа задан в экранных пикселях; масштаб округляется до ступеней √2, чтобы следы не перестраивались при каждом движении колёсика.
   const u = Math.pow(2, Math.round(Math.log2(unit) * 2) / 2);
@@ -471,28 +695,38 @@ function RouteLines({ steps, view, unit, cls, animate, segMs, current, startDela
           const delay = startDelay + (f.seg + f.at) * segMs - elapsed;
           const sx = 1.45 * u * size;
           return (
-            <path key={k} d={FOOT_PATH} className={`footprint${f.faint ? ' is-faint' : ''}`}
+            <path
+              key={k}
+              d={FOOT_PATH}
+              className={`footprint${f.faint ? ' is-faint' : ''}`}
               transform={`translate(${f.x} ${f.y}) rotate(${f.angle}) scale(${sx} ${f.side === 'l' ? sx : -sx})`}
-              style={animate ? { ['--step-delay' as string]: `${delay}ms` } : undefined} />
+              style={animate ? { ['--step-delay' as string]: `${delay}ms` } : undefined}
+            />
           );
         })}
       </g>
-      {!ghost && ptsList.map((pt, i) => {
-        if (!pt) return null;
-        const same = ptsList.slice(0, i).filter((q) => q && q.x === pt.x && q.y === pt.y).length;
-        const ang = same * 0.9;
-        const ox = same ? Math.cos(ang) * 15 * unit : 0;
-        const oy = same ? Math.sin(ang) * 15 * unit : 0;
-        const isCurrent = current === i;
-        return (
-          <g key={i} transform={`translate(${pt.x + ox} ${pt.y + oy})`}>
-            <g className={`route-dot route-${pt.kind}${isCurrent ? ' is-current' : ''}`} style={{ ['--dot-delay' as string]: `${startDelay + i * segMs}ms` }}>
-              <circle r={(isCurrent ? 10 : 7.5) * unit} style={{ strokeWidth: 1.4 * unit }} />
-              <text style={{ fontSize: 9 * unit }} textAnchor="middle" dominantBaseline="central">{pt.kind === 'gap' ? '?' : i + 1}</text>
+      {!ghost &&
+        ptsList.map((pt, i) => {
+          if (!pt) return null;
+          const same = ptsList.slice(0, i).filter((q) => q && q.x === pt.x && q.y === pt.y).length;
+          const ang = same * 0.9;
+          const ox = same ? Math.cos(ang) * 15 * unit : 0;
+          const oy = same ? Math.sin(ang) * 15 * unit : 0;
+          const isCurrent = current === i;
+          return (
+            <g key={i} transform={`translate(${pt.x + ox} ${pt.y + oy})`}>
+              <g
+                className={`route-dot route-${pt.kind}${isCurrent ? ' is-current' : ''}`}
+                style={{ ['--dot-delay' as string]: `${startDelay + i * segMs}ms` }}
+              >
+                <circle r={(isCurrent ? 10 : 7.5) * unit} style={{ strokeWidth: 1.4 * unit }} />
+                <text style={{ fontSize: 9 * unit }} textAnchor="middle" dominantBaseline="central">
+                  {pt.kind === 'gap' ? '?' : i + 1}
+                </text>
+              </g>
             </g>
-          </g>
-        );
-      })}
+          );
+        })}
     </g>
   );
 }
@@ -503,20 +737,30 @@ function DeathGlyph({ kind, u }: { kind: DeathView['marker']; u: number }) {
     return (
       <>
         <circle r={r} className="glyph-bg" style={{ strokeWidth: 1.2 * u }} />
-        <path d={`M${-r * 0.42},${-r * 0.42} L${r * 0.42},${r * 0.42} M${r * 0.42},${-r * 0.42} L${-r * 0.42},${r * 0.42}`} className="glyph-fg" style={{ strokeWidth: 1.5 * u }} />
+        <path
+          d={`M${-r * 0.42},${-r * 0.42} L${r * 0.42},${r * 0.42} M${r * 0.42},${-r * 0.42} L${-r * 0.42},${r * 0.42}`}
+          className="glyph-fg"
+          style={{ strokeWidth: 1.5 * u }}
+        />
       </>
     );
   if (kind === 'other')
     return (
       <>
         <circle r={r} className="glyph-bg" style={{ strokeWidth: 1.4 * u }} />
-        <path d={`M0,${-r * 0.55} L0,${r * 0.55} M${-r * 0.34},${-r * 0.15} L${r * 0.34},${-r * 0.15}`} className="glyph-fg" style={{ strokeWidth: 1.3 * u }} />
+        <path
+          d={`M0,${-r * 0.55} L0,${r * 0.55} M${-r * 0.34},${-r * 0.15} L${r * 0.34},${-r * 0.15}`}
+          className="glyph-fg"
+          style={{ strokeWidth: 1.3 * u }}
+        />
       </>
     );
   return (
     <>
       <circle r={r} className="glyph-bg" style={{ strokeWidth: 1.4 * u }} />
-      <text style={{ fontSize: 10 * u }} textAnchor="middle" dominantBaseline="central" className="glyph-text">?</text>
+      <text style={{ fontSize: 10 * u }} textAnchor="middle" dominantBaseline="central" className="glyph-text">
+        ?
+      </text>
     </>
   );
 }

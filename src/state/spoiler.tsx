@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { criticalAllowed, isVisible, opensCritical, type SpoilerState } from '../lib/spoilers';
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { criticalAllowed, isVisible, opensCritical, type SpoilerState } from '../lib/spoilers';
 
 const KEY = 'rose-atlas:spoiler';
 
@@ -68,7 +69,8 @@ export function SpoilerProvider({ children }: { children: ReactNode }) {
           }}
           onCancel={() => setPending(null)}
         >
-          В этом режиме атлас покажет, кто стоит за смертями, как они произошли и чем закончится роман. Это изменит карту, связи, хронологию и доску улик.
+          В этом режиме атлас покажет, кто стоит за смертями, как они произошли и чем закончится роман. Это изменит
+          карту, связи, хронологию и доску улик.
         </ConfirmDialog>
       )}
     </SpoilerContext.Provider>

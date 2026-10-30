@@ -18,7 +18,11 @@ export function useReducedMotion(): boolean {
   const [r, setR] = useState(reducedMotion);
   useEffect(() => {
     let mq: MediaQueryList;
-    try { mq = window.matchMedia('(prefers-reduced-motion: reduce)'); } catch { return; }
+    try {
+      mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    } catch {
+      return;
+    }
     const on = () => setR(mq.matches);
     mq.addEventListener?.('change', on);
     return () => mq.removeEventListener?.('change', on);
@@ -63,7 +67,11 @@ export function seenBefore(key: string): boolean {
  * (отфильтрованный список) — это не перезапускает переход. Раньше эффект зависел от самого значения:
  * каждая отрисовка сбрасывала таймер, фаза 'out' не заканчивалась, и список оставался невидимым.
  */
-export function useSwap<T>(value: T, key: string, ms: number = DURATION.fast): { shown: T; phase: 'in' | 'out'; shownKey: string } {
+export function useSwap<T>(
+  value: T,
+  key: string,
+  ms: number = DURATION.fast,
+): { shown: T; phase: 'in' | 'out'; shownKey: string } {
   const [state, setState] = useState<{ shownKey: string; phase: 'in' | 'out' }>({ shownKey: key, phase: 'in' });
   const settled = state.phase === 'in' && state.shownKey === key;
   // Последнее значение показанного ключа: его держим на экране, пока старое содержимое уходит.
@@ -74,7 +82,10 @@ export function useSwap<T>(value: T, key: string, ms: number = DURATION.fast): {
 
   useEffect(() => {
     if (key === state.shownKey && state.phase === 'in') return;
-    if (reducedMotion()) { setState({ shownKey: key, phase: 'in' }); return; }
+    if (reducedMotion()) {
+      setState({ shownKey: key, phase: 'in' });
+      return;
+    }
     setState((s) => (s.phase === 'out' ? s : { ...s, phase: 'out' }));
     // Повторная смена ключа во время ухода переносит появление — показывается последний выбор.
     // Это же завершает уход, если ключ успел вернуться к прежнему (быстрые клики туда и обратно).

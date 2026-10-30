@@ -1,6 +1,9 @@
 /** Следы вдоль маршрута: отпечатки ставятся по той же кривой, что и прежние линии, — геометрия маршрута не меняется. */
 
-export interface Pt { x: number; y: number }
+export interface Pt {
+  x: number;
+  y: number;
+}
 
 export interface Footprint {
   x: number;
@@ -27,7 +30,14 @@ const quad = (a: Pt, c: Pt, b: Pt, t: number): Pt => {
  * Расставляет отпечатки по кривой a→b с шагом `stride` (длина по дуге) и смещением `gait` от оси.
  * Отступ `margin` от концов оставляет место для кружков эпизодов. `startSide` продолжает чередование ног с прошлого отрезка.
  */
-export function footprints(a: Pt, b: Pt, stride: number, gait: number, margin: number, startSide: 'l' | 'r' = 'l'): Footprint[] {
+export function footprints(
+  a: Pt,
+  b: Pt,
+  stride: number,
+  gait: number,
+  margin: number,
+  startSide: 'l' | 'r' = 'l',
+): Footprint[] {
   const c = bend(a, b);
   // Таблица длины дуги: квадратичная кривая короткая, 64 отрезков хватает с запасом.
   const N = 64;

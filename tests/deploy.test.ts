@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+
+import { describe, expect, it } from 'vitest';
 
 const root = join(__dirname, '..');
 const read = (p: string) => readFileSync(join(root, p), 'utf8');
@@ -17,7 +18,8 @@ describe('конфигурация развёртывания', () => {
     for (const r of refs) expect(existsSync(join(root, 'src', r)), r).toBe(true);
     expect(css).not.toMatch(/https?:\/\//);
     // каждый шрифт из styles.css объявлен
-    for (const fam of ['Cormorant Garamond', 'Alegreya', 'Alegreya Sans', 'IBM Plex Mono']) expect(css).toContain(`font-family: '${fam}'`);
+    for (const fam of ['Cormorant Garamond', 'Alegreya', 'Alegreya Sans', 'IBM Plex Mono'])
+      expect(css).toContain(`font-family: '${fam}'`);
   });
 
   it('_headers: строгая CSP только для своего домена и вечный кэш для хешированных файлов', () => {
@@ -94,6 +96,8 @@ describe('PWA: установка и работа без интернета', ()
   });
 
   it('service worker регистрируется только в собранном сайте и не в сборке одним файлом', () => {
-    expect(read('src/main.tsx')).toMatch(/import\.meta\.env\.PROD && import\.meta\.env\.MODE !== 'single'\) registerServiceWorker\(\)/);
+    expect(read('src/main.tsx')).toMatch(
+      /import\.meta\.env\.PROD && import\.meta\.env\.MODE !== 'single'\) registerServiceWorker\(\)/,
+    );
   });
 });

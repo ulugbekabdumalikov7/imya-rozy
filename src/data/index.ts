@@ -1,22 +1,41 @@
-import { characters, characterById } from './characters';
-import { locations, locationById } from './locations';
-import { events, eventById, eventsSorted } from './events';
-import { deaths, deathById, deathByCharacter } from './deaths';
-import { relationships, relationshipById, relationLabels } from './relationships';
-import { clues, clueById, hypotheses } from './clues';
-import { routes, routeByCharacter } from './routes';
-import { historicalNotes, historicalNoteById, days } from './history';
-import { sources, sourceById } from './sources';
+import { characterById, characters } from './characters';
+import { clueById, clues, hypotheses } from './clues';
+import { deathByCharacter, deathById, deaths } from './deaths';
+import { eventById, events, eventsSorted } from './events';
+import { days, historicalNoteById, historicalNotes } from './history';
+import { locationById, locations } from './locations';
+import { hotspotAnchor, hotspotById, type PlanHotspot, plans } from './plans';
+import { relationLabels, relationshipById, relationships } from './relationships';
+import { routeByCharacter, routes } from './routes';
+import { sourceById, sources } from './sources';
 import type { CanonicalHour, Location, MapView } from './types';
-import { plans, hotspotById, hotspotAnchor, type PlanHotspot } from './plans';
-export { plans, hotspotById, hotspotAnchor };
+export { hotspotAnchor, hotspotById, plans };
 export type { PlanHotspot };
 
 export {
-  characters, characterById, locations, locationById, events, eventById, eventsSorted,
-  deaths, deathById, deathByCharacter, relationships, relationshipById, relationLabels,
-  clues, clueById, hypotheses, routes, routeByCharacter, historicalNotes, historicalNoteById,
-  days, sources, sourceById,
+  characterById,
+  characters,
+  clueById,
+  clues,
+  days,
+  deathByCharacter,
+  deathById,
+  deaths,
+  eventById,
+  events,
+  eventsSorted,
+  historicalNoteById,
+  historicalNotes,
+  hypotheses,
+  locationById,
+  locations,
+  relationLabels,
+  relationshipById,
+  relationships,
+  routeByCharacter,
+  routes,
+  sourceById,
+  sources,
 };
 
 export const hourLabels: Record<CanonicalHour, string> = {
@@ -32,10 +51,25 @@ export const hourLabels: Record<CanonicalHour, string> = {
   unknown: 'Время не уточнено',
 };
 
-export const hourOrder: CanonicalHour[] = ['matins', 'lauds', 'prime', 'terce', 'sext', 'nones', 'vespers', 'compline', 'night', 'unknown'];
+export const hourOrder: CanonicalHour[] = [
+  'matins',
+  'lauds',
+  'prime',
+  'terce',
+  'sext',
+  'nones',
+  'vespers',
+  'compline',
+  'night',
+  'unknown',
+];
 
 export const dayLabel = (d: number) =>
-  d === 0 ? 'До прибытия' : d === 8 ? 'Эпилог' : `День ${['', 'первый', 'второй', 'третий', 'четвёртый', 'пятый', 'шестой', 'седьмой'][d]}`;
+  d === 0
+    ? 'До прибытия'
+    : d === 8
+      ? 'Эпилог'
+      : `День ${['', 'первый', 'второй', 'третий', 'четвёртый', 'пятый', 'шестой', 'седьмой'][d]}`;
 
 export const viewLabels: Record<MapView, string> = {
   abbey: 'План аббатства',

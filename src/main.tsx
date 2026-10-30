@@ -1,10 +1,12 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
 import './fonts.css';
 import './styles.css';
-import { applyTheme, getTheme } from './lib/theme';
+
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+
+import App from './App';
 import { registerServiceWorker } from './lib/pwa';
+import { applyTheme, getTheme } from './lib/theme';
 
 // Тема уже выставлена скриптом theme-init.js; повтор нужен для сборки одним файлом, где его нет.
 applyTheme(getTheme());

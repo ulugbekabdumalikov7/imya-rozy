@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { bend, footprints } from '../src/lib/footsteps';
 
 describe('следы маршрута', () => {
@@ -12,7 +13,8 @@ describe('следы маршрута', () => {
       // ближайшая точка кривой — не дальше смещения шага (плюс погрешность дискретизации)
       let best = Infinity;
       for (let i = 0; i <= 400; i++) {
-        const t = i / 400, u = 1 - t;
+        const t = i / 400,
+          u = 1 - t;
         const x = u * u * a.x + 2 * u * t * c.x + t * t * b.x;
         const y = u * u * a.y + 2 * u * t * c.y + t * t * b.y;
         best = Math.min(best, Math.hypot(f.x - x, f.y - y));
@@ -25,8 +27,12 @@ describe('следы маршрута', () => {
   it('ноги чередуются, шаги равномерны и идут от начала к концу', () => {
     const fp = footprints(a, b, 15, 3, 10);
     expect(fp.length).toBeGreaterThan(10);
-    fp.forEach((f, i) => { if (i) expect(f.side).not.toBe(fp[i - 1]!.side); });
-    fp.forEach((f, i) => { if (i) expect(f.at).toBeGreaterThan(fp[i - 1]!.at); });
+    fp.forEach((f, i) => {
+      if (i) expect(f.side).not.toBe(fp[i - 1]!.side);
+    });
+    fp.forEach((f, i) => {
+      if (i) expect(f.at).toBeGreaterThan(fp[i - 1]!.at);
+    });
     expect(fp[0]!.at).toBeGreaterThan(0);
     expect(fp.at(-1)!.at).toBeLessThan(1);
   });

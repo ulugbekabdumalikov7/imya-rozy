@@ -1,19 +1,33 @@
+import {
+  BookMarked,
+  Clock3,
+  Download,
+  Landmark,
+  Map as MapIcon,
+  Moon,
+  Network,
+  RefreshCw,
+  ScrollText,
+  Sun,
+  Users,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { BookMarked, Clock3, Download, Landmark, Map as MapIcon, Moon, Network, RefreshCw, ScrollText, Sun, Users, X } from 'lucide-react';
-import { href, useRoute } from './lib/router';
-import { useSwap, DURATION } from './lib/motion';
-import { SpoilerProvider } from './state/spoiler';
+
 import { SpoilerControl } from './components/SpoilerControl';
-import { setTheme, useTheme } from './lib/theme';
+import { DURATION, useSwap } from './lib/motion';
 import { applyUpdate, dismissUpdate, installApp, usePwa } from './lib/pwa';
+import { href, useRoute } from './lib/router';
+import { setTheme, useTheme } from './lib/theme';
+import { CluesSection } from './sections/CluesSection';
+import { HeroesSection } from './sections/HeroesSection';
+import { HistorySection } from './sections/HistorySection';
 import { HomeSection } from './sections/HomeSection';
 import { MapSection } from './sections/MapSection';
-import { HeroesSection } from './sections/HeroesSection';
 import { RelationsSection } from './sections/RelationsSection';
-import { TimelineSection } from './sections/TimelineSection';
-import { CluesSection } from './sections/CluesSection';
-import { HistorySection } from './sections/HistorySection';
 import { SourcesSection } from './sections/SourcesSection';
+import { TimelineSection } from './sections/TimelineSection';
+import { SpoilerProvider } from './state/spoiler';
 
 const NAV = [
   { to: 'map', label: 'Карта', icon: MapIcon, match: ['map'] },
@@ -25,7 +39,14 @@ const NAV = [
 ];
 
 const TITLES: Record<string, string> = {
-  map: 'Карта', heroes: 'Герои', relations: 'Судьбы', compare: 'Сравнение судеб', timeline: 'Хронология', clues: 'Улики', history: 'История', sources: 'Источники',
+  map: 'Карта',
+  heroes: 'Герои',
+  relations: 'Судьбы',
+  compare: 'Сравнение судеб',
+  timeline: 'Хронология',
+  clues: 'Улики',
+  history: 'История',
+  sources: 'Источники',
 };
 
 /** Знак: роза-окно — круг и восемь лучей, тонкой линией. */
@@ -36,7 +57,17 @@ export function RoseMark({ className }: { className?: string }) {
       <circle cx="16" cy="16" r="4" fill="none" stroke="currentColor" strokeWidth="1.2" />
       {Array.from({ length: 8 }, (_, i) => {
         const a = (i * Math.PI) / 4;
-        return <line key={i} x1={16 + 4 * Math.cos(a)} y1={16 + 4 * Math.sin(a)} x2={16 + 13.5 * Math.cos(a)} y2={16 + 13.5 * Math.sin(a)} stroke="currentColor" strokeWidth="1" />;
+        return (
+          <line
+            key={i}
+            x1={16 + 4 * Math.cos(a)}
+            y1={16 + 4 * Math.sin(a)}
+            x2={16 + 13.5 * Math.cos(a)}
+            y2={16 + 13.5 * Math.sin(a)}
+            stroke="currentColor"
+            strokeWidth="1"
+          />
+        );
       })}
       <circle cx="16" cy="16" r="1.6" fill="currentColor" />
     </svg>
@@ -57,7 +88,10 @@ function useNavOverflow(activeKey: string) {
     nav.addEventListener('scroll', update, { passive: true });
     const ro = new ResizeObserver(update);
     ro.observe(nav);
-    return () => { nav.removeEventListener('scroll', update); ro.disconnect(); };
+    return () => {
+      nav.removeEventListener('scroll', update);
+      ro.disconnect();
+    };
   }, []);
   useEffect(() => {
     const nav = ref.current;
@@ -77,7 +111,13 @@ function ThemeToggle() {
   const toLight = theme === 'dark';
   const label = toLight ? 'Включить светлую тему' : 'Включить тёмную тему';
   return (
-    <button type="button" className="theme-toggle" onClick={() => setTheme(toLight ? 'light' : 'dark')} aria-label={label} title={label}>
+    <button
+      type="button"
+      className="theme-toggle"
+      onClick={() => setTheme(toLight ? 'light' : 'dark')}
+      aria-label={label}
+      title={label}
+    >
       {toLight ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}
     </button>
   );
@@ -91,8 +131,12 @@ function UpdateNotice() {
     <div className="update-notice" role="status">
       <RefreshCw size={15} aria-hidden="true" />
       <span>Атлас обновился</span>
-      <button type="button" className="btn btn-small btn-accent" onClick={applyUpdate}>Обновить</button>
-      <button type="button" className="icon-btn" onClick={dismissUpdate} aria-label="Позже"><X size={15} /></button>
+      <button type="button" className="btn btn-small btn-accent" onClick={applyUpdate}>
+        Обновить
+      </button>
+      <button type="button" className="icon-btn" onClick={dismissUpdate} aria-label="Позже">
+        <X size={15} />
+      </button>
     </div>
   );
 }
@@ -102,7 +146,17 @@ function InstallButton() {
   const { canInstall } = usePwa();
   if (!canInstall) return null;
   return (
-    <p><button type="button" className="link-btn install-btn" onClick={() => { void installApp(); }}><Download size={14} aria-hidden="true" /> Установить на устройство — работает без интернета</button></p>
+    <p>
+      <button
+        type="button"
+        className="link-btn install-btn"
+        onClick={() => {
+          void installApp();
+        }}
+      >
+        <Download size={14} aria-hidden="true" /> Установить на устройство — работает без интернета
+      </button>
+    </p>
   );
 }
 
@@ -125,32 +179,63 @@ function Shell() {
 
   let content;
   switch (section) {
-    case 'map': content = <MapSection route={route} />; break;
-    case 'heroes': content = <HeroesSection route={route} />; break;
+    case 'map':
+      content = <MapSection route={route} />;
+      break;
+    case 'heroes':
+      content = <HeroesSection route={route} />;
+      break;
     case 'relations':
-    case 'compare': content = <RelationsSection route={route} />; break;
-    case 'timeline': content = <TimelineSection route={route} />; break;
-    case 'clues': content = <CluesSection route={route} />; break;
-    case 'history': content = <HistorySection route={route} />; break;
-    case 'sources': content = <SourcesSection route={route} />; break;
-    default: content = <HomeSection />;
+    case 'compare':
+      content = <RelationsSection route={route} />;
+      break;
+    case 'timeline':
+      content = <TimelineSection route={route} />;
+      break;
+    case 'clues':
+      content = <CluesSection route={route} />;
+      break;
+    case 'history':
+      content = <HistorySection route={route} />;
+      break;
+    case 'sources':
+      content = <SourcesSection route={route} />;
+      break;
+    default:
+      content = <HomeSection />;
   }
 
   return (
     <div className={`app section-${section || 'home'}`}>
       <UpdateNotice />
-      <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById('main')?.focus(); }}>К содержанию</a>
+      <a
+        className="skip-link"
+        href="#main"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById('main')?.focus();
+        }}
+      >
+        К содержанию
+      </a>
       <header className="topbar">
         <a className="wordmark" href={href('')} aria-label="Атлас «Имени розы» — на главную">
           <RoseMark className="wordmark-rose" />
-          <span className="wordmark-text">Имя розы<span className="wordmark-sub">атлас аббатства · 1327</span></span>
+          <span className="wordmark-text">
+            Имя розы<span className="wordmark-sub">атлас аббатства · 1327</span>
+          </span>
         </a>
         <nav className="mainnav" aria-label="Разделы" ref={navRef}>
           {NAV.map((n) => {
             const active = n.match.includes(liveRoute.path[0] ?? '');
             const Icon = n.icon;
             return (
-              <a key={n.to} href={href(n.to)} className={active ? 'is-active' : ''} aria-current={active ? 'page' : undefined}>
+              <a
+                key={n.to}
+                href={href(n.to)}
+                className={active ? 'is-active' : ''}
+                aria-current={active ? 'page' : undefined}
+              >
                 <Icon size={16} aria-hidden="true" /> <span>{n.label}</span>
               </a>
             );
@@ -162,12 +247,21 @@ function Shell() {
         </div>
       </header>
       <main id="main" tabIndex={-1}>
-        <div key={section} className={`page-swap${phase === 'out' ? ' is-out' : ''}`}>{content}</div>
+        <div key={section} className={`page-swap${phase === 'out' ? ' is-out' : ''}`}>
+          {content}
+        </div>
       </main>
       {section !== 'map' && (
         <footer className="footer">
-          <p>Атлас по роману Умберто Эко «Имя розы» (1980). Тексты — пересказ, а не цитаты; карты — эталонные планы из книги с выровненными зонами.</p>
-          <p><a href={href('sources')}><ScrollText size={14} aria-hidden="true" /> Источники и достоверность</a></p>
+          <p>
+            Атлас по роману Умберто Эко «Имя розы» (1980). Тексты — пересказ, а не цитаты; карты — эталонные планы из
+            книги с выровненными зонами.
+          </p>
+          <p>
+            <a href={href('sources')}>
+              <ScrollText size={14} aria-hidden="true" /> Источники и достоверность
+            </a>
+          </p>
           <InstallButton />
         </footer>
       )}

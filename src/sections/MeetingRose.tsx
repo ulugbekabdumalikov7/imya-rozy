@@ -24,7 +24,12 @@ export function RoseLines({ className, draw = false }: { className?: string; dra
   return (
     <g className={className}>
       {ROSE_PATHS.map((d, i) => (
-        <path key={i} d={d} pathLength={draw ? 1 : undefined} style={draw ? { ['--rd' as string]: `${i * 0.18}s` } : undefined} />
+        <path
+          key={i}
+          d={d}
+          pathLength={draw ? 1 : undefined}
+          style={draw ? { ['--rd' as string]: `${i * 0.18}s` } : undefined}
+        />
       ))}
     </g>
   );
@@ -56,7 +61,12 @@ export function MeetingMarker({ unit, selected, onPick, onActivate }: MarkerProp
       tabIndex={0}
       aria-label="Адсон и девушка: встреча на кухне Эдифиция, третья ночь"
       onClick={onPick}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onActivate(); } }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onActivate();
+        }
+      }}
     >
       <circle r={r * 1.6} className="hit" />
       <circle r={r * 1.35} className="meeting-glow" style={{ strokeWidth: unit }} />
@@ -65,8 +75,12 @@ export function MeetingMarker({ unit, selected, onPick, onActivate }: MarkerProp
         <RoseLines className="meeting-rose" />
       </g>
       <g className="meeting-label" transform={`translate(${r + 7 * unit} 0)`}>
-        <text style={{ fontSize: 12.5 * unit }} dominantBaseline="middle" y={-6 * unit} className="meeting-label-title">Адсон и девушка</text>
-        <text style={{ fontSize: 10.5 * unit }} dominantBaseline="middle" y={8 * unit} className="meeting-label-sub">Кухня · нижний этаж · третья ночь</text>
+        <text style={{ fontSize: 12.5 * unit }} dominantBaseline="middle" y={-6 * unit} className="meeting-label-title">
+          Адсон и девушка
+        </text>
+        <text style={{ fontSize: 10.5 * unit }} dominantBaseline="middle" y={8 * unit} className="meeting-label-sub">
+          Кухня · нижний этаж · третья ночь
+        </text>
       </g>
     </g>
   );
@@ -76,7 +90,17 @@ export function MeetingMarker({ unit, selected, onPick, onActivate }: MarkerProp
  * Сцена при открытии встречи: план гаснет, как при свече, вокруг остаётся пятно света,
  * роза прорисовывается линией, появляется подпись. Около трёх с половиной секунд после подлёта камеры; при уменьшении движения — без затемнения и прорисовки.
  */
-export function MeetingScene({ unit, width, height, uid }: { unit: number; width: number; height: number; uid: string }) {
+export function MeetingScene({
+  unit,
+  width,
+  height,
+  uid,
+}: {
+  unit: number;
+  width: number;
+  height: number;
+  uid: string;
+}) {
   const pt = meetingPoint(unit);
   if (!pt) return null;
   const R = 150 * unit;
@@ -95,7 +119,14 @@ export function MeetingScene({ unit, width, height, uid }: { unit: number; width
           <circle cx={pt[0]} cy={pt[1]} r={R} fill={`url(#${gradId})`} />
         </mask>
       </defs>
-      <rect className="scene-veil" x={-width} y={-height} width={width * 3} height={height * 3} mask={`url(#${maskId})`} />
+      <rect
+        className="scene-veil"
+        x={-width}
+        y={-height}
+        width={width * 3}
+        height={height * 3}
+        mask={`url(#${maskId})`}
+      />
       <g transform={`translate(${pt[0]} ${pt[1]})`}>
         <g transform={`scale(${unit * 4.2}) translate(0 -2.6)`}>
           <RoseLines className="scene-rose" draw />
@@ -103,8 +134,12 @@ export function MeetingScene({ unit, width, height, uid }: { unit: number; width
         {/* положение — атрибутом внешней группы, анимация — у внутренней: CSS-transform анимации иначе заменил бы атрибут */}
         <g transform={`translate(0 ${66 * unit})`}>
           <g className="scene-caption">
-            <text textAnchor="middle" style={{ fontSize: 17 * unit }} className="scene-caption-title">Третья ночь. Кухня Эдифиция.</text>
-            <text textAnchor="middle" y={19 * unit} style={{ fontSize: 11.5 * unit }} className="scene-caption-sub">Адсон встречает девушку из деревни</text>
+            <text textAnchor="middle" style={{ fontSize: 17 * unit }} className="scene-caption-title">
+              Третья ночь. Кухня Эдифиция.
+            </text>
+            <text textAnchor="middle" y={19 * unit} style={{ fontSize: 11.5 * unit }} className="scene-caption-sub">
+              Адсон встречает девушку из деревни
+            </text>
           </g>
         </g>
       </g>

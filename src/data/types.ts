@@ -35,13 +35,7 @@ export interface SourceReference {
   url?: string;
 }
 
-export type CharacterGroup =
-  | 'investigators'
-  | 'library'
-  | 'abbey'
-  | 'franciscans'
-  | 'papal'
-  | 'outside';
+export type CharacterGroup = 'investigators' | 'library' | 'abbey' | 'franciscans' | 'papal' | 'outside';
 
 export interface DossierSection extends Gate {
   heading: string;
@@ -72,21 +66,29 @@ export interface Character extends Gate {
   dossier: DossierSection[];
   fate: GatedText[];
   /** Символ для эмблемы вместо выдуманного портрета. */
-  emblem: 'lens' | 'quill' | 'key' | 'eye' | 'book' | 'herb' | 'scale' | 'cross' | 'flame' | 'tower' | 'bowl' | 'seal' | 'crown' | 'rose' | 'hammer' | 'glass';
+  emblem:
+    | 'lens'
+    | 'quill'
+    | 'key'
+    | 'eye'
+    | 'book'
+    | 'herb'
+    | 'scale'
+    | 'cross'
+    | 'flame'
+    | 'tower'
+    | 'bowl'
+    | 'seal'
+    | 'crown'
+    | 'rose'
+    | 'hammer'
+    | 'glass';
   certainty: Certainty;
   sourceIds: string[];
 }
 
 export type LocationType =
-  | 'church'
-  | 'aedificium'
-  | 'library'
-  | 'service'
-  | 'residence'
-  | 'garden'
-  | 'medical'
-  | 'outer'
-  | 'passage';
+  'church' | 'aedificium' | 'library' | 'service' | 'residence' | 'garden' | 'medical' | 'outer' | 'passage';
 
 /** Вид карты: общий план аббатства либо план библиотеки (каждый в своей системе координат). */
 export type MapView = 'abbey' | 'library';
@@ -115,19 +117,10 @@ export interface Location {
 }
 
 export type CanonicalHour =
-  | 'matins' | 'lauds' | 'prime' | 'terce' | 'sext' | 'nones' | 'vespers' | 'compline' | 'night' | 'unknown';
+  'matins' | 'lauds' | 'prime' | 'terce' | 'sext' | 'nones' | 'vespers' | 'compline' | 'night' | 'unknown';
 
 export type EventKind =
-  | 'arrival'
-  | 'death'
-  | 'discovery'
-  | 'clue'
-  | 'meeting'
-  | 'library'
-  | 'political'
-  | 'trial'
-  | 'finale'
-  | 'epilogue';
+  'arrival' | 'death' | 'discovery' | 'clue' | 'meeting' | 'library' | 'political' | 'trial' | 'finale' | 'epilogue';
 
 export interface StoryEvent extends Gate {
   id: string;
@@ -138,7 +131,7 @@ export interface StoryEvent extends Gate {
   /** Дополнительные сведения, открывающиеся позже. */
   later?: GatedText[];
   significance: string;
-  day: number;            // 1–7; 0 — предыстория; 8 — эпилог
+  day: number; // 1–7; 0 — предыстория; 8 — эпилог
   hour: CanonicalHour;
   /** Порядок внутри всей хронологии. */
   sequence: number;
