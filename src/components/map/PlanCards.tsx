@@ -1,10 +1,10 @@
 import { ArrowRight, MapPinned } from 'lucide-react';
 
-import { locationById, plans } from '../data';
-import { ABBEY_LEGEND, type PlanHotspot } from '../data/plans';
-import type { MapView } from '../data/types';
-import { useSpoiler } from '../state/spoiler';
-import { CertaintyBadge, LocChip, Withheld } from './ui';
+import { locationById, plans } from '../../data';
+import { ABBEY_LEGEND, type PlanHotspot } from '../../data/plans';
+import type { MapView } from '../../data/types';
+import { useSpoiler } from '../../state/spoiler';
+import { CertaintyBadge, LocChip, Withheld } from '../ui';
 
 /** Видимые тексты зоны с учётом режима раскрытия сюжета. */
 export function hotspotTexts(h: PlanHotspot, known: boolean) {

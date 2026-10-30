@@ -17,8 +17,8 @@ import {
   sources,
 } from '../src/data';
 import { ABBEY_LEGEND } from '../src/data/plans';
+import { statusText } from '../src/lib/characterStatus';
 import { byGender, count, EPISODES, plural, SHARED_EPISODES, SOURCES } from '../src/lib/ru';
-import { statusText } from '../src/sections/HeroesSection';
 
 /**
  * Латинские, итальянские и собственные имена, которые законно встречаются в русском тексте:

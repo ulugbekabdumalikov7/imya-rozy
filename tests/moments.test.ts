@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { nameRows } from '../src/components/map/MomentLayer';
 import { eventById, events } from '../src/data';
 import {
   dayMarks,
@@ -11,7 +12,6 @@ import {
   resolveMoment,
 } from '../src/lib/moments';
 import { isVisible } from '../src/lib/spoilers';
-import { nameRows } from '../src/sections/MomentLayer';
 
 const full = { mode: 'full', day: 7 } as const;
 const day3 = { mode: 'progress', day: 3 } as const;

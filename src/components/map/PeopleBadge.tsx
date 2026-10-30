@@ -1,4 +1,4 @@
-import type { Character } from '../data/types';
+import type { Character } from '../../data/types';
 import { nameRows } from './MomentLayer';
 
 /** Силуэт человека (голова и плечи) в единицах «1 = 1px», центр в нуле. */

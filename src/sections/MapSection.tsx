@@ -13,7 +13,8 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { EventCard, LocationCard } from '../components/cards';
-import { AbbeyLegend, HotspotCard, PlanFacts } from '../components/PlanCards';
+import { AbbeyLegend, HotspotCard, PlanFacts } from '../components/map/PlanCards';
+import { type FocusReason, type LayerKey, PlanMap } from '../components/map/PlanMap';
 import { DetailPanel, LocChip } from '../components/ui';
 import {
   anchorIn,
@@ -40,7 +41,6 @@ import { horizon } from '../lib/spoilers';
 import { type Theme, useTheme } from '../lib/theme';
 import { eventTitle } from '../lib/visible';
 import { useSpoiler } from '../state/spoiler';
-import { type FocusReason, type LayerKey, PlanMap } from './PlanMap';
 
 const LAYERS: { key: LayerKey; label: string; hint: string }[] = [
   { key: 'arch', label: 'Контуры зон', hint: 'Обводка построек и комнат по плану' },

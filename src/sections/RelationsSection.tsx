@@ -5,6 +5,7 @@ import { RelationDetail } from '../components/cards';
 import { Chronicle, DetailPanel, Emblem, SectionHead } from '../components/ui';
 import { characterById, characters, eventsOfCharacter, relationLabels, relationships } from '../data';
 import type { RelationType } from '../data/types';
+import { groupLabels } from '../lib/characterStatus';
 import { reducedMotion } from '../lib/motion';
 import { href, patchParams, type Route as AppRoute } from '../lib/router';
 import { horizon } from '../lib/spoilers';
@@ -12,7 +13,6 @@ import { usePanZoom } from '../lib/usePanZoom';
 import { relationPhaseAt, visibleTexts } from '../lib/visible';
 import { useSpoiler } from '../state/spoiler';
 import { CompareView } from './CompareView';
-import { groupLabels } from './HeroesSection';
 
 const GW = 1000;
 const GH = 720;

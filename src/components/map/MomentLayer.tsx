@@ -1,5 +1,5 @@
-import { anchorIn, characterById, plans } from '../data';
-import type { MapView, StoryEvent } from '../data/types';
+import { anchorIn, characterById, plans } from '../../data';
+import type { MapView, StoryEvent } from '../../data/types';
 
 interface Props {
   view: MapView;

@@ -1,8 +1,8 @@
 import { Minus, Plus, RotateCcw } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import abbeyPlanUrl from '../assets/abbey-plan.webp';
-import libraryPlanUrl from '../assets/library-plan.webp';
+import abbeyPlanUrl from '../../assets/abbey-plan.webp';
+import libraryPlanUrl from '../../assets/library-plan.webp';
 import {
   anchorIn,
   characterById,
@@ -16,16 +16,16 @@ import {
   locationById,
   plans,
   routeByCharacter,
-} from '../data';
-import { LIBRARY_PASSAGE_MARK, LIBRARY_RED_GLYPHS } from '../data/planGeometry';
-import type { PlanHotspot } from '../data/plans';
-import type { MapView, Route, RouteStep, StoryEvent } from '../data/types';
-import { FOOT_PATH, type Footprint, footprints } from '../lib/footsteps';
-import { happenedBy } from '../lib/moments';
-import { firstTimeThisSession, reducedMotion } from '../lib/motion';
-import { usePanZoom } from '../lib/usePanZoom';
-import { type DeathView, deathView, eventTitle } from '../lib/visible';
-import { useSpoiler } from '../state/spoiler';
+} from '../../data';
+import { LIBRARY_PASSAGE_MARK, LIBRARY_RED_GLYPHS } from '../../data/planGeometry';
+import type { PlanHotspot } from '../../data/plans';
+import type { MapView, Route, RouteStep, StoryEvent } from '../../data/types';
+import { FOOT_PATH, type Footprint, footprints } from '../../lib/footsteps';
+import { happenedBy } from '../../lib/moments';
+import { firstTimeThisSession, reducedMotion } from '../../lib/motion';
+import { usePanZoom } from '../../lib/usePanZoom';
+import { type DeathView, deathView, eventTitle } from '../../lib/visible';
+import { useSpoiler } from '../../state/spoiler';
 import { MEETING_EVENT_ID, MEETING_SCENE_DELAY_MS, MEETING_SCENE_MS, MeetingMarker, MeetingScene } from './MeetingRose';
 import { MomentLayer } from './MomentLayer';
 import { PeopleBadge, PeoplePopover } from './PeopleBadge';
