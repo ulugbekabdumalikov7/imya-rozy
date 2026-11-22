@@ -10,9 +10,24 @@ export interface View {
 
 /**
  * Масштабирование и перемещение SVG-схемы: колесо мыши, перетаскивание, щипок двумя пальцами, кнопки.
+ * Для объёмного макета — ещё и поворот: правой кнопкой (или с Shift) и вращением двух пальцев.
  * Возвращает трансформацию для внутренней группы и масштаб «единица схемы → пиксель экрана».
  */
-export function usePanZoom(svgRef: RefObject<SVGSVGElement>, width: number, height: number, minK = 1, maxK = 5) {
+export interface OrbitHandlers {
+  /** Перетаскивание правой кнопкой мыши или с Shift: смещение указателя в пикселях экрана. */
+  onOrbit?: (dx: number, dy: number) => void;
+  /** Поворот двумя пальцами: угол в градусах. */
+  onTwist?: (deg: number) => void;
+}
+
+export function usePanZoom(
+  svgRef: RefObject<SVGSVGElement>,
+  width: number,
+  height: number,
+  minK = 1,
+  maxK = 5,
+  orbit: OrbitHandlers = {},
+) {
   const [view, setViewRaw] = useState<View>({ x: 0, y: 0, k: 1 });
   const viewRef = useRef(view);
   viewRef.current = view;
@@ -28,7 +43,9 @@ export function usePanZoom(svgRef: RefObject<SVGSVGElement>, width: number, heig
   const [pxPerUnit, setPxPerUnit] = useState(1);
   const [box, setBox] = useState({ w: width, h: height });
   const pointers = useRef(new Map<number, { x: number; y: number }>());
-  const last = useRef<{ x: number; y: number; dist?: number } | null>(null);
+  const last = useRef<{ x: number; y: number; dist?: number; angle?: number } | null>(null);
+  /** Жест поворота макета (правая кнопка или Shift): последняя точка в пикселях экрана. */
+  const orbiting = useRef<{ x: number; y: number } | null>(null);
   const moved = useRef(false);
 
   const clamp = useCallback(
@@ -95,16 +112,35 @@ export function usePanZoom(svgRef: RefObject<SVGSVGElement>, width: number, heig
   }, [svgRef, toSvg, zoomAt]);
 
   const onPointerDown = (e: React.PointerEvent) => {
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     moved.current = false;
+    if (orbit.onOrbit && e.pointerType === 'mouse' && (e.button === 2 || e.shiftKey)) {
+      orbiting.current = { x: e.clientX, y: e.clientY };
+      (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+      return;
+    }
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const pts = [...pointers.current.values()];
     if (pts.length === 1) last.current = toSvg(e.clientX, e.clientY);
     if (pts.length === 2) {
       const [a, b] = pts as [{ x: number; y: number }, { x: number; y: number }];
-      last.current = { ...toSvg((a.x + b.x) / 2, (a.y + b.y) / 2), dist: Math.hypot(a.x - b.x, a.y - b.y) };
+      last.current = {
+        ...toSvg((a.x + b.x) / 2, (a.y + b.y) / 2),
+        dist: Math.hypot(a.x - b.x, a.y - b.y),
+        angle: Math.atan2(b.y - a.y, b.x - a.x),
+      };
     }
   };
   const onPointerMove = (e: React.PointerEvent) => {
+    if (orbiting.current) {
+      const dx = e.clientX - orbiting.current.x;
+      const dy = e.clientY - orbiting.current.y;
+      if (Math.abs(dx) + Math.abs(dy) > 0) {
+        moved.current = true;
+        orbit.onOrbit?.(dx, dy);
+      }
+      orbiting.current = { x: e.clientX, y: e.clientY };
+      return;
+    }
     if (!pointers.current.has(e.pointerId) || !last.current) return;
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const pts = [...pointers.current.values()];
@@ -123,11 +159,19 @@ export function usePanZoom(svgRef: RefObject<SVGSVGElement>, width: number, heig
       const dist = Math.hypot(a.x - b.x, a.y - b.y);
       const mid = toSvg((a.x + b.x) / 2, (a.y + b.y) / 2);
       if (last.current.dist) zoomAt(dist / last.current.dist, mid.x, mid.y);
+      const angle = Math.atan2(b.y - a.y, b.x - a.x);
+      if (orbit.onTwist && last.current.angle !== undefined) {
+        let d = ((angle - last.current.angle) * 180) / Math.PI;
+        if (d > 180) d -= 360;
+        if (d < -180) d += 360;
+        if (Math.abs(d) < 20) orbit.onTwist(d);
+      }
       moved.current = true;
-      last.current = { ...mid, dist };
+      last.current = { ...mid, dist, angle };
     }
   };
   const onPointerUp = (e: React.PointerEvent) => {
+    orbiting.current = null;
     pointers.current.delete(e.pointerId);
     if (pointers.current.size === 0) last.current = null;
   };

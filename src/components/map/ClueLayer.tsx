@@ -1,5 +1,5 @@
-import { hotspotAnchor } from '../../data';
 import type { PlanHotspot } from '../../data/plans';
+import { useMapGeometry } from './projection';
 
 interface Props {
   /** Число видимых улик по зонам плана. */
@@ -12,12 +12,13 @@ interface Props {
 
 /** Ромбики с числом улик в зоне. */
 export function ClueLayer({ counts, hotspots, unit, click, onPick }: Props) {
+  const geo = useMapGeometry();
   return (
     <g className="layer-clues">
       {[...counts.entries()].map(([id, n]) => {
         const h = hotspots.find((x) => x.id === id);
         if (!h) return null;
-        const a = hotspotAnchor(h);
+        const a = geo.anchor(h);
         const s = 8 * unit;
         return (
           <g

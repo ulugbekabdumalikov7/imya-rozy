@@ -40,7 +40,8 @@ describe('конфигурация развёртывания', () => {
 
   it('планы хранятся в WebP и не тяжелее 600 КБ', () => {
     const plans = readdirSync(join(root, 'src/assets')).filter((f) => /plan/.test(f));
-    expect(plans.sort()).toEqual(['abbey-plan.webp', 'library-plan.webp']);
+    // abbey-plan-ink — тот же план, только линии: он отпечатан на основании объёмного макета
+    expect(plans.sort()).toEqual(['abbey-plan-ink.webp', 'abbey-plan.webp', 'library-plan.webp']);
     for (const p of plans) expect(statSync(join(root, 'src/assets', p)).size, p).toBeLessThan(600 * 1024);
   });
 

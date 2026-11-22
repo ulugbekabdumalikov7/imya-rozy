@@ -1,5 +1,6 @@
-import { anchorIn, characterById, plans } from '../../data';
+import { characterById, plans } from '../../data';
 import type { MapView, StoryEvent } from '../../data/types';
+import { useMapGeometry } from './projection';
 
 interface Props {
   view: MapView;
@@ -18,6 +19,7 @@ interface Props {
  * и текущий момент — пульсирующее кольцо, подпись и участники.
  */
 export function MomentLayer({ view, unit, moment, thread, title, label, isVisibleCharacter, onPick }: Props) {
+  const { anchorIn } = useMapGeometry();
   // Точки нити: подряд идущие события в одном месте сливаются в одну точку.
   const pts: { e: StoryEvent; x: number; y: number }[] = [];
   for (const e of thread) {
