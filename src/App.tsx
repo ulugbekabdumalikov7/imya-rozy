@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
+import { FeedbackButton } from './components/feedback/FeedbackButton';
 import { Guide, GuideButton } from './components/guide';
 import { SpoilerControl } from './components/SpoilerControl';
 import { RoseMark } from './components/ui';
@@ -221,6 +222,7 @@ function Shell() {
         </nav>
         <div className="topbar-actions">
           <GuideButton route={liveRoute} />
+          <FeedbackButton />
           <ThemeToggle />
           <SpoilerControl />
         </div>

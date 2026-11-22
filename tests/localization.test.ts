@@ -215,6 +215,8 @@ const UI_ALLOWED = new Set([
   'legisti',
   'Horarium',
   'Opiniones',
+  'Scriptor',
+  'lectori',
   'NOME',
   'DELLA',
   'ROSA',
