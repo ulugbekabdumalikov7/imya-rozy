@@ -78,7 +78,7 @@ export function SpoilerControl() {
   }, [open]);
   const Icon = ICONS[spoiler.mode];
   return (
-    <div className="spoiler-control" ref={ref}>
+    <div className="spoiler-control" ref={ref} data-guide="spoiler">
       <button
         type="button"
         className={`spoiler-btn mode-${spoiler.mode}`}

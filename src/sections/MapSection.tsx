@@ -387,7 +387,7 @@ export function MapSection({ route }: { route: AppRoute }) {
           >
             <Layers size={15} aria-hidden="true" /> Слои
           </button>
-          <div className="seg seg-compact" role="group" aria-label="План">
+          <div className="seg seg-compact" role="group" aria-label="План" data-guide="plan-switch">
             {VIEWS.map((v) => (
               <button
                 key={v}
