@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 
-import { anchorIn, characterById, clues, deaths, eventById, events, hotspotIn } from '../../data';
+import { characterById, clues, deaths, eventById, events, hotspotIn } from '../../data';
 import type { MapView, StoryEvent } from '../../data/types';
 import { happenedBy } from '../../lib/moments';
 import { type DeathView, deathView } from '../../lib/visible';
 import { useSpoiler } from '../../state/spoiler';
+import type { MapGeometry } from './projection';
 
 export interface DeathMarker {
   v: DeathView;
@@ -18,7 +19,13 @@ export interface DeathMarker {
  * Данные слоёв карты: кто бывал в каждой зоне, сколько там улик, где отметить смерти.
  * Учитывают раскрытие, фильтр дня и момент «Час за часом».
  */
-export function useMapMarkers(view: MapView, dayFilter: number | null, moment: StoryEvent | undefined, unit: number) {
+export function useMapMarkers(
+  view: MapView,
+  dayFilter: number | null,
+  moment: StoryEvent | undefined,
+  unit: number,
+  geometry: MapGeometry,
+) {
   const { spoiler, visible } = useSpoiler();
   const dayOk = (d: number) => dayFilter === null || d === dayFilter;
   const timeOk = happenedBy(moment);
@@ -64,8 +71,8 @@ export function useMapMarkers(view: MapView, dayFilter: number | null, moment: S
       if (!dayOk(v.death.day)) continue;
       const found = eventById.get(v.death.eventId);
       if (found && !timeOk(found.sequence)) continue; // тело ещё не нашли
-      const a = anchorIn(view, v.death.foundLocationId);
-      const site = v.deathLocation ? anchorIn(view, v.deathLocation.locationId) : null;
+      const a = geometry.anchorIn(view, v.death.foundLocationId);
+      const site = v.deathLocation ? geometry.anchorIn(view, v.deathLocation.locationId) : null;
       if (!a && !site) continue;
       const base = a ?? site!;
       const key = `${base[0]},${base[1]}`;
@@ -83,7 +90,7 @@ export function useMapMarkers(view: MapView, dayFilter: number | null, moment: S
     }
     return out.sort((a, b) => a.v.death.day - b.v.death.day);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deathViews, view, dayFilter, unit, momentKey]);
+  }, [deathViews, view, dayFilter, unit, momentKey, geometry]);
 
   return { peopleAt, cluesAt, deathMarkers };
 }

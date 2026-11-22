@@ -1,8 +1,8 @@
 import { useMemo, useRef } from 'react';
 
-import { anchorIn } from '../../data';
 import type { MapView, RouteStep } from '../../data/types';
 import { FOOT_PATH, type Footprint, footprints } from '../../lib/footsteps';
+import { useMapGeometry } from './projection';
 
 /**
  * Маршрут: следы героя идут по той же кривой, что связывала эпизоды, шаг за шагом;
@@ -27,8 +27,9 @@ export function RouteLines({
   current: number | null;
   startDelay?: number;
 }) {
+  const geo = useMapGeometry();
   const ptsList = steps.map((s) => {
-    const a = anchorIn(view, s.locationId);
+    const a = geo.anchorIn(view, s.locationId);
     return a ? { ...s, x: a[0], y: a[1] } : null;
   });
   const ghost = cls === 'route-ghost';
@@ -58,7 +59,7 @@ export function RouteLines({
     });
     return out;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stepsKey, view, u, size, ghost]);
+  }, [stepsKey, view, u, size, ghost, geo]);
 
   return (
     <g className={`layer-route ${cls}${animate ? ' is-route-drawing' : ''}`} aria-hidden={ghost || undefined}>

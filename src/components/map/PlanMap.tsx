@@ -1,22 +1,26 @@
-import { Minus, Plus, RotateCcw } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Box, Compass, LocateFixed, Map as MapIcon, Minus, Plus, RotateCcw, RotateCw } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import abbeyPlanUrl from '../../assets/abbey-plan.webp';
 import libraryPlanUrl from '../../assets/library-plan.webp';
-import { characterById, eventById, hotspotAnchor, plans, routeByCharacter } from '../../data';
+import { characterById, eventById, plans, routeByCharacter } from '../../data';
+import { BOARD, PEAKS } from '../../data/abbeyModel';
 import { LIBRARY_PASSAGE_MARK, LIBRARY_RED_GLYPHS } from '../../data/planGeometry';
 import type { PlanHotspot } from '../../data/plans';
 import type { MapView, Route, RouteStep, StoryEvent } from '../../data/types';
-import { firstTimeThisSession, reducedMotion } from '../../lib/motion';
+import { type Camera, makeProjector } from '../../lib/model3d';
+import { easeInOut, firstTimeThisSession, reducedMotion } from '../../lib/motion';
 import { usePanZoom } from '../../lib/usePanZoom';
 import { eventTitle } from '../../lib/visible';
 import { useSpoiler } from '../../state/spoiler';
+import { AbbeyModel } from './AbbeyModel';
 import { ClueLayer } from './ClueLayer';
 import { DeathLayer } from './DeathLayer';
 import { hotspotLabel } from './hotspotLabel';
 import { MEETING_EVENT_ID, MeetingMarker, MeetingScene } from './MeetingRose';
 import { MomentLayer } from './MomentLayer';
 import { PeopleBadge, PeoplePopover } from './PeopleBadge';
+import { FLAT_GEOMETRY, modelGeometry, ProjectionProvider } from './projection';
 import { RouteLines } from './RouteLines';
 import { type FocusReason, useMapFocus } from './useMapFocus';
 import { useMapMarkers } from './useMapMarkers';
@@ -51,6 +55,12 @@ interface Props {
   momentLabel?: string;
 }
 
+/** Камера макета по умолчанию: лёгкий поворот и взгляд сверху под углом — видны две стороны зданий. */
+const MODEL_CAMERA: Camera = { yaw: -14, tilt: 50 };
+/** Вид сверху, как на исходном плане. */
+const PLAN_CAMERA: Camera = { yaw: 0, tilt: 0 };
+const MAX_TILT = 68;
+
 const pts = (poly: [number, number][]) => poly.map((p) => p.join(',')).join(' ');
 /** Порядок отрисовки: местность и открытые пространства — под постройками. */
 const LAYER_ORDER: Record<PlanHotspot['kind'], number> = { terrain: 0, open: 1, opening: 2, building: 3, room: 3 };
@@ -61,8 +71,6 @@ export function PlanMap(p: Props) {
   const W = plan.width;
   const H = plan.height;
   const svgRef = useRef<SVGSVGElement>(null);
-  const pz = usePanZoom(svgRef, W, H, 1, p.view === 'library' ? 5 : 6);
-  const unit = 1 / (pz.pxPerUnit * pz.view.k || 1); // одна экранная точка в единицах плана
   const [hoverId, setHoverId] = useState<string | null>(null);
   // «Здесь бывали»: открытое окошко слоя «Персонажи» (id зоны плана)
   const [peopleOpen, setPeopleOpen] = useState<string | null>(null);
@@ -83,6 +91,88 @@ export function PlanMap(p: Props) {
     reducedMotion() ? 'none' : firstTimeThisSession('map-draw') ? 'drawing' : 'settling',
   );
   const settleDelay = drawMode === 'drawing' ? 1400 : drawMode === 'settling' ? 300 : 0;
+
+  // ── Объёмный макет аббатства: камера (поворот и наклон), рост зданий при первом показе ──
+  const isModel = p.view === 'abbey';
+  const cameraRef = useRef<Camera>(MODEL_CAMERA);
+  const [camera, setCameraRaw] = useState<Camera>(MODEL_CAMERA);
+  const [moving, setMoving] = useState(false);
+  const camAnim = useRef<number | null>(null);
+  const settleTimer = useRef<number | null>(null);
+  const setCamera = useCallback((c: Camera) => {
+    cameraRef.current = c;
+    setCameraRaw(c);
+    // во время движения — без окон, черепицы и размытия теней: так поворот идёт плавно
+    setMoving(true);
+    if (settleTimer.current) window.clearTimeout(settleTimer.current);
+    settleTimer.current = window.setTimeout(() => setMoving(false), 180);
+  }, []);
+  const turnTo = useCallback(
+    (to: Camera, ms = 650) => {
+      if (camAnim.current) cancelAnimationFrame(camAnim.current);
+      const from = cameraRef.current;
+      // кратчайший поворот
+      const dyaw = ((((to.yaw - from.yaw) % 360) + 540) % 360) - 180;
+      if (reducedMotion() || ms <= 0) {
+        setCamera({ yaw: from.yaw + dyaw, tilt: to.tilt });
+        return;
+      }
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - t0) / ms);
+        const e = easeInOut(t);
+        setCamera({ yaw: from.yaw + dyaw * e, tilt: from.tilt + (to.tilt - from.tilt) * e });
+        camAnim.current = t < 1 ? requestAnimationFrame(step) : null;
+      };
+      camAnim.current = requestAnimationFrame(step);
+    },
+    [setCamera],
+  );
+  useEffect(
+    () => () => {
+      if (camAnim.current) cancelAnimationFrame(camAnim.current);
+      if (settleTimer.current) window.clearTimeout(settleTimer.current);
+    },
+    [],
+  );
+  const [grow, setGrow] = useState(() => (isModel && drawMode === 'drawing' ? 0 : 1));
+  useEffect(() => {
+    if (grow >= 1) return;
+    const t0 = performance.now();
+    let raf = 0;
+    const step = (now: number) => {
+      const t = Math.min(1, Math.max(0, (now - t0 - 250) / 1500));
+      setGrow(1 - Math.pow(1 - t, 3));
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+    // только при первом показе
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const proj = useMemo(() => makeProjector(camera, W, H, BOARD, PEAKS), [camera, W, H]);
+  const geometry = useMemo(() => (isModel ? modelGeometry(proj, grow) : FLAT_GEOMETRY), [isModel, proj, grow]);
+  const orbit = useCallback(
+    (dx: number, dy: number) => {
+      if (!isModel) return;
+      if (camAnim.current) cancelAnimationFrame(camAnim.current);
+      const c = cameraRef.current;
+      setCamera({ yaw: c.yaw + dx * 0.35, tilt: Math.max(0, Math.min(MAX_TILT, c.tilt - dy * 0.25)) });
+    },
+    [isModel, setCamera],
+  );
+  const twist = useCallback(
+    (deg: number) => {
+      if (!isModel) return;
+      if (camAnim.current) cancelAnimationFrame(camAnim.current);
+      const c = cameraRef.current;
+      setCamera({ ...c, yaw: c.yaw + deg });
+    },
+    [isModel, setCamera],
+  );
+
+  const pz = usePanZoom(svgRef, W, H, 1, p.view === 'library' ? 5 : 6, { onOrbit: orbit, onTwist: twist });
+  const unit = 1 / (pz.pxPerUnit * pz.view.k || 1); // одна экранная точка в единицах плана
 
   const meeting = useMeetingScene(p.view, p.selectedEventId, p.moment);
 
@@ -107,9 +197,10 @@ export function PlanMap(p: Props) {
     panelOpen: p.panelOpen,
     momentActive: !!p.moment,
     settleDelay,
+    geometry,
   });
 
-  const { peopleAt, cluesAt, deathMarkers } = useMapMarkers(p.view, p.dayFilter, p.moment, unit);
+  const { peopleAt, cluesAt, deathMarkers } = useMapMarkers(p.view, p.dayFilter, p.moment, unit, geometry);
 
   const routeStyle =
     p.route?.characterId === 'william'
@@ -129,274 +220,350 @@ export function PlanMap(p: Props) {
   const label = (h: PlanHotspot) => hotspotLabel(h, visible);
   const tip = hovered ?? selected;
 
+  /** Зона плана — кнопка: те же подписи, клавиши и обработчики на плоском плане и на макете. */
+  const spotProps = (h: PlanHotspot) => {
+    const isSel = selected?.id === h.id;
+    const lb = label(h);
+    return {
+      'data-spot': h.id,
+      className: `spot spot-${h.kind}${isSel ? ' is-selected' : ''}${hoverId === h.id ? ' is-hover' : ''}${h.locationId ? ' is-linked' : ''}`,
+      role: 'button',
+      tabIndex: 0,
+      'aria-label': `${lb.title}${lb.sub ? `, ${lb.sub}` : ''}`,
+      'aria-pressed': isSel,
+      onPointerEnter: (e: React.PointerEvent) => e.pointerType === 'mouse' && setHoverId(h.id),
+      onPointerLeave: () => setHoverId((x) => (x === h.id ? null : x)),
+      onFocus: () => setHoverId(h.id),
+      onBlur: () => setHoverId((x) => (x === h.id ? null : x)),
+      onClick: click(() => p.onPickHotspot(h)),
+      onKeyDown: (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          p.onPickHotspot(h);
+        }
+      },
+    };
+  };
+
   return (
     <div className="map-canvas" style={{ ['--plan-ratio' as string]: `${W} / ${H}` }}>
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${W} ${H}`}
-        className={`plan-svg tone-${p.tone} plan-${p.view}${p.layers.has('arch') ? ' layers-arch' : ''}${meeting.playing ? ' is-meeting-scene' : ''}`}
-        role="group"
-        aria-label={p.view === 'abbey' ? 'План аббатства' : 'План библиотеки'}
-        {...pz.handlers}
-        onClick={() => {
-          if (peopleOpen) setPeopleOpen(null);
-        }} // нажатие мимо окошка «Здесь бывали» закрывает его
-      >
-        <defs>
-          <filter id="tone-night" colorInterpolationFilters="sRGB">
-            {/* Ночная гамма: яркость → инверсия; бумага становится чернотой, чернила — костью. */}
-            <feColorMatrix
-              type="matrix"
-              values="-0.28 -0.55 -0.1 0 0.93  -0.27 -0.53 -0.1 0 0.9  -0.25 -0.5 -0.1 0 0.85  0 0 0 1 0"
-            />
-            <feComponentTransfer>
-              <feFuncR type="gamma" amplitude="1" exponent="1.35" offset="0" />
-              <feFuncG type="gamma" amplitude="1" exponent="1.35" offset="0" />
-              <feFuncB type="gamma" amplitude="1" exponent="1.35" offset="0" />
-            </feComponentTransfer>
-          </filter>
-          {/* край скана (корешок, тень) в ночной гамме становится светлой рамкой — обрезаем его */}
-          <clipPath id={`scan-edge-${p.view}`}>
-            <rect x={10} y={8} width={W - 20} height={H - 16} />
-          </clipPath>
-        </defs>
-        <rect x={-W} y={-H} width={W * 3} height={H * 3} className="plan-ground" />
-        <g transform={pz.transform}>
-          <g key={p.view} className={drawClass}>
-            <image
-              href={IMAGES[p.view]}
-              x={0}
-              y={0}
-              width={W}
-              height={H}
-              className="plan-image"
-              filter={p.tone === 'night' ? 'url(#tone-night)' : undefined}
-              clipPath={p.tone === 'night' && p.view === 'abbey' ? `url(#scan-edge-${p.view})` : undefined}
-              preserveAspectRatio="none"
-            />
-
-            {/* Красные буквы плана библиотеки: в ночной гамме окрашиваются в бордовый поверх исходных пикселей. */}
-            {p.view === 'library' && p.tone === 'night' && (
-              <g className="glyph-tint" aria-hidden="true">
-                {LIBRARY_RED_GLYPHS.map((g, i) => (
-                  <rect key={i} x={g.x - 1} y={g.y - 1} width={g.w + 2} height={g.h + 2} />
-                ))}
-                <rect
-                  x={LIBRARY_PASSAGE_MARK.x}
-                  y={LIBRARY_PASSAGE_MARK.y}
-                  width={LIBRARY_PASSAGE_MARK.w}
-                  height={LIBRARY_PASSAGE_MARK.h}
-                />
-              </g>
-            )}
-
-            {/* Обводка зон проявляется линией при первом открытии */}
-            {drawClass === 'is-drawing' && (
-              <g aria-hidden="true">
-                {hotspots.map((h, i) => (
-                  <polygon
-                    key={`s-${h.id}`}
-                    points={pts(h.poly)}
-                    className="sketch"
-                    pathLength={1}
-                    style={{ ['--d' as string]: i % 24 }}
-                  />
-                ))}
-              </g>
-            )}
-
-            {/* Затемнение всего плана, кроме выбранной зоны */}
-            {selected && (
-              <path
-                className="spotlight"
-                fillRule="evenodd"
-                d={`M${-W} ${-H}H${W * 2}V${H * 2}H${-W}Z M${selected.poly.map((q) => q.join(' ')).join(' L')}Z`}
+      <ProjectionProvider value={geometry}>
+        <svg
+          ref={svgRef}
+          viewBox={`0 0 ${W} ${H}`}
+          className={`plan-svg tone-${p.tone} plan-${p.view}${isModel ? ' is-model' : ''}${moving ? ' is-moving' : ''}${p.layers.has('arch') ? ' layers-arch' : ''}${meeting.playing ? ' is-meeting-scene' : ''}`}
+          role="group"
+          aria-label={p.view === 'abbey' ? 'План аббатства' : 'План библиотеки'}
+          {...pz.handlers}
+          onClick={() => {
+            if (peopleOpen) setPeopleOpen(null);
+          }} // нажатие мимо окошка «Здесь бывали» закрывает его
+          onContextMenu={isModel ? (e) => e.preventDefault() : undefined} // правая кнопка поворачивает макет
+        >
+          <defs>
+            <filter id="tone-night" colorInterpolationFilters="sRGB">
+              {/* Ночная гамма: яркость → инверсия; бумага становится чернотой, чернила — костью. */}
+              <feColorMatrix
+                type="matrix"
+                values="-0.28 -0.55 -0.1 0 0.93  -0.27 -0.53 -0.1 0 0.9  -0.25 -0.5 -0.1 0 0.85  0 0 0 1 0"
               />
-            )}
-
-            <g className={`rooms${hoverId ? ' has-hover' : ''}`}>
-              {hotspots.map((h) => {
-                const isSel = selected?.id === h.id;
-                const lb = label(h);
-                return (
-                  <polygon
-                    key={h.id}
-                    data-spot={h.id}
-                    points={pts(h.poly)}
-                    className={`spot spot-${h.kind}${isSel ? ' is-selected' : ''}${hoverId === h.id ? ' is-hover' : ''}${h.locationId ? ' is-linked' : ''}`}
-                    style={{ strokeWidth: (isSel ? 2 : 1.3) * unit }}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`${lb.title}${lb.sub ? `, ${lb.sub}` : ''}`}
-                    aria-pressed={isSel}
-                    onPointerEnter={(e) => e.pointerType === 'mouse' && setHoverId(h.id)}
-                    onPointerLeave={() => setHoverId((x) => (x === h.id ? null : x))}
-                    onFocus={() => setHoverId(h.id)}
-                    onBlur={() => setHoverId((x) => (x === h.id ? null : x))}
-                    onClick={click(() => p.onPickHotspot(h))}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        p.onPickHotspot(h);
-                      }
-                    }}
+              <feComponentTransfer>
+                <feFuncR type="gamma" amplitude="1" exponent="1.35" offset="0" />
+                <feFuncG type="gamma" amplitude="1" exponent="1.35" offset="0" />
+                <feFuncB type="gamma" amplitude="1" exponent="1.35" offset="0" />
+              </feComponentTransfer>
+            </filter>
+          </defs>
+          <rect x={-W} y={-H} width={W * 3} height={H * 3} className="plan-ground" />
+          <g transform={pz.transform}>
+            <g key={p.view} className={drawClass}>
+              {isModel ? (
+                <AbbeyModel
+                  proj={proj}
+                  hotspots={hotspots}
+                  spotProps={spotProps}
+                  selectedId={selected?.id}
+                  outlines={p.layers.has('arch')}
+                  printOpacity={p.tone === 'scan' ? 0.62 : 0.3}
+                  grow={grow}
+                  detail={!moving && grow >= 1}
+                />
+              ) : (
+                <>
+                  <image
+                    href={IMAGES[p.view]}
+                    x={0}
+                    y={0}
+                    width={W}
+                    height={H}
+                    className="plan-image"
+                    filter={p.tone === 'night' ? 'url(#tone-night)' : undefined}
+                    preserveAspectRatio="none"
                   />
-                );
-              })}
-            </g>
 
-            <g className="markers">
-              {p.layers.has('people') && (
-                <g className="layer-people">
-                  {[...peopleAt.entries()].map(([id, set]) => {
-                    const h = hotspots.find((x) => x.id === id);
-                    if (!h) return null;
-                    const a = hotspotAnchor(h);
-                    return (
-                      <PeopleBadge
-                        key={id}
-                        x={a[0] - 18 * unit}
-                        y={a[1] + 14 * unit}
-                        unit={unit}
-                        people={[...set].map((c) => characterById.get(c)!)}
-                        open={peopleOpen === id}
-                        placeName={label(h).title}
-                        onToggle={() => {
-                          if (!pz.wasDrag()) setPeopleOpen((cur) => (cur === id ? null : id));
-                        }}
+                  {/* Красные буквы плана библиотеки: в ночной гамме окрашиваются в бордовый поверх исходных пикселей. */}
+                  {p.tone === 'night' && (
+                    <g className="glyph-tint" aria-hidden="true">
+                      {LIBRARY_RED_GLYPHS.map((g, i) => (
+                        <rect key={i} x={g.x - 1} y={g.y - 1} width={g.w + 2} height={g.h + 2} />
+                      ))}
+                      <rect
+                        x={LIBRARY_PASSAGE_MARK.x}
+                        y={LIBRARY_PASSAGE_MARK.y}
+                        width={LIBRARY_PASSAGE_MARK.w}
+                        height={LIBRARY_PASSAGE_MARK.h}
                       />
-                    );
-                  })}
-                </g>
-              )}
+                    </g>
+                  )}
 
-              {p.layers.has('clues') && (
-                <ClueLayer counts={cluesAt} hotspots={hotspots} unit={unit} click={click} onPick={p.onPickHotspot} />
-              )}
+                  {/* Обводка зон проявляется линией при первом открытии */}
+                  {drawClass === 'is-drawing' && (
+                    <g aria-hidden="true">
+                      {hotspots.map((h, i) => (
+                        <polygon
+                          key={`s-${h.id}`}
+                          points={pts(h.poly)}
+                          className="sketch"
+                          pathLength={1}
+                          style={{ ['--d' as string]: i % 24 }}
+                        />
+                      ))}
+                    </g>
+                  )}
 
-              {p.layers.has('deaths') && (
-                <DeathLayer
-                  markers={deathMarkers}
-                  unit={unit}
-                  numbered={p.layers.has('investigation')}
-                  selectedEventId={p.selectedEventId}
-                  click={click}
-                  onPickEvent={p.onPickEvent}
-                />
-              )}
+                  {/* Затемнение всего плана, кроме выбранной зоны */}
+                  {selected && (
+                    <path
+                      className="spotlight"
+                      fillRule="evenodd"
+                      d={`M${-W} ${-H}H${W * 2}V${H * 2}H${-W}Z M${selected.poly.map((q) => q.join(' ')).join(' L')}Z`}
+                    />
+                  )}
 
-              {p.layers.has('route') && ghost && (
-                <RouteLines
-                  key={`ghost-${routeKey}`}
-                  steps={ghost.steps.filter((s) => visible(s))}
-                  view={p.view}
-                  unit={unit}
-                  cls="route-ghost"
-                  animate={false}
-                  segMs={0}
-                  current={null}
-                />
-              )}
-              {p.layers.has('route') && p.route && (
-                <RouteLines
-                  key={routeKey}
-                  steps={visibleSteps}
-                  view={p.view}
-                  unit={unit}
-                  cls={routeStyle}
-                  animate={!reducedMotion()}
-                  segMs={segMs}
-                  current={p.routeStep}
-                  startDelay={settleDelay}
-                />
-              )}
-
-              {meeting.selected && meeting.playing && (
-                <MeetingScene key={meeting.sceneKey} uid={String(meeting.sceneKey)} unit={unit} width={W} height={H} />
-              )}
-              {meeting.shown && (
-                <MeetingMarker
-                  unit={unit}
-                  selected={meeting.selected}
-                  onPick={click(() => p.onPickEvent(MEETING_EVENT_ID))}
-                  onActivate={() => p.onPickEvent(MEETING_EVENT_ID)}
-                />
-              )}
-
-              {/* момент — поверх розы: имена участников не должны прятаться под знаком */}
-              {p.moment && (
-                <MomentLayer
-                  view={p.view}
-                  unit={unit}
-                  moment={p.moment}
-                  thread={p.momentThread ?? [p.moment]}
-                  label={p.momentLabel ?? ''}
-                  title={(e) => eventTitle(e, spoiler)}
-                  isVisibleCharacter={(id) => visible(characterById.get(id)!)}
-                  onPick={(id) => p.onPickEvent(id)}
-                />
-              )}
-            </g>
-
-            {/* «Здесь бывали» — поверх всех слоёв */}
-            {peopleOpen &&
-              p.layers.has('people') &&
-              (() => {
-                const h = hotspots.find((x) => x.id === peopleOpen);
-                const set = peopleAt.get(peopleOpen);
-                if (!h || !set) return null;
-                const a = hotspotAnchor(h);
-                const bx = a[0] - 18 * unit;
-                const by = a[1] + 14 * unit;
-                return (
-                  <PeoplePopover
-                    unit={unit}
-                    people={[...set].map((c) => characterById.get(c)!)}
-                    x={bx}
-                    y={by}
-                    below={by < H * 0.3}
-                    minX={8 * unit}
-                    maxX={W - 8 * unit}
-                    onOpenPlace={() => {
-                      setPeopleOpen(null);
-                      p.onPickHotspot(h);
-                    }}
-                  />
-                );
-              })()}
-
-            {/* Подпись зоны под курсором или выбранной */}
-            {tip &&
-              (() => {
-                const a = hotspotAnchor(tip);
-                const lb = label(tip);
-                const fs = 13 * unit;
-                return (
-                  <g className="spot-tip" aria-hidden="true" transform={`translate(${a[0]} ${a[1] - 22 * unit})`}>
-                    <text className="tip-title" textAnchor="middle" style={{ fontSize: fs }}>
-                      {lb.title}
-                    </text>
-                    {lb.sub && (
-                      <text className="tip-sub" textAnchor="middle" y={fs * 1.15} style={{ fontSize: fs * 0.8 }}>
-                        {lb.sub}
-                      </text>
-                    )}
+                  <g className={`rooms${hoverId ? ' has-hover' : ''}`}>
+                    {hotspots.map((h) => {
+                      const sp = spotProps(h);
+                      return (
+                        <polygon
+                          key={h.id}
+                          {...sp}
+                          points={pts(h.poly)}
+                          style={{ strokeWidth: (selected?.id === h.id ? 2 : 1.3) * unit }}
+                        />
+                      );
+                    })}
                   </g>
-                );
-              })()}
-          </g>
-        </g>
-      </svg>
+                </>
+              )}
 
-      <div className="map-zoom" role="group" aria-label="Масштаб">
+              <g className="markers">
+                {p.layers.has('people') && (
+                  <g className="layer-people">
+                    {[...peopleAt.entries()].map(([id, set]) => {
+                      const h = hotspots.find((x) => x.id === id);
+                      if (!h) return null;
+                      const a = geometry.anchor(h);
+                      return (
+                        <PeopleBadge
+                          key={id}
+                          x={a[0] - 18 * unit}
+                          y={a[1] + 14 * unit}
+                          unit={unit}
+                          people={[...set].map((c) => characterById.get(c)!)}
+                          open={peopleOpen === id}
+                          placeName={label(h).title}
+                          onToggle={() => {
+                            if (!pz.wasDrag()) setPeopleOpen((cur) => (cur === id ? null : id));
+                          }}
+                        />
+                      );
+                    })}
+                  </g>
+                )}
+
+                {p.layers.has('clues') && (
+                  <ClueLayer counts={cluesAt} hotspots={hotspots} unit={unit} click={click} onPick={p.onPickHotspot} />
+                )}
+
+                {p.layers.has('deaths') && (
+                  <DeathLayer
+                    markers={deathMarkers}
+                    unit={unit}
+                    numbered={p.layers.has('investigation')}
+                    selectedEventId={p.selectedEventId}
+                    click={click}
+                    onPickEvent={p.onPickEvent}
+                  />
+                )}
+
+                {p.layers.has('route') && ghost && (
+                  <RouteLines
+                    key={`ghost-${routeKey}`}
+                    steps={ghost.steps.filter((s) => visible(s))}
+                    view={p.view}
+                    unit={unit}
+                    cls="route-ghost"
+                    animate={false}
+                    segMs={0}
+                    current={null}
+                  />
+                )}
+                {p.layers.has('route') && p.route && (
+                  <RouteLines
+                    key={routeKey}
+                    steps={visibleSteps}
+                    view={p.view}
+                    unit={unit}
+                    cls={routeStyle}
+                    animate={!reducedMotion()}
+                    segMs={segMs}
+                    current={p.routeStep}
+                    startDelay={settleDelay}
+                  />
+                )}
+
+                {meeting.selected && meeting.playing && (
+                  <MeetingScene
+                    key={meeting.sceneKey}
+                    uid={String(meeting.sceneKey)}
+                    unit={unit}
+                    width={W}
+                    height={H}
+                  />
+                )}
+                {meeting.shown && (
+                  <MeetingMarker
+                    unit={unit}
+                    selected={meeting.selected}
+                    onPick={click(() => p.onPickEvent(MEETING_EVENT_ID))}
+                    onActivate={() => p.onPickEvent(MEETING_EVENT_ID)}
+                  />
+                )}
+
+                {/* момент — поверх розы: имена участников не должны прятаться под знаком */}
+                {p.moment && (
+                  <MomentLayer
+                    view={p.view}
+                    unit={unit}
+                    moment={p.moment}
+                    thread={p.momentThread ?? [p.moment]}
+                    label={p.momentLabel ?? ''}
+                    title={(e) => eventTitle(e, spoiler)}
+                    isVisibleCharacter={(id) => visible(characterById.get(id)!)}
+                    onPick={(id) => p.onPickEvent(id)}
+                  />
+                )}
+              </g>
+
+              {/* «Здесь бывали» — поверх всех слоёв */}
+              {peopleOpen &&
+                p.layers.has('people') &&
+                (() => {
+                  const h = hotspots.find((x) => x.id === peopleOpen);
+                  const set = peopleAt.get(peopleOpen);
+                  if (!h || !set) return null;
+                  const a = geometry.anchor(h);
+                  const bx = a[0] - 18 * unit;
+                  const by = a[1] + 14 * unit;
+                  return (
+                    <PeoplePopover
+                      unit={unit}
+                      people={[...set].map((c) => characterById.get(c)!)}
+                      x={bx}
+                      y={by}
+                      below={by < H * 0.3}
+                      minX={8 * unit}
+                      maxX={W - 8 * unit}
+                      onOpenPlace={() => {
+                        setPeopleOpen(null);
+                        p.onPickHotspot(h);
+                      }}
+                    />
+                  );
+                })()}
+
+              {/* Подпись зоны под курсором или выбранной */}
+              {tip &&
+                (() => {
+                  const a = geometry.anchor(tip);
+                  const lb = label(tip);
+                  const fs = 13 * unit;
+                  return (
+                    <g className="spot-tip" aria-hidden="true" transform={`translate(${a[0]} ${a[1] - 22 * unit})`}>
+                      <text className="tip-title" textAnchor="middle" style={{ fontSize: fs }}>
+                        {lb.title}
+                      </text>
+                      {lb.sub && (
+                        <text className="tip-sub" textAnchor="middle" y={fs * 1.15} style={{ fontSize: fs * 0.8 }}>
+                          {lb.sub}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })()}
+            </g>
+          </g>
+        </svg>
+      </ProjectionProvider>
+
+      <div className="map-zoom" role="group" aria-label="Масштаб и вид">
         <button type="button" className="icon-btn" onClick={pz.zoomIn} aria-label="Приблизить">
           <Plus size={18} />
         </button>
         <button type="button" className="icon-btn" onClick={pz.zoomOut} aria-label="Отдалить">
           <Minus size={18} />
         </button>
-        <button type="button" className="icon-btn" onClick={pz.reset} aria-label="Исходный масштаб">
-          <RotateCcw size={16} />
+        {isModel && (
+          <>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={() => turnTo({ ...camera, yaw: camera.yaw - 45 })}
+              aria-label="Повернуть макет влево"
+              title="Повернуть влево (или перетаскивайте правой кнопкой мыши, двумя пальцами — поворот)"
+            >
+              <RotateCcw size={16} />
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={() => turnTo({ ...camera, yaw: camera.yaw + 45 })}
+              aria-label="Повернуть макет вправо"
+              title="Повернуть вправо"
+            >
+              <RotateCw size={16} />
+            </button>
+            <button
+              type="button"
+              className="icon-btn map-north"
+              onClick={() => turnTo({ ...camera, yaw: 0 })}
+              aria-label="Север плана наверх"
+              title="Север наверх"
+            >
+              <Compass size={17} style={{ transform: `rotate(${-camera.yaw - 45}deg)` }} />
+            </button>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={() => turnTo(camera.tilt > 1 ? PLAN_CAMERA : MODEL_CAMERA, 800)}
+              aria-label={camera.tilt > 1 ? 'Вид сверху, как на плане' : 'Объёмный макет'}
+              aria-pressed={camera.tilt <= 1}
+              title={camera.tilt > 1 ? 'Вид сверху' : 'Макет'}
+            >
+              {camera.tilt > 1 ? <MapIcon size={16} /> : <Box size={16} />}
+            </button>
+          </>
+        )}
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={() => {
+            pz.reset();
+            if (isModel) turnTo(MODEL_CAMERA, 600);
+          }}
+          aria-label="Исходный вид"
+        >
+          <LocateFixed size={16} />
         </button>
       </div>
     </div>

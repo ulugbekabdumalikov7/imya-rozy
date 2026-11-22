@@ -168,7 +168,7 @@ describe('путеводитель: содержание', () => {
     for (const to of ['heroes', 'relations', 'timeline', 'clues']) expect(app).toContain(`to: '${to}'`);
     expect(read('components/SpoilerControl.tsx')).toContain('data-guide="spoiler"');
     expect(read('sections/MapSection.tsx')).toContain('data-guide="plan-switch"');
-    expect(read('components/map/PlanMap.tsx')).toContain('data-spot={h.id}');
+    expect(read('components/map/PlanMap.tsx')).toContain("'data-spot': h.id");
     expect(hotspotById.has('ab-aedificium')).toBe(true);
   });
 });

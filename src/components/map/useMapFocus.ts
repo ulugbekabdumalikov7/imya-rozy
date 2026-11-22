@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 
-import { anchorIn, hotspotAnchor } from '../../data';
 import type { PlanHotspot } from '../../data/plans';
 import type { MapView } from '../../data/types';
 import type { usePanZoom } from '../../lib/usePanZoom';
+import type { MapGeometry } from './projection';
 
 export type FocusReason = 'event' | 'location' | 'step' | 'none';
 
@@ -19,6 +19,8 @@ interface FocusOptions {
   momentActive: boolean;
   /** Задержка первого подлёта: план ещё проявляется. */
   settleDelay: number;
+  /** Где на экране стоят места (плоский план или макет). */
+  geometry: MapGeometry;
 }
 
 const isMobile = () => {
@@ -33,7 +35,11 @@ const isMobile = () => {
 export function useMapFocus(o: FocusOptions) {
   const firstFocus = useRef(true);
   useEffect(() => {
-    const a = o.focusLocationId ? anchorIn(o.view, o.focusLocationId) : o.selected ? hotspotAnchor(o.selected) : null;
+    const a = o.focusLocationId
+      ? o.geometry.anchorIn(o.view, o.focusLocationId)
+      : o.selected
+        ? o.geometry.anchor(o.selected)
+        : null;
     if (!a) {
       firstFocus.current = false;
       return;

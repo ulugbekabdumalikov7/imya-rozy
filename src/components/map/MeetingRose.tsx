@@ -1,4 +1,4 @@
-import { anchorIn } from '../../data';
+import { FLAT_GEOMETRY, type MapGeometry, useMapGeometry } from './projection';
 
 /**
  * Встреча Адсона и девушки (третья ночь, кухня Эдифиция) — главный знак карты.
@@ -36,8 +36,8 @@ export function RoseLines({ className, draw = false }: { className?: string; dra
 }
 
 /** Где стоит роза: у Эдифиция, смещённо, чтобы не закрывать метки смертей и маршрутов в его центре. */
-export function meetingPoint(unit: number): [number, number] | null {
-  const a = anchorIn('abbey', MEETING_LOCATION);
+export function meetingPoint(unit: number, geo: MapGeometry = FLAT_GEOMETRY): [number, number] | null {
+  const a = geo.anchorIn('abbey', MEETING_LOCATION);
   return a ? [a[0] - 34 * unit, a[1] + 30 * unit] : null;
 }
 
@@ -50,7 +50,7 @@ interface MarkerProps {
 
 /** Знак на плане: тёмный диск с бордовой розой, едва «дышит», как свеча; подпись — при наведении и выборе. */
 export function MeetingMarker({ unit, selected, onPick, onActivate }: MarkerProps) {
-  const pt = meetingPoint(unit);
+  const pt = meetingPoint(unit, useMapGeometry());
   if (!pt) return null;
   const r = 12 * unit;
   return (
@@ -101,7 +101,7 @@ export function MeetingScene({
   height: number;
   uid: string;
 }) {
-  const pt = meetingPoint(unit);
+  const pt = meetingPoint(unit, useMapGeometry());
   if (!pt) return null;
   const R = 150 * unit;
   const maskId = `meeting-light-${uid}`;
