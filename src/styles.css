@@ -554,32 +554,32 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .tone-scan .spotlight { fill: rgba(30, 24, 18, 0.28); }
 /* ─────────── Объёмный макет аббатства ─────────── */
 .plan-svg.is-model { cursor: grab; }
-.abbey-model .face { stroke: rgba(40, 30, 24, 0.28); stroke-width: 0.6px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.abbey-model .face-roof, .abbey-model .face-top { stroke: rgba(30, 22, 18, 0.42); }
-.abbey-model .face-foot { fill: rgba(28, 20, 14, 0.16); pointer-events: none; }
-.abbey-model .face-openings { fill: rgba(36, 28, 22, 0.78); pointer-events: none; }
-.abbey-model .face-courses { stroke: rgba(30, 20, 14, 0.2); stroke-width: 0.6px; vector-effect: non-scaling-stroke; fill: none; pointer-events: none; }
-.abbey-model .court-floor { fill: #6f6656; }
+.abbey-model .face { stroke: rgba(20, 20, 19, 0.3); stroke-width: 0.6px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.abbey-model .face-roof, .abbey-model .face-top { stroke: rgba(15, 15, 14, 0.45); }
+.abbey-model .face-foot { fill: rgba(18, 18, 17, 0.16); pointer-events: none; }
+.abbey-model .face-openings { fill: rgba(26, 26, 25, 0.8); pointer-events: none; }
+.abbey-model .face-courses { stroke: rgba(10, 10, 10, 0.22); stroke-width: 0.6px; vector-effect: non-scaling-stroke; fill: none; pointer-events: none; }
+.abbey-model .court-floor { fill: #6b6a67; }
 .abbey-model .plinth { stroke: rgba(0, 0, 0, 0.25); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
-.abbey-model .ground-meadow { fill: #a9a58a; }
-.abbey-model .ground-yard { fill: #cdc2a8; pointer-events: none; }
-.abbey-model .ground-lawn { fill: #a3a27e; pointer-events: none; }
+.abbey-model .ground-meadow { fill: #aeada9; }
+.abbey-model .ground-yard { fill: #d2d1cd; pointer-events: none; }
+.abbey-model .ground-lawn { fill: #b4b3af; pointer-events: none; }
 .abbey-model .model-print { pointer-events: none; }
-.abbey-model .model-shadows { fill: #2a1f17; opacity: 0.34; pointer-events: none; }
-.abbey-model .model-ao { fill: #20170f; opacity: 0.3; pointer-events: none; }
-.abbey-model .tree-trunk { stroke: #5a4632; stroke-width: 1.6px; vector-effect: non-scaling-stroke; }
+.abbey-model .model-shadows { fill: #1c1c1b; opacity: 0.34; pointer-events: none; }
+.abbey-model .model-ao { fill: #161615; opacity: 0.3; pointer-events: none; }
+.abbey-model .tree-trunk { stroke: #4d4c49; stroke-width: 1.6px; vector-effect: non-scaling-stroke; }
 .abbey-model .tree { pointer-events: none; }
-.abbey-model .grave { stroke: #ece4d2; stroke-width: 1.4px; vector-effect: non-scaling-stroke; fill: none; pointer-events: none; }
-.abbey-model .zone-outline { fill: none; stroke: rgba(122, 22, 30, 0.6); stroke-width: 1px; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; pointer-events: none; }
+.abbey-model .grave { stroke: #f2f1ee; stroke-width: 1.4px; vector-effect: non-scaling-stroke; fill: none; pointer-events: none; }
+.abbey-model .zone-outline { fill: none; stroke: rgba(20, 20, 19, 0.5); stroke-width: 1px; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; pointer-events: none; }
 .abbey-model .zone-selected { fill: rgba(181, 56, 63, 0.16); stroke: var(--blood-lit); stroke-width: 2px; vector-effect: non-scaling-stroke; pointer-events: none; animation: fade var(--t-slow) var(--ease) both; }
 
 /* открытые зоны: материал земли; зона остаётся кнопкой */
 .abbey-model .gz { stroke: none; transition: filter var(--t-medium) var(--ease); }
 .abbey-model .gz-beds { fill: url(#model-beds); }
 .abbey-model .gz-rock { fill: url(#model-rock); }
-.abbey-model .gz-orchard, .abbey-model .gz-tree-garden { fill: #9ea07b; }
-.abbey-model .gz-cemetery { fill: #b3ad8f; }
-.abbey-model .gz-road { fill: #c4b394; }
+.abbey-model .gz-orchard, .abbey-model .gz-tree-garden { fill: #a6a5a1; }
+.abbey-model .gz-cemetery { fill: #bdbcb8; }
+.abbey-model .gz-road { fill: #c7c6c2; }
 .abbey-model .gz-cloister { fill: transparent; }
 .abbey-model .gz-gate { fill: transparent; }
 .abbey-model .gz.is-hover, .abbey-model .gz:focus-visible { filter: brightness(1.08); outline: none; }
@@ -594,7 +594,7 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 /* во время поворота — без тонкой обводки граней и мягких переходов: так кадр рисуется быстрее */
 .plan-svg.is-moving .abbey-model .face { stroke: none; }
 .plan-svg.is-moving .abbey-model :is(.face-foot, .grave) { display: none; }
-.plan-svg.is-moving .abbey-model .tree circle { fill: #646d4b; }
+.plan-svg.is-moving .abbey-model .tree circle { fill: #74736f; }
 
 .spot-tip { pointer-events: none; animation: fade var(--t-medium) var(--ease) both; }
 .spot-tip text { paint-order: stroke; stroke: var(--halo); stroke-width: 4px; stroke-linejoin: round; }

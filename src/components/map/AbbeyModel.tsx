@@ -409,17 +409,17 @@ export function AbbeyModel({ proj, hotspots, spotProps, selectedId, outlines, pr
           fx={0.5 + lightDir[0] * 0.28}
           fy={0.5 + lightDir[1] * 0.28}
         >
-          <stop offset="0" stopColor="#8f9670" />
-          <stop offset="0.55" stopColor="#66704c" />
-          <stop offset="1" stopColor="#3e4530" />
+          <stop offset="0" stopColor="#b4b3af" />
+          <stop offset="0.55" stopColor="#7d7c78" />
+          <stop offset="1" stopColor="#4a4947" />
         </radialGradient>
         <pattern id="model-beds" patternUnits="userSpaceOnUse" width="9" height="9">
-          <rect width="9" height="9" fill="#a9a37c" />
-          <rect width="9" height="4" fill="#8c8f62" />
+          <rect width="9" height="9" fill="#b9b8b4" />
+          <rect width="9" height="4" fill="#9a9995" />
         </pattern>
         <pattern id="model-rock" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(35)">
-          <rect width="8" height="8" fill="#8a8071" />
-          <rect width="1.4" height="8" fill="#6f665a" />
+          <rect width="8" height="8" fill="#8f8e8a" />
+          <rect width="1.4" height="8" fill="#6e6d6a" />
         </pattern>
         <filter id="model-soft" x="-5%" y="-5%" width="110%" height="110%">
           <feGaussianBlur stdDeviation="2.6" />
