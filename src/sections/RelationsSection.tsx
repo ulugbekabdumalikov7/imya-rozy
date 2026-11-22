@@ -183,7 +183,7 @@ function Graph({ route }: { route: AppRoute }) {
   return (
     <div className="graph-layout">
       <div className="graph-controls">
-        <fieldset className="ctl-group">
+        <fieldset className="ctl-group" data-guide="rel-types">
           <legend>Типы связей</legend>
           <div className="chips">
             {presentTypes.map((t) => (

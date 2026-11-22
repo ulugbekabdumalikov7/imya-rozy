@@ -104,7 +104,7 @@ export function TimelineSection({ route }: { route: AppRoute }) {
       </SectionHead>
 
       <div className="filters">
-        <div className="chips" role="group" aria-label="Фильтры событий">
+        <div className="chips" role="group" aria-label="Фильтры событий" data-guide="tl-filters">
           {FILTERS.map((f) => (
             <button
               key={f.key}

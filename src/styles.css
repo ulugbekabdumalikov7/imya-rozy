@@ -988,7 +988,7 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
   animation: guide-ring 2.4s var(--ease-in-out) infinite;
 }
 @keyframes guide-ring { 0%, 100% { box-shadow: 0 0 0 1px var(--accent-veil), 0 0 14px 0 var(--accent-veil); } 50% { box-shadow: 0 0 0 4px var(--accent-veil), 0 0 26px 4px var(--accent-veil); } }
-.guide-step-spoilers .guide-ring { cursor: default; }
+.guide-step-intro-spoilers .guide-ring { cursor: default; }
 
 .guide-card {
   position: absolute; left: 0; top: 0; width: min(380px, calc(100vw - 32px));
@@ -1026,6 +1026,14 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .guide-step-gate .guide-actions { flex: 0 1 auto; }
 .guide-skip { font-family: var(--f-ui); font-size: 0.86rem; color: var(--fg-3); margin-right: auto; }
 .guide-actions .btn { white-space: nowrap; }
+.guide { pointer-events: none; }
+.guide-block, .guide-ring, .guide-card { pointer-events: auto; }
+.guide-block { position: absolute; inset: 0; }
+.guide-veil { pointer-events: none; }
+.guide.is-try .guide-ring { pointer-events: none; cursor: default; }
+.guide-try { display: flex; align-items: center; gap: 9px; margin: 0 0 0.4rem; font-family: var(--f-ui); font-size: 0.88rem; color: var(--accent); }
+.guide-try-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; animation: guide-try 1.6s var(--ease-in-out) infinite; }
+@keyframes guide-try { 0%, 100% { box-shadow: 0 0 0 0 var(--accent-veil); } 50% { box-shadow: 0 0 0 6px var(--accent-veil); } }
 .guide-btn[aria-pressed="true"] { border-color: var(--blood-lit); color: var(--fg); }
 
 @media (max-width: 640px) {
