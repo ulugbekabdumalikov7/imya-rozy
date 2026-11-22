@@ -55,6 +55,9 @@
   --seal-3: #5d5750;
   --seal-ink: #050504;
   --scene-veil: rgba(4, 3, 2, 0.74);
+  /* путеводитель: тьма вокруг подсвеченного и слабый свет свечи на первом шаге */
+  --guide-veil: rgba(5, 4, 3, 0.74);
+  --guide-candle: rgba(236, 230, 217, 0.07);
 
   /* Шрифты */
   --f-display: 'Cormorant Garamond', 'Cormorant', Garamond, Georgia, 'Times New Roman', serif;
@@ -139,6 +142,8 @@
   --backdrop: rgba(30, 27, 23, 0.42);
   --scan-frame: #e6e2db;
   --scene-veil: rgba(36, 30, 24, 0.48);
+  --guide-veil: rgba(30, 27, 23, 0.5);
+  --guide-candle: rgba(250, 248, 244, 0.32);
 }
 :root[data-theme="light"] .sheet, :root[data-theme="light"] .detail-panel, :root[data-theme="light"] .dialog, :root[data-theme="light"] .spoiler-pop {
   --field: #ffffff;
@@ -965,6 +970,70 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .dialog { border: 1px solid var(--rule-2); max-width: 470px; width: 100%; padding: 26px; box-shadow: var(--shadow); animation: unfold var(--t-slow) var(--ease-in-out) both; }
 .dialog h2 { margin-top: 0; }
 .dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+/* ─────────── Путеводитель первого визита ─────────── */
+/* Тьма с прорезями над настоящими элементами, кольцо света вокруг них, красная нить от карточки к цели. */
+.guide { position: fixed; inset: 0; z-index: 95; animation: fade var(--t-slow) var(--ease) both; }
+.guide-veil { position: absolute; inset: 0; display: block; }
+.guide-dim { fill: var(--guide-veil); }
+.guide-glow { fill: url(#guide-candle); animation: guide-breathe 5s var(--ease-in-out) infinite alternate; transform-origin: center; transform-box: fill-box; }
+@keyframes guide-breathe { from { opacity: 0.7; transform: scale(0.96); } to { opacity: 1; transform: scale(1.03); } }
+.guide-thread path { fill: none; stroke: var(--blood-lit); stroke-width: 1.2; stroke-dasharray: 1; stroke-dashoffset: 1; animation: guide-draw var(--t-slow) var(--ease-out) 0.25s forwards; }
+.guide-thread circle { fill: var(--blood-lit); opacity: 0; animation: fade var(--t-medium) var(--ease) 0.8s forwards; }
+@keyframes guide-draw { to { stroke-dashoffset: 0; } }
+.guide-ring {
+  position: absolute; left: 0; top: 0; padding: 0; margin: 0; background: none; cursor: pointer;
+  border: 1px solid var(--blood-lit); border-radius: 4px;
+  box-shadow: 0 0 0 1px var(--accent-veil), 0 0 22px 2px var(--accent-veil);
+  animation: guide-ring 2.4s var(--ease-in-out) infinite;
+}
+@keyframes guide-ring { 0%, 100% { box-shadow: 0 0 0 1px var(--accent-veil), 0 0 14px 0 var(--accent-veil); } 50% { box-shadow: 0 0 0 4px var(--accent-veil), 0 0 26px 4px var(--accent-veil); } }
+.guide-step-spoilers .guide-ring { cursor: default; }
+
+.guide-card {
+  position: absolute; left: 0; top: 0; width: min(380px, calc(100vw - 32px));
+  border: 1px solid var(--rule-2); box-shadow: var(--shadow); padding: 22px 22px 16px;
+  transition: transform var(--t-slow) var(--ease-in-out);
+  animation: unfold var(--t-slow) var(--ease-in-out) both;
+}
+.guide-card h2 { margin: 0 0 0.4rem; font-family: var(--f-display); font-size: var(--step-2); font-weight: 600; line-height: 1.12; outline: none; }
+.guide-text { margin: 0 0 0.9rem; font-size: 0.98rem; line-height: 1.55; color: var(--fg-2); }
+.guide-body { animation: fade-blur var(--t-slow) var(--ease) both; }
+.guide-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.guide-step-gate .guide-head { justify-content: center; }
+.guide-step-gate .guide-progress { display: none; }
+.guide-note { margin: 0.8rem 0 0; font-family: var(--f-ui); font-size: 0.82rem; color: var(--fg-3); }
+.guide-card .spoiler-picker .seg { display: flex; flex-direction: column; width: 100%; }
+.guide-card .spoiler-picker .seg button { border-right: 0; border-bottom: 1px solid var(--rule); justify-content: flex-start; padding: 9px 12px; }
+.guide-card .spoiler-picker .seg button:last-child { border-bottom: 0; }
+
+/* первый шаг: роза-окно прорисовывается тонкой линией, как вход под своды */
+.guide-step-gate .guide-card { text-align: center; padding-top: 26px; }
+.guide-rose { display: block; width: 46px; height: 46px; margin: 0 auto 12px; color: var(--accent); }
+.guide-rose circle, .guide-rose line { stroke-dasharray: 100; stroke-dashoffset: 100; animation: guide-rose 1.6s var(--ease-out) forwards; }
+.guide-rose line { animation-delay: 0.45s; }
+.guide-rose circle:last-child { stroke-dasharray: none; stroke-dashoffset: 0; opacity: 0; animation: fade var(--t-medium) var(--ease) 1.2s forwards; }
+@keyframes guide-rose { to { stroke-dashoffset: 0; } }
+
+.guide-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.guide-step-gate .guide-foot { justify-content: center; }
+.guide-progress { display: flex; gap: 8px; list-style: none; margin: 0; padding: 0; font-family: var(--f-display); font-size: 0.9rem; line-height: 1; color: var(--fg-3); }
+.guide-progress li { transition: color var(--t-medium) var(--ease), opacity var(--t-medium) var(--ease); }
+.guide-progress li.is-past { color: var(--fg-2); }
+.guide-progress li.is-current { color: var(--accent); opacity: 1; font-weight: 600; }
+.guide-progress li:not(.is-current):not(.is-past) { opacity: 0.45; }
+.guide-actions { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: flex-end; }
+.guide-step-gate .guide-actions { flex: 0 1 auto; }
+.guide-skip { font-family: var(--f-ui); font-size: 0.86rem; color: var(--fg-3); margin-right: auto; }
+.guide-actions .btn { white-space: nowrap; }
+.guide-btn[aria-pressed="true"] { border-color: var(--blood-lit); color: var(--fg); }
+
+@media (max-width: 640px) {
+  .guide-card { padding: 18px 16px 14px; }
+  .guide-card h2 { font-size: 1.4rem; }
+  .guide-text { font-size: 0.95rem; margin-bottom: 0.6rem; }
+  .guide-foot { margin-top: 12px; }
+}
 
 /* ─────────── Адаптивность ─────────── */
 @media (max-width: 1180px) {

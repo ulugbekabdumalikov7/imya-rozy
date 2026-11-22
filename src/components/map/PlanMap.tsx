@@ -221,6 +221,7 @@ export function PlanMap(p: Props) {
                 return (
                   <polygon
                     key={h.id}
+                    data-spot={h.id}
                     points={pts(h.poly)}
                     className={`spot spot-${h.kind}${isSel ? ' is-selected' : ''}${hoverId === h.id ? ' is-hover' : ''}${h.locationId ? ' is-linked' : ''}`}
                     style={{ strokeWidth: (isSel ? 2 : 1.3) * unit }}
