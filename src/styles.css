@@ -562,6 +562,11 @@ a.hcell.is-death { background: var(--blood-lit); opacity: 1; }
 .abbey-model .court-floor { fill: #6b6a67; }
 .abbey-model .plinth { stroke: rgba(0, 0, 0, 0.25); stroke-width: 0.6px; vector-effect: non-scaling-stroke; }
 .abbey-model .ground-meadow { fill: #aeada9; }
+.abbey-model .ground-low { fill: #8f8e8a; pointer-events: none; }
+.abbey-model .face-rock { stroke: rgba(20, 20, 19, 0.18); stroke-width: 0.5px; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.abbey-model .cliff { cursor: pointer; outline: none; }
+.abbey-model .cliff.is-hover .face-rock, .abbey-model .cliff:focus-visible .face-rock { stroke: rgba(255, 255, 255, 0.55); }
+.abbey-model .cliff.is-selected .face-rock { stroke: var(--blood-lit); stroke-width: 1px; }
 .abbey-model .ground-yard { fill: #d2d1cd; pointer-events: none; }
 .abbey-model .ground-lawn { fill: #b4b3af; pointer-events: none; }
 .abbey-model .model-print { pointer-events: none; }

@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 
 import { anchorIn as planAnchorIn, hotspotAnchor, hotspotIn } from '../../data';
-import { BUILDINGS } from '../../data/abbeyModel';
+import { BUILDINGS, CLIFF } from '../../data/abbeyModel';
 import type { PlanHotspot } from '../../data/plans';
 import type { MapView } from '../../data/types';
 import type { Projector } from '../../lib/model3d';
@@ -23,7 +23,8 @@ export const ProjectionProvider = ProjectionContext.Provider;
 export const useMapGeometry = () => useContext(ProjectionContext);
 
 /** Высота «булавки» над зоной: над крышей здания или у земли для открытых мест. */
-export const pinHeight = (h: PlanHotspot) => BUILDINGS[h.id.replace(/^ab-/, '')]?.pin ?? 2;
+export const pinHeight = (h: PlanHotspot) =>
+  h.id === 'ab-cliff' ? -CLIFF.drop * 0.45 : (BUILDINGS[h.id.replace(/^ab-/, '')]?.pin ?? 2);
 
 export function modelGeometry(proj: Projector, grow = 1): MapGeometry {
   const anchor = (h: PlanHotspot): [number, number] => {

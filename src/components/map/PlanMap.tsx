@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import abbeyPlanUrl from '../../assets/abbey-plan.webp';
 import libraryPlanUrl from '../../assets/library-plan.webp';
 import { characterById, eventById, plans, routeByCharacter } from '../../data';
-import { BOARD, PEAKS } from '../../data/abbeyModel';
+import { BOARD, CLIFF, PEAKS } from '../../data/abbeyModel';
 import { LIBRARY_PASSAGE_MARK, LIBRARY_RED_GLYPHS } from '../../data/planGeometry';
 import type { PlanHotspot } from '../../data/plans';
 import type { MapView, Route, RouteStep, StoryEvent } from '../../data/types';
@@ -57,9 +57,11 @@ interface Props {
   momentLabel?: string;
 }
 
-/** Камера макета по умолчанию: лёгкий поворот и взгляд сверху под углом — видны две стороны зданий. */
-const MODEL_CAMERA: Camera = { yaw: -14, tilt: 50 };
+/** Камера макета по умолчанию: взгляд с юго-юго-востока сверху под углом — видны две стороны зданий и склон обрыва. */
+const MODEL_CAMERA: Camera = { yaw: 18, tilt: 50 };
 const MAX_TILT = 68;
+/** Длительность перехода между плоским планом и макетом. */
+const MORPH_MS = 1300;
 
 const pts = (poly: [number, number][]) => poly.map((p) => p.join(',')).join(' ');
 /** Порядок отрисовки: местность и открытые пространства — под постройками. */
@@ -93,7 +95,39 @@ export function PlanMap(p: Props) {
   const settleDelay = drawMode === 'drawing' ? 1400 : drawMode === 'settling' ? 300 : 0;
 
   // ── Объёмный макет аббатства: камера (поворот и наклон), рост зданий при первом показе ──
-  const isModel = p.view === 'abbey' && !!p.model;
+  // Переход 2D ↔ 3D: morph = 0 — плоский план, 1 — макет. Между ними камера поднимается из вида сверху,
+  // здания вырастают из плана, а плоский план растворяется.
+  const onAbbey = p.view === 'abbey';
+  const [morph, setMorph] = useState(() => (p.model ? 1 : 0));
+  const morphRef = useRef(morph);
+  useEffect(() => {
+    const target = p.model ? 1 : 0;
+    const from = morphRef.current;
+    if (from === target) return;
+    if (reducedMotion() || !onAbbey) {
+      morphRef.current = target;
+      setMorph(target);
+      return;
+    }
+    const ms = MORPH_MS * Math.abs(target - from);
+    const t0 = performance.now();
+    let raf = 0;
+    const step = (now: number) => {
+      const t = Math.min(1, (now - t0) / ms);
+      const v = from + (target - from) * t;
+      morphRef.current = v;
+      setMorph(v);
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [p.model, onAbbey]);
+  const morphE = easeInOut(morph);
+  /** Макет на экране (целиком или во время перехода). */
+  const isModel = onAbbey && morph > 0;
+  /** Плоский план на экране (на плане библиотеки — всегда). */
+  const showPlan = !onAbbey || morph < 1;
+  const morphing = onAbbey && morph > 0 && morph < 1;
   const cameraRef = useRef<Camera>(MODEL_CAMERA);
   const [camera, setCameraRaw] = useState<Camera>(MODEL_CAMERA);
   const [moving, setMoving] = useState(false);
@@ -135,7 +169,7 @@ export function PlanMap(p: Props) {
     },
     [],
   );
-  const [grow, setGrow] = useState(() => (isModel && drawMode === 'drawing' ? 0 : 1));
+  const [grow, setGrow] = useState(() => (onAbbey && p.model && drawMode === 'drawing' ? 0 : 1));
   useEffect(() => {
     if (grow >= 1) return;
     const t0 = performance.now();
@@ -150,8 +184,26 @@ export function PlanMap(p: Props) {
     // только при первом показе
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const proj = useMemo(() => makeProjector(camera, W, H, BOARD, PEAKS), [camera, W, H]);
-  const geometry = useMemo(() => (isModel ? modelGeometry(proj, grow) : FLAT_GEOMETRY), [isModel, proj, grow]);
+  // Во время перехода камера и кадрирование плавно идут от «ровно как план» (тождественно) к виду макета.
+  const proj = useMemo(() => {
+    const k = morphE;
+    const lerp = (a: number, b: number) => a + (b - a) * k;
+    const board = {
+      x0: lerp(0, BOARD.x0),
+      y0: lerp(0, BOARD.y0),
+      x1: lerp(W, BOARD.x1),
+      y1: lerp(H, BOARD.y1),
+      depth: (BOARD.depth + CLIFF.drop) * k,
+    };
+    const peaks = PEAKS.map(([x, y, z]) => [x, y, z * k] as [number, number, number]);
+    return makeProjector({ yaw: camera.yaw * k, tilt: camera.tilt * k }, W, H, board, peaks);
+  }, [camera, morphE, W, H]);
+  /** Рост зданий: при первом показе и при переходе из 2D здания поднимаются из плана. */
+  const modelGrow = Math.min(grow, easeInOut(Math.max(0, Math.min(1, (morph - 0.2) / 0.8))));
+  const geometry = useMemo(
+    () => (isModel ? modelGeometry(proj, modelGrow) : FLAT_GEOMETRY),
+    [isModel, proj, modelGrow],
+  );
   const orbit = useCallback(
     (dx: number, dy: number) => {
       if (!isModel) return;
@@ -251,7 +303,7 @@ export function PlanMap(p: Props) {
         <svg
           ref={svgRef}
           viewBox={`0 0 ${W} ${H}`}
-          className={`plan-svg tone-${p.tone} plan-${p.view}${isModel ? ' is-model' : ''}${moving ? ' is-moving' : ''}${p.layers.has('arch') ? ' layers-arch' : ''}${meeting.playing ? ' is-meeting-scene' : ''}`}
+          className={`plan-svg tone-${p.tone} plan-${p.view}${isModel ? ' is-model' : ''}${moving || morphing ? ' is-moving' : ''}${p.layers.has('arch') ? ' layers-arch' : ''}${meeting.playing ? ' is-meeting-scene' : ''}`}
           role="group"
           aria-label={p.view === 'abbey' ? 'План аббатства' : 'План библиотеки'}
           {...pz.handlers}
@@ -280,85 +332,90 @@ export function PlanMap(p: Props) {
           </defs>
           <rect x={-W} y={-H} width={W * 3} height={H * 3} className="plan-ground" />
           <g transform={pz.transform}>
-            <g key={`${p.view}-${isModel ? '3d' : '2d'}`} className={drawClass}>
-              {isModel ? (
-                <AbbeyModel
-                  proj={proj}
-                  hotspots={hotspots}
-                  spotProps={spotProps}
-                  selectedId={selected?.id}
-                  outlines={p.layers.has('arch')}
-                  printOpacity={p.tone === 'scan' ? 0.62 : 0.3}
-                  grow={grow}
-                  detail={!moving && grow >= 1}
-                />
-              ) : (
-                <>
-                  <image
-                    href={IMAGES[p.view]}
-                    x={0}
-                    y={0}
-                    width={W}
-                    height={H}
-                    className="plan-image"
-                    filter={p.tone === 'night' ? 'url(#tone-night)' : undefined}
-                    clipPath={p.tone === 'night' && p.view === 'abbey' ? `url(#scan-edge-${p.view})` : undefined}
-                    preserveAspectRatio="none"
-                  />
-
-                  {/* Красные буквы плана библиотеки: в ночной гамме окрашиваются в бордовый поверх исходных пикселей. */}
-                  {p.tone === 'night' && (
-                    <g className="glyph-tint" aria-hidden="true">
-                      {LIBRARY_RED_GLYPHS.map((g, i) => (
-                        <rect key={i} x={g.x - 1} y={g.y - 1} width={g.w + 2} height={g.h + 2} />
-                      ))}
-                      <rect
-                        x={LIBRARY_PASSAGE_MARK.x}
-                        y={LIBRARY_PASSAGE_MARK.y}
-                        width={LIBRARY_PASSAGE_MARK.w}
-                        height={LIBRARY_PASSAGE_MARK.h}
-                      />
-                    </g>
-                  )}
-
-                  {/* Обводка зон проявляется линией при первом открытии */}
-                  {drawClass === 'is-drawing' && (
-                    <g aria-hidden="true">
-                      {hotspots.map((h, i) => (
-                        <polygon
-                          key={`s-${h.id}`}
-                          points={pts(h.poly)}
-                          className="sketch"
-                          pathLength={1}
-                          style={{ ['--d' as string]: i % 24 }}
-                        />
-                      ))}
-                    </g>
-                  )}
-
-                  {/* Затемнение всего плана, кроме выбранной зоны */}
-                  {selected && (
-                    <path
-                      className="spotlight"
-                      fillRule="evenodd"
-                      d={`M${-W} ${-H}H${W * 2}V${H * 2}H${-W}Z M${selected.poly.map((q) => q.join(' ')).join(' L')}Z`}
+            <g key={p.view} className={drawClass}>
+              {showPlan && (
+                <g className="plan-flat" style={{ opacity: onAbbey ? 1 - Math.min(1, morph / 0.45) : 1 }}>
+                  <>
+                    <image
+                      href={IMAGES[p.view]}
+                      x={0}
+                      y={0}
+                      width={W}
+                      height={H}
+                      className="plan-image"
+                      filter={p.tone === 'night' ? 'url(#tone-night)' : undefined}
+                      clipPath={p.tone === 'night' && p.view === 'abbey' ? `url(#scan-edge-${p.view})` : undefined}
+                      preserveAspectRatio="none"
                     />
-                  )}
 
-                  <g className={`rooms${hoverId ? ' has-hover' : ''}`}>
-                    {hotspots.map((h) => {
-                      const sp = spotProps(h);
-                      return (
-                        <polygon
-                          key={h.id}
-                          {...sp}
-                          points={pts(h.poly)}
-                          style={{ strokeWidth: (selected?.id === h.id ? 2 : 1.3) * unit }}
+                    {/* Красные буквы плана библиотеки: в ночной гамме окрашиваются в бордовый поверх исходных пикселей. */}
+                    {p.tone === 'night' && (
+                      <g className="glyph-tint" aria-hidden="true">
+                        {LIBRARY_RED_GLYPHS.map((g, i) => (
+                          <rect key={i} x={g.x - 1} y={g.y - 1} width={g.w + 2} height={g.h + 2} />
+                        ))}
+                        <rect
+                          x={LIBRARY_PASSAGE_MARK.x}
+                          y={LIBRARY_PASSAGE_MARK.y}
+                          width={LIBRARY_PASSAGE_MARK.w}
+                          height={LIBRARY_PASSAGE_MARK.h}
                         />
-                      );
-                    })}
-                  </g>
-                </>
+                      </g>
+                    )}
+
+                    {/* Обводка зон проявляется линией при первом открытии */}
+                    {drawClass === 'is-drawing' && (
+                      <g aria-hidden="true">
+                        {hotspots.map((h, i) => (
+                          <polygon
+                            key={`s-${h.id}`}
+                            points={pts(h.poly)}
+                            className="sketch"
+                            pathLength={1}
+                            style={{ ['--d' as string]: i % 24 }}
+                          />
+                        ))}
+                      </g>
+                    )}
+
+                    {/* Затемнение всего плана, кроме выбранной зоны */}
+                    {selected && (
+                      <path
+                        className="spotlight"
+                        fillRule="evenodd"
+                        d={`M${-W} ${-H}H${W * 2}V${H * 2}H${-W}Z M${selected.poly.map((q) => q.join(' ')).join(' L')}Z`}
+                      />
+                    )}
+
+                    <g className={`rooms${hoverId ? ' has-hover' : ''}`}>
+                      {hotspots.map((h) => {
+                        const sp = spotProps(h);
+                        return (
+                          <polygon
+                            key={h.id}
+                            {...sp}
+                            points={pts(h.poly)}
+                            style={{ strokeWidth: (selected?.id === h.id ? 2 : 1.3) * unit }}
+                          />
+                        );
+                      })}
+                    </g>
+                  </>
+                </g>
+              )}
+              {isModel && (
+                <g className="plan-model" style={{ opacity: Math.min(1, morph / 0.3) }}>
+                  <AbbeyModel
+                    proj={proj}
+                    hotspots={hotspots}
+                    spotProps={spotProps}
+                    selectedId={selected?.id}
+                    outlines={p.layers.has('arch')}
+                    printOpacity={p.tone === 'scan' ? 0.62 : 0.3}
+                    grow={modelGrow}
+                    detail={!moving && !morphing && modelGrow >= 1}
+                  />
+                </g>
               )}
 
               <g className="markers">
@@ -518,7 +575,7 @@ export function PlanMap(p: Props) {
         <button type="button" className="icon-btn" onClick={pz.zoomOut} aria-label="Отдалить">
           <Minus size={18} />
         </button>
-        {isModel && (
+        {onAbbey && p.model && morph === 1 && (
           <>
             <button
               type="button"

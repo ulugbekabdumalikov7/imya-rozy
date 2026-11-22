@@ -171,7 +171,7 @@ export function inside(p: V2, poly: V2[]): boolean {
 
 // ───────────── материалы и свет ─────────────
 
-export type Material = 'stone' | 'stoneDark' | 'plaster' | 'wood' | 'tile' | 'slate' | 'lead' | 'coping';
+export type Material = 'stone' | 'stoneDark' | 'plaster' | 'wood' | 'tile' | 'slate' | 'lead' | 'coping' | 'rock';
 type RGB = [number, number, number];
 
 /**
@@ -187,6 +187,7 @@ export const MATERIALS: Record<Material, RGB> = {
   slate: [72, 71, 70],
   lead: [138, 137, 134],
   coping: [236, 235, 232],
+  rock: [150, 149, 145],
 };
 
 /** Свет — тёплый, с северо-запада и сверху; привязан к макету, поэтому при повороте тени поворачиваются вместе с ним. */
