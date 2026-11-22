@@ -172,3 +172,22 @@ describe('макет построен на контурах плана', () => {
     expect(model.anchorIn('library', 'library')).toEqual(FLAT_GEOMETRY.anchorIn('library', 'library'));
   });
 });
+
+describe('обрыв', () => {
+  it('склон идёт от бровки (z = 0) вниз к подошве и обращён вверх', async () => {
+    const { buildSlope } = await import('../src/lib/terrain');
+    const { CLIFF } = await import('../src/data/abbeyModel');
+    const { tris } = buildSlope(CLIFF.rim, CLIFF.foot, CLIFF.drop);
+    expect(tris.length).toBeGreaterThan(100);
+    const zs = tris.flat().map((p) => p[2]);
+    expect(Math.max(...zs)).toBeLessThanOrEqual(CLIFF.drop * 0.1);
+    expect(Math.min(...zs)).toBeGreaterThanOrEqual(-CLIFF.drop * 1.1);
+    // бровка обрыва проходит по внутреннему краю зоны плана «Обрыв»
+    const cliff = plans.abbey.hotspots.find((h) => h.id === 'ab-cliff')!;
+    for (const p of cliff.poly)
+      expect(
+        CLIFF.rim.some((q) => q[0] === p[0] && q[1] === p[1]) || CLIFF.foot.some((q) => q[0] === p[0] && q[1] === p[1]),
+        String(p),
+      ).toBe(true);
+  });
+});

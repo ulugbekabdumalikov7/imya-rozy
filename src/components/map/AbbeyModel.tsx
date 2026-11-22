@@ -2,7 +2,7 @@ import { type ReactNode, useMemo } from 'react';
 
 import abbeyInkUrl from '../../assets/abbey-plan-ink.webp';
 import { plans } from '../../data';
-import { AVENUE, BOARD, BUILDINGS, ENCLOSURE, INTERIOR, TREE_AREAS, WALL } from '../../data/abbeyModel';
+import { AVENUE, BOARD, BUILDINGS, CLIFF, ENCLOSURE, INTERIOR, TREE_AREAS, WALL } from '../../data/abbeyModel';
 import type { PlanHotspot } from '../../data/plans';
 import {
   buildPart,
@@ -22,6 +22,7 @@ import {
   type V2,
   type V3,
 } from '../../lib/model3d';
+import { boulders, buildSlope } from '../../lib/terrain';
 
 /** Свойства интерактивной зоны (кнопка, подпись, обработчики) — те же, что у зон плоского плана. */
 export type SpotProps = (h: PlanHotspot) => SpotAttrs;
@@ -45,8 +46,6 @@ interface Props {
   detail: boolean;
 }
 
-const W = BOARD.x1 - BOARD.x0;
-const H = BOARD.y1 - BOARD.y0;
 /** Размер исходного плана: он целиком отпечатан на основании. */
 const PLAN_W = plans.abbey.width;
 const PLAN_H = plans.abbey.height;
@@ -227,6 +226,24 @@ function buildScene(buildings: PlanHotspot[], trees: Tree[], grow: number) {
   };
 }
 
+/** Обрыв: склон, отвесные стены и низина — геометрия не зависит от камеры. */
+const TERRAIN = (() => {
+  const D = CLIFF.drop;
+  const slope = buildSlope(CLIFF.rim, CLIFF.foot, D).tris.map((pts) => {
+    let n = normalOf(pts);
+    if (n[2] < 0) n = [-n[0], -n[1], -n[2]];
+    return { f: { pts, mat: 'rock' as const, kind: 'roof' as const }, n, c: centroid3(pts), fill: shade('rock', n) };
+  });
+  const rocks = boulders(CLIFF.foot, (q) => inside(q, CLIFF.lowland), -D).map((pts) => {
+    let n = normalOf(pts);
+    if (n[2] < 0) n = [-n[0], -n[1], -n[2]];
+    return { f: { pts, mat: 'rock' as const, kind: 'roof' as const }, n, c: centroid3(pts), fill: shade('rock', n) };
+  });
+  /** Плато — основание без низины и склона (для земли, отпечатка плана и теней). */
+  const hole: V2[] = [...CLIFF.rim, [1300, 36]];
+  return { slope: [...slope, ...rocks], hole };
+})();
+
 interface Drawable {
   depth: number;
   node: ReactNode;
@@ -379,22 +396,69 @@ export function AbbeyModel({ proj, hotspots, spotProps, selectedId, outlines, pr
 
   items.sort((a, b) => a.depth - b.depth);
 
-  // ── подставка макета: видимые торцы ──
-  const corners: V2[] = [
-    [BOARD.x0, BOARD.y0],
-    [BOARD.x1, BOARD.y0],
-    [BOARD.x1, BOARD.y1],
-    [BOARD.x0, BOARD.y1],
-  ];
-  const outward: V3[] = [
-    [0, -1, 0],
-    [1, 0, 0],
-    [0, 1, 0],
-    [-1, 0, 0],
-  ];
-  const plinth = corners
-    .map((p, i) => ({ p, q: corners[(i + 1) % 4]!, n: outward[i]! }))
-    .filter((e) => dot(e.n, cam) > 1e-3);
+  // ── подставка макета: видимые торцы (на северо-востоке — ниже, у низины за обрывом) ──
+  // обрыв углубляется вместе с ростом зданий: при переходе из 2D земля сначала ровная, как на плане
+  const terrainGrow = Math.min(1, grow * 1.4);
+  const D = CLIFF.drop * terrainGrow;
+  const zb = -(BOARD.depth + D);
+  const ppT = (q: V3) => P(q[0], q[1], q[2] * terrainGrow);
+  const { x0, y0, x1, y1 } = BOARD;
+  const plinth = (
+    [
+      {
+        n: [0, -1, 0],
+        top: [
+          [x0, y0, 0],
+          [CLIFF.rim[0]![0], y0, 0],
+          [CLIFF.foot[0]![0], y0, -D],
+          [x1, y0, -D],
+        ],
+      },
+      {
+        n: [1, 0, 0],
+        top: [
+          [x1, y0, -D],
+          [x1, CLIFF.foot[CLIFF.foot.length - 1]![1], -D],
+          [x1, CLIFF.rim[CLIFF.rim.length - 1]![1], 0],
+          [x1, y1, 0],
+        ],
+      },
+      {
+        n: [0, 1, 0],
+        top: [
+          [x1, y1, 0],
+          [x0, y1, 0],
+        ],
+      },
+      {
+        n: [-1, 0, 0],
+        top: [
+          [x0, y1, 0],
+          [x0, y0, 0],
+        ],
+      },
+    ] as { n: V3; top: V3[] }[]
+  )
+    .filter((e) => dot(e.n, cam) > 1e-3)
+    .map((e) => {
+      const first = e.top[0]!;
+      const last = e.top[e.top.length - 1]!;
+      return { n: e.n, pts: [...e.top, [last[0], last[1], zb], [first[0], first[1], zb]] as V3[] };
+    });
+  const lowShift = (() => {
+    const a0 = P(0, 0, 0);
+    const a1 = P(0, 0, -D);
+    return `translate(${r1(a1[0] - a0[0])} ${r1(a1[1] - a0[1])})`;
+  })();
+  const cliffHotspot = hotspots.find((h) => h.id === 'ab-cliff');
+  const cliffProps = cliffHotspot ? spotProps(cliffHotspot) : null;
+  const plateau =
+    path([
+      [x0, y0],
+      [x1, y0],
+      [x1, y1],
+      [x0, y1],
+    ]) + path(TERRAIN.hole);
 
   const lightDir = screenLight(proj);
 
@@ -427,48 +491,55 @@ export function AbbeyModel({ proj, hotspots, spotProps, selectedId, outlines, pr
         <filter id="model-ao" x="-5%" y="-5%" width="110%" height="110%">
           <feGaussianBlur stdDeviation="3.2" />
         </filter>
-        <clipPath id="model-board">
-          <rect x={BOARD.x0 + 4} y={BOARD.y0 + 4} width={W - 8} height={H - 8} />
+        <clipPath id="model-plateau">
+          <path d={plateau} fillRule="evenodd" clipRule="evenodd" />
         </clipPath>
       </defs>
 
-      {plinth.map(({ p, q, n }, i) => {
-        const pts: V3[] = [
-          [p[0], p[1], 0],
-          [q[0], q[1], 0],
-          [q[0], q[1], -BOARD.depth],
-          [p[0], p[1], -BOARD.depth],
-        ];
-        return (
-          <polygon
-            key={`pl${i}`}
-            points={poly(pts.map((v) => P(v[0], v[1], v[2])))}
-            fill={shade('wood', n)}
-            className="plinth"
-          />
-        );
-      })}
+      {plinth.map(({ n, pts }, i) => (
+        <polygon key={`pl${i}`} points={poly(pts.map(pp))} fill={shade('wood', n)} className="plinth" />
+      ))}
+
+      {/* низина за обрывом — ниже плато */}
+      <g transform={`${lowShift} ${proj.ground}`}>
+        <path d={path(CLIFF.lowland)} className="ground-low" />
+      </g>
+
+      {/* обрыв: каменистый склон и отвесные стены; это та же зона плана «Обрыв» */}
+      <g
+        {...(cliffProps ?? {})}
+        className={`cliff ${cliffProps?.className ?? ''}${selectedId === 'ab-cliff' ? ' is-selected' : ''}`}
+      >
+        {TERRAIN.slope
+          .filter(({ n }) => dot(n, cam) > 1e-3)
+          .sort((a, b) => dot(a.c, cam) - dot(b.c, cam))
+          .map(({ f, fill }, i) => (
+            <polygon key={i} points={poly(f.pts.map(ppT))} fill={fill} className="face face-rock" />
+          ))}
+      </g>
 
       <g transform={proj.ground}>
-        <rect x={BOARD.x0} y={BOARD.y0} width={W} height={H} className="ground-meadow" />
+        <path d={plateau} fillRule="evenodd" className="ground-meadow" />
         <path d={path(INTERIOR)} className="ground-yard" />
-        {ground.map((h) => {
-          const sp = spotProps(h);
-          const material =
-            h.id === 'ab-garden' || h.id === 'ab-plots'
-              ? 'beds'
-              : h.id === 'ab-cliff'
-                ? 'rock'
-                : h.id.replace(/^ab-/, '');
-          return (
-            <polygon
-              key={h.id}
-              points={poly(h.poly)}
-              {...sp}
-              className={`gz gz-${material} ${sp.className}${selectedId === h.id ? ' is-selected' : ''}`}
-            />
-          );
-        })}
+        {ground
+          .filter((h) => h.id !== 'ab-cliff')
+          .map((h) => {
+            const sp = spotProps(h);
+            const material =
+              h.id === 'ab-garden' || h.id === 'ab-plots'
+                ? 'beds'
+                : h.id === 'ab-cliff'
+                  ? 'rock'
+                  : h.id.replace(/^ab-/, '');
+            return (
+              <polygon
+                key={h.id}
+                points={poly(h.poly)}
+                {...sp}
+                className={`gz gz-${material} ${sp.className}${selectedId === h.id ? ' is-selected' : ''}`}
+              />
+            );
+          })}
         {BUILDINGS.cloister?.court && <path d={path(BUILDINGS.cloister.court.pts)} className="ground-lawn" />}
         <image
           href={abbeyInkUrl}
@@ -477,15 +548,22 @@ export function AbbeyModel({ proj, hotspots, spotProps, selectedId, outlines, pr
           width={PLAN_W}
           height={PLAN_H}
           preserveAspectRatio="none"
-          clipPath="url(#model-board)"
+          clipPath="url(#model-plateau)"
           opacity={printOpacity}
           className="model-print"
         />
-        <path className="model-shadows" d={scene.shadowPath} filter={detail ? 'url(#model-soft)' : undefined} />
-        <path className="model-ao" d={scene.aoPath} filter={detail ? 'url(#model-ao)' : undefined} />
+        <g clipPath="url(#model-plateau)">
+          <path className="model-shadows" d={scene.shadowPath} filter={detail ? 'url(#model-soft)' : undefined} />
+          <path className="model-ao" d={scene.aoPath} filter={detail ? 'url(#model-ao)' : undefined} />
+        </g>
         {/* выбранная открытая зона — на земле, под зданиями */}
-        {selectedGround && <polygon points={poly(selectedGround.poly)} className="zone-selected" />}
-        {outlines && hotspots.map((h) => <polygon key={`o-${h.id}`} points={poly(h.poly)} className="zone-outline" />)}
+        {selectedGround && selectedGround.id !== 'ab-cliff' && (
+          <polygon points={poly(selectedGround.poly)} className="zone-selected" />
+        )}
+        {outlines &&
+          hotspots
+            .filter((h) => h.id !== 'ab-cliff')
+            .map((h) => <polygon key={`o-${h.id}`} points={poly(h.poly)} className="zone-outline" />)}
       </g>
 
       {items.map((it) => it.node)}
