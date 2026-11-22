@@ -1,37 +1,52 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { closeGuide, guideStatus, openGuide, useGuideOpen } from '../../lib/guide';
+import { activeTour, closeGuide, guideStatus, openGuide, type TourId, useActiveTour } from '../../lib/guide';
 import { reducedMotion } from '../../lib/motion';
 import { navigate, type Route } from '../../lib/router';
 import { SpoilerPicker } from '../SpoilerControl';
 import { RoseMark } from '../ui';
-import { placeCard, threadPath } from './placement';
-import { GUIDE_STEPS } from './steps';
+import { bounds, placeCard, threadPath } from './placement';
+import { tourForRoute, TOURS } from './tours';
 import { useSpotlight } from './useSpotlight';
 
 /** На главной путеводитель ждёт, пока доиграет вступление с заголовком. */
 const AFTER_INTRO_MS = 4600;
 const AFTER_LOAD_MS = 1000;
+/** Подсказки раздела — когда страница раздела уже появилась. */
+const AFTER_ENTER_MS = 900;
+/** «Попробуйте сами»: дать увидеть отклик интерфейса, прежде чем идти дальше. */
+const TRY_IT_PAUSE_MS = 450;
 const NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 
 /**
- * Путеводитель первого визита: пять коротких шагов по настоящему интерфейсу.
- * Сам открывается один раз; потом — по кнопке с компасом в шапке.
+ * Путеводители: общий — при первом визите, пять шагов по настоящему интерфейсу;
+ * подсказки раздела — при первом входе в каждый раздел, если общий путеводитель пройден
+ * (кто его пропустил, тот не хочет подсказок — они остаются под кнопкой с компасом).
  */
 export function Guide({ route }: { route: Route }) {
-  const open = useGuideOpen();
+  const active = useActiveTour();
+  const section = tourForRoute(route);
 
   useEffect(() => {
-    if (guideStatus()) return;
+    if (guideStatus('intro')) return;
     const onHome = route.path.length === 0;
-    const t = window.setTimeout(openGuide, onHome && !reducedMotion() ? AFTER_INTRO_MS : AFTER_LOAD_MS);
+    const t = window.setTimeout(() => openGuide('intro'), onHome && !reducedMotion() ? AFTER_INTRO_MS : AFTER_LOAD_MS);
     return () => window.clearTimeout(t);
     // только при первом показе страницы
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return open ? <GuideTour route={route} /> : null;
+  // Только при входе в раздел: если общий путеводитель закончился здесь же, подсказки раздела ждут следующего входа.
+  useEffect(() => {
+    if (!section || guideStatus('intro') !== 'done' || guideStatus(section)) return;
+    const t = window.setTimeout(() => {
+      if (!activeTour()) openGuide(section);
+    }, AFTER_ENTER_MS);
+    return () => window.clearTimeout(t);
+  }, [section]);
+
+  return active ? <GuideTour key={active} tourId={active} route={route} /> : null;
 }
 
 function useViewport() {
@@ -44,11 +59,12 @@ function useViewport() {
   return vp;
 }
 
-function GuideTour({ route }: { route: Route }) {
+function GuideTour({ tourId, route }: { tourId: TourId; route: Route }) {
+  const tour = TOURS[tourId];
   const [index, setIndex] = useState(0);
-  const step = GUIDE_STEPS[index]!;
+  const step = tour.steps[index]!;
   const first = index === 0;
-  const last = index === GUIDE_STEPS.length - 1;
+  const last = index === tour.steps.length - 1;
   const { goals, shown, found } = useSpotlight(step.targets, step.id);
   const vp = useViewport();
 
@@ -72,6 +88,27 @@ function GuideTour({ route }: { route: Route }) {
   // Шагу с картой нужен план аббатства — путеводитель сам ведёт читателя за ворота.
   useEffect(() => {
     if (step.needsMap && (route.path[0] !== 'map' || route.params.get('view') === 'library')) navigate('map');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step.id]);
+
+  // Подсказки раздела закрываются, если читатель ушёл из раздела: подсвечивать там уже нечего.
+  useEffect(() => {
+    if (tour.matches && !tour.matches(route)) closeGuide(null);
+  }, [tour, route]);
+
+  // «Попробуйте сами»: настоящее нажатие на подсвеченное переводит к следующему шагу.
+  useEffect(() => {
+    if (!step.tryIt) return;
+    let t = 0;
+    const onClick = (e: MouseEvent) => {
+      const el = e.target instanceof Element ? e.target : null;
+      if (el && step.targets.some((sel) => el.closest(sel))) t = window.setTimeout(next, TRY_IT_PAUSE_MS);
+    };
+    document.addEventListener('click', onClick, true);
+    return () => {
+      document.removeEventListener('click', onClick, true);
+      window.clearTimeout(t);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step.id]);
 
@@ -112,12 +149,19 @@ function GuideTour({ route }: { route: Route }) {
     }
   };
 
-  const target = found ? goals[0] : undefined;
+  const target = found ? bounds(goals) : undefined;
   const place = placeCard(target, card, vp);
   const lit = shown.filter((r) => r.w > 2 && r.h > 2);
+  // Слой, который ловит нажатия мимо: на шаге «попробуйте сами» в нём прорезаны окна над целями.
+  const holes = step.tryIt
+    ? `path(evenodd, 'M0 0H${vp.w}V${vp.h}H0Z${goals.map((r) => `M${r.x} ${r.y}h${r.w}v${r.h}h${-r.w}Z`).join('')}')`
+    : undefined;
 
   return (
-    <div className={`guide guide-step-${step.id}${target ? ' has-target' : ''}`}>
+    <div
+      className={`guide guide-tour-${tourId} guide-step-${step.id}${target ? ' has-target' : ''}${step.tryIt ? ' is-try' : ''}`}
+    >
+      <div className="guide-block" style={{ clipPath: holes }} aria-hidden="true" />
       <svg className="guide-veil" width={vp.w} height={vp.h} aria-hidden="true">
         <defs>
           <mask id="guide-mask">
@@ -149,7 +193,7 @@ function GuideTour({ route }: { route: Route }) {
           aria-hidden="true"
           className="guide-ring"
           style={{ transform: `translate(${r.x}px, ${r.y}px)`, width: r.w, height: r.h }}
-          onClick={last ? undefined : next}
+          onClick={last || step.tryIt ? undefined : next}
         />
       ))}
 
@@ -164,13 +208,13 @@ function GuideTour({ route }: { route: Route }) {
         onKeyDown={trapTab}
       >
         <div key={step.id} className="guide-body">
-          {first && <RoseMark className="guide-rose" />}
+          {step.id === 'gate' && <RoseMark className="guide-rose" />}
           <div className="guide-head">
             <p className="rubric" lang="la">
               {step.rubric}
             </p>
-            <ol className="guide-progress" aria-label={`Шаг ${index + 1} из ${GUIDE_STEPS.length}`}>
-              {GUIDE_STEPS.map((s, i) => (
+            <ol className="guide-progress" aria-label={`Шаг ${index + 1} из ${tour.steps.length}`}>
+              {tour.steps.map((s, i) => (
                 <li key={s.id} className={i === index ? 'is-current' : i < index ? 'is-past' : ''} aria-hidden="true">
                   {NUMERALS[i]}
                 </li>
@@ -183,6 +227,25 @@ function GuideTour({ route }: { route: Route }) {
           <p id="guide-text" className="guide-text">
             {step.text}
           </p>
+          {step.tryIt && (
+            <p className="guide-try">
+              <span className="guide-try-dot" aria-hidden="true" /> {step.tryIt}
+            </p>
+          )}
+          {last && tourId !== 'intro' && (
+            <p className="guide-note">
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => {
+                  closeGuide('done');
+                  openGuide('intro');
+                }}
+              >
+                Общий путеводитель по атласу
+              </button>
+            </p>
+          )}
           {step.picker && (
             <>
               <SpoilerPicker compact />
@@ -203,7 +266,7 @@ function GuideTour({ route }: { route: Route }) {
               </button>
             )}
             <button type="button" className="btn btn-small btn-accent" onClick={next}>
-              {first ? 'Войти' : last ? 'Начать расследование' : 'Далее'}
+              {first ? tour.startLabel : last ? tour.finishLabel : 'Далее'}
               {!last && <ArrowRight size={14} aria-hidden="true" />}
             </button>
           </div>

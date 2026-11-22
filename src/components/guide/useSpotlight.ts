@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { DURATION, reducedMotion } from '../../lib/motion';
-import { MAX_TARGETS } from './steps';
+import { MAX_TARGETS } from './tours';
 
 export interface Rect {
   x: number;
@@ -14,6 +14,8 @@ export interface Rect {
 const PAD = 6;
 /** Сколько ждать, пока элемент шага появится (карта прорисовывается не сразу). */
 const WAIT_MS = 2500;
+/** Если часть целей не нашлась за это время, подсвечиваются найденные. */
+const PARTIAL_MS = 400;
 /** Скорость, с которой пятно света догоняет новую цель при смене шага. */
 const FOLLOW_MS = 110;
 
@@ -42,7 +44,11 @@ function reveal(el: Element) {
     return;
   }
   const r = el.getBoundingClientRect();
-  if (r.top < 0 || r.bottom > window.innerHeight) el.scrollIntoView({ block: 'center', behavior: smooth });
+  if (r.top >= 0 && r.bottom <= window.innerHeight) return;
+  // высокий элемент (список, доска) — показать его начало, а не середину
+  const tall = r.height > window.innerHeight * 0.7;
+  if (tall) window.scrollBy({ top: r.top - window.innerHeight * 0.18, behavior: smooth });
+  else el.scrollIntoView({ block: 'center', behavior: smooth });
 }
 
 /**
@@ -69,14 +75,22 @@ export function useSpotlight(selectors: string[], stepKey: string) {
     const tick = (now: number) => {
       const dt = now - last;
       last = now;
-      const els = selectors.map((s) => document.querySelector(s));
-      const rects = els.map((el) => (el ? measure(el) : null));
-      const all = selectors.length > 0 && rects.every(Boolean);
-      if (all) {
+      // у каждого селектора — первый видимый элемент (на телефоне часть панелей спрятана)
+      const hits = selectors
+        .map((s) => {
+          for (const el of document.querySelectorAll(s)) {
+            const r = measure(el);
+            if (r) return { el, r };
+          }
+          return null;
+        })
+        .filter((h): h is { el: Element; r: Rect } => !!h);
+      // все цели на месте — или часть, если остальных так и нет (например, скрыты на этом экране)
+      if (hits.length && (hits.length === selectors.length || now - started > PARTIAL_MS)) {
         found = true;
-        goals = rects as Rect[];
-        els.forEach((el) => {
-          if (el && !revealed.has(el)) {
+        goals = hits.map((h) => h.r);
+        hits.forEach(({ el }) => {
+          if (!revealed.has(el)) {
             revealed.add(el);
             reveal(el);
           }

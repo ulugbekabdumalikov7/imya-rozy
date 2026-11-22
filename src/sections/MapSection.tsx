@@ -281,7 +281,7 @@ export function MapSection({ route }: { route: AppRoute }) {
           </label>
         </fieldset>
 
-        <fieldset className="ctl-group">
+        <fieldset className="ctl-group" data-guide="map-layers">
           <legend>Слои</legend>
           {LAYERS.map((l) => (
             <label key={l.key} className="check">
@@ -300,7 +300,7 @@ export function MapSection({ route }: { route: AppRoute }) {
           ))}
         </fieldset>
 
-        <fieldset className="ctl-group">
+        <fieldset className="ctl-group" data-guide="map-days">
           <legend>События дня</legend>
           <div className="seg seg-wrap">
             <button
@@ -328,7 +328,7 @@ export function MapSection({ route }: { route: AppRoute }) {
           </div>
         </fieldset>
 
-        <fieldset className="ctl-group">
+        <fieldset className="ctl-group" data-guide="map-route">
           <legend>Маршрут героя</legend>
           <select
             id="route-select"
@@ -381,6 +381,7 @@ export function MapSection({ route }: { route: AppRoute }) {
           <button
             type="button"
             className="btn btn-small only-mobile"
+            data-guide="map-layers-btn"
             onClick={() => setControlsOpen(true)}
             aria-expanded={controlsOpen}
             aria-controls="map-controls"

@@ -76,7 +76,7 @@ function HeroCatalog({ route }: { route: AppRoute }) {
         </p>
       </SectionHead>
 
-      <div className="filters" role="search">
+      <div className="filters" role="search" data-guide="heroes-filters">
         <label className="search-field">
           <Search size={16} aria-hidden="true" />
           <span className="sr-only">Поиск по имени</span>

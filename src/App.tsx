@@ -220,7 +220,7 @@ function Shell() {
           })}
         </nav>
         <div className="topbar-actions">
-          <GuideButton />
+          <GuideButton route={liveRoute} />
           <ThemeToggle />
           <SpoilerControl />
         </div>

@@ -118,7 +118,7 @@ export function CluesSection({ route }: { route: AppRoute }) {
             </span>{' '}
             Версии
           </h2>
-          <ul>
+          <ul data-guide="hyp-list">
             {hyps.map((h) => {
               const st = status(h);
               return (

@@ -1,6 +1,6 @@
 import type { Rect } from './useSpotlight';
 
-export type Side = 'below' | 'above' | 'right' | 'left' | 'center' | 'dock';
+export type Side = 'below' | 'above' | 'right' | 'left' | 'inset' | 'center' | 'dock';
 
 export interface Placement {
   x: number;
@@ -12,10 +12,21 @@ export interface Placement {
 
 const MARGIN = 16;
 const GAP = 22;
+const INSET = 24;
 /** До этой ширины экрана карточка занимает всю ширину и стоит над целью или под ней. */
 export const NARROW = 640;
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+/** Общая рамка нескольких целей: карточка встаёт рядом со всеми сразу и не закрывает ни одну. */
+export function bounds(rects: Rect[]): Rect | undefined {
+  if (!rects.length) return undefined;
+  const x = Math.min(...rects.map((r) => r.x));
+  const y = Math.min(...rects.map((r) => r.y));
+  const right = Math.max(...rects.map((r) => r.x + r.w));
+  const bottom = Math.max(...rects.map((r) => r.y + r.h));
+  return { x, y, w: right - x, h: bottom - y };
+}
 
 /**
  * Где поставить карточку шага: рядом с целью и не поверх неё. Сначала под целью, потом над ней,
@@ -78,7 +89,15 @@ export function placeCard(
         thread: { from: [x, edgeY(alignY)], to: [target.x, tcy], vertical: false },
       };
     }
-    return { ...center, side: 'center', thread: null };
+    // большая цель (граф, доска, список): карточка встаёт в её нижний правый угол, внутри подсветки
+    const innerRight = Math.min(target.x + target.w, vp.w) - INSET;
+    const bottom = Math.min(target.y + target.h, vp.h) - INSET;
+    return {
+      x: clamp(innerRight - card.w, MARGIN, vp.w - card.w - MARGIN),
+      y: clamp(bottom - card.h, MARGIN, vp.h - card.h - MARGIN),
+      side: 'inset',
+      thread: null,
+    };
   }
   // телефон: у нижнего края; нить — если цель видна над карточкой
   const y = vp.h - card.h - MARGIN;
