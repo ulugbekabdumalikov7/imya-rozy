@@ -7,8 +7,14 @@
   // Имя должно совпадать с именем Worker в панели Cloudflare.
   "name": "imya-rozy",
   "compatibility_date": "2026-10-01",
+  // Маленький Worker: принимает письма из формы «Написать автору» (/api/feedback), остальное отдаёт из dist.
+  // Ключ и адрес — переменные RESEND_API_KEY и FEEDBACK_TO (см. DEPLOYMENT.md, «Обратная связь»).
+  "main": "worker/index.ts",
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
+    // запросы к /api/* сначала идут в Worker, а не в файлы и не в index.html
+    "run_worker_first": ["/api/*"],
     // Неизвестный путь (/foo/bar) отдаёт index.html; разделы сайта адресуются через # и сервера не требуют.
     "not_found_handling": "single-page-application"
   },

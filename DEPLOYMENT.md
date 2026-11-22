@@ -1,6 +1,6 @@
 # Deployment: GitHub + Cloudflare Pages
 
-The site is a static Vite build. It needs no server, database, container or secret, and it costs nothing on Cloudflare's free plan, which includes unlimited bandwidth and 500 builds a month.
+The site is a static Vite build plus one small endpoint, `/api/feedback`, for the «Написать автору» form. It needs no database or container, and it costs nothing on Cloudflare's free plan, which includes unlimited bandwidth and 500 builds a month.
 
 ```
 feature branch ──push──► GitHub ──► GitHub Actions: lint · typecheck · test · build · verify   (status "check")
@@ -169,3 +169,32 @@ git push -u origin feature/short-name
 | `check` can't be found when you add the required check | CI hasn't run yet. Push to `main` or open a PR, then add it. |
 | Styles or fonts missing after a deploy | Clear the browser cache; HTML is never cached (`max-age=0`). Run `npm run preview:cf` locally to reproduce. |
 | CSP error in the console after you add an external script | Add its host to the matching directive in `public/_headers`. `tests/deploy.test.ts` guards against accidentally loosening the policy. |
+
+## Feedback form («Написать автору»)
+
+The feather button in the header opens a form. The form posts to `/api/feedback` on the same site (so the CSP stays `connect-src 'self'`), and the server sends the letter through [Resend](https://resend.com). The free plan allows 100 emails a day.
+
+- **Worker project:** handled by `worker/index.ts` (`main` in `wrangler.jsonc`; `/api/*` runs before static files).
+- **Pages project:** handled by `functions/api/feedback.ts`. Pages picks it up automatically.
+- **Shared logic:** both use `server/feedback.ts`, which validates the letter, checks the origin, sets up a honeypot against bots and sends the email.
+
+The recipient address is **not stored in the code**. Until the two settings below exist, the endpoint answers `503`, and the form says it couldn't send and keeps the text.
+
+### One-time setup
+
+1. Sign up at <https://resend.com> **with the address that should receive the letters**. Without your own domain, Resend can only send from `onboarding@resend.dev` to the account owner's address.
+2. In Resend, open **API Keys → Create API key**. Permission: *Sending access*. Copy the key.
+3. In Cloudflare, open **Workers & Pages → imya-rozy → Settings → Variables and Secrets** and add:
+
+   | Name | Type | Value |
+   |---|---|---|
+   | `RESEND_API_KEY` | Secret | the key from step 2 |
+   | `FEEDBACK_TO` | Text | the address from step 1 |
+
+   For a Worker, the same can be done from a terminal: `npx wrangler secret put RESEND_API_KEY`, then `npx wrangler secret put FEEDBACK_TO`.
+4. Redeploy, or push any commit. Then send a test letter from the site.
+
+Optional settings:
+
+- **Fallback for readers:** set the build variable `VITE_FEEDBACK_EMAIL` (**Settings → Build → Variables**). If sending from the site fails, the form then also offers «Через почту», which opens the reader's mail app with the letter already filled in. This address ends up in the page code, so it becomes visible to everyone.
+- **Your own sender:** after verifying a domain in Resend, set `FEEDBACK_FROM`, for example `Атлас «Имени розы» <atlas@your-domain>`.
