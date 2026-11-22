@@ -57,6 +57,16 @@ const dayShort = (d: number) => (d === 0 ? 'Пролог' : d === 8 ? 'Эп.' : 
 const VIEWS: MapView[] = ['abbey', 'library'];
 const TONE_KEY = 'rose-atlas:plan-tone';
 type Tone = 'night' | 'scan';
+/** Вид плана аббатства: плоский план из книги или объёмный макет. Выбор запоминается. */
+const DIM_KEY = 'rose-atlas:abbey-dim';
+type Dim = '2d' | '3d';
+function loadDim(): Dim {
+  try {
+    return window.localStorage.getItem(DIM_KEY) === '2d' ? '2d' : '3d';
+  } catch {
+    return '3d';
+  }
+}
 
 /** Гамма плана запоминается отдельно для каждой темы: по умолчанию ночная — в тёмной, исходный скан — в светлой. */
 function loadTone(theme: Theme): Tone {
@@ -79,6 +89,16 @@ export function MapSection({ route }: { route: AppRoute }) {
     setTones((t) => ({ ...t, [theme]: v }));
     try {
       window.localStorage.setItem(theme === 'dark' ? TONE_KEY : `${TONE_KEY}:${theme}`, v);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const [dim, setDimRaw] = useState<Dim>(loadDim);
+  const setDim = (v: Dim) => {
+    setDimRaw(v);
+    try {
+      window.localStorage.setItem(DIM_KEY, v);
     } catch {
       /* ignore */
     }
@@ -401,6 +421,22 @@ export function MapSection({ route }: { route: AppRoute }) {
               </button>
             ))}
           </div>
+          {view === 'abbey' && (
+            <div className="seg seg-compact" role="group" aria-label="Вид карты" data-guide="map-dim">
+              {(['2d', '3d'] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className={d === dim ? 'is-active' : ''}
+                  aria-pressed={d === dim}
+                  onClick={() => setDim(d)}
+                  title={d === '2d' ? 'Плоский план из книги' : 'Объёмный макет'}
+                >
+                  {d === '2d' ? '2D' : '3D'}
+                </button>
+              ))}
+            </div>
+          )}
           {view === 'library' && (
             <button
               type="button"
@@ -444,6 +480,7 @@ export function MapSection({ route }: { route: AppRoute }) {
           route={layers.has('route') ? routeVisible : undefined}
           routeStep={step}
           tone={tone}
+          model={view === 'abbey' && dim === '3d'}
           onPickHotspot={pickHotspot}
           onPickEvent={pickEvent}
           focusKey={`${locId}|${spotId}|${eventId}|${step}|${view}|${moment?.id ?? ''}`}

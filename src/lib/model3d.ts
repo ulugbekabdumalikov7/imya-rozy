@@ -174,16 +174,19 @@ export function inside(p: V2, poly: V2[]): boolean {
 export type Material = 'stone' | 'stoneDark' | 'plaster' | 'wood' | 'tile' | 'slate' | 'lead' | 'coping';
 type RGB = [number, number, number];
 
-/** Приглушённые цвета макета: известняк, состаренное дерево, тёмная черепица. */
+/**
+ * Чёрно-белый макет, как гипсовая архитектурная модель: стены светлые, кровли тёмные.
+ * Материалы различаются только тоном; цвет на карте остаётся за знаками и выделением.
+ */
 export const MATERIALS: Record<Material, RGB> = {
-  stone: [204, 194, 174],
-  stoneDark: [176, 165, 146],
-  plaster: [214, 205, 186],
-  wood: [122, 98, 74],
-  tile: [128, 88, 70],
-  slate: [92, 86, 82],
-  lead: [132, 128, 120],
-  coping: [222, 214, 198],
+  stone: [216, 215, 212],
+  stoneDark: [182, 181, 178],
+  plaster: [226, 225, 222],
+  wood: [112, 111, 109],
+  tile: [96, 95, 93],
+  slate: [72, 71, 70],
+  lead: [138, 137, 134],
+  coping: [236, 235, 232],
 };
 
 /** Свет — тёплый, с северо-запада и сверху; привязан к макету, поэтому при повороте тени поворачиваются вместе с ним. */
@@ -197,8 +200,8 @@ export const SHADOW_STEP: V2 = [-LIGHT[0] / LIGHT[2], -LIGHT[1] / LIGHT[2]];
 
 const AMBIENT = 0.6;
 const DIFFUSE = 0.48;
-/** Тёплый оттенок прямого света. */
-const WARM: RGB = [1.04, 1.0, 0.93];
+/** Нейтральный свет: макет чёрно-белый. */
+const WARM: RGB = [1, 1, 1];
 
 export function shade(mat: Material, n: V3): string {
   const base = MATERIALS[mat];

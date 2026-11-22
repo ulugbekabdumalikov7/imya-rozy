@@ -1,4 +1,4 @@
-import { Box, Compass, LocateFixed, Map as MapIcon, Minus, Plus, RotateCcw, RotateCw } from 'lucide-react';
+import { Compass, LocateFixed, Minus, Plus, RotateCcw, RotateCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import abbeyPlanUrl from '../../assets/abbey-plan.webp';
@@ -42,6 +42,8 @@ interface Props {
   routeStep: number | null;
   /** Ночная гамма (чёрный фон, светлые линии) либо исходный скан. */
   tone: 'night' | 'scan';
+  /** План аббатства объёмным макетом (иначе — плоский план из книги). */
+  model?: boolean;
   onPickHotspot: (h: PlanHotspot) => void;
   onPickEvent: (id: string) => void;
   focusKey: string;
@@ -57,8 +59,6 @@ interface Props {
 
 /** Камера макета по умолчанию: лёгкий поворот и взгляд сверху под углом — видны две стороны зданий. */
 const MODEL_CAMERA: Camera = { yaw: -14, tilt: 50 };
-/** Вид сверху, как на исходном плане. */
-const PLAN_CAMERA: Camera = { yaw: 0, tilt: 0 };
 const MAX_TILT = 68;
 
 const pts = (poly: [number, number][]) => poly.map((p) => p.join(',')).join(' ');
@@ -93,7 +93,7 @@ export function PlanMap(p: Props) {
   const settleDelay = drawMode === 'drawing' ? 1400 : drawMode === 'settling' ? 300 : 0;
 
   // ── Объёмный макет аббатства: камера (поворот и наклон), рост зданий при первом показе ──
-  const isModel = p.view === 'abbey';
+  const isModel = p.view === 'abbey' && !!p.model;
   const cameraRef = useRef<Camera>(MODEL_CAMERA);
   const [camera, setCameraRaw] = useState<Camera>(MODEL_CAMERA);
   const [moving, setMoving] = useState(false);
@@ -273,10 +273,14 @@ export function PlanMap(p: Props) {
                 <feFuncB type="gamma" amplitude="1" exponent="1.35" offset="0" />
               </feComponentTransfer>
             </filter>
+            {/* край скана (корешок, тень) в ночной гамме становится светлой рамкой — обрезаем его */}
+            <clipPath id={`scan-edge-${p.view}`}>
+              <rect x={10} y={8} width={W - 20} height={H - 16} />
+            </clipPath>
           </defs>
           <rect x={-W} y={-H} width={W * 3} height={H * 3} className="plan-ground" />
           <g transform={pz.transform}>
-            <g key={p.view} className={drawClass}>
+            <g key={`${p.view}-${isModel ? '3d' : '2d'}`} className={drawClass}>
               {isModel ? (
                 <AbbeyModel
                   proj={proj}
@@ -298,6 +302,7 @@ export function PlanMap(p: Props) {
                     height={H}
                     className="plan-image"
                     filter={p.tone === 'night' ? 'url(#tone-night)' : undefined}
+                    clipPath={p.tone === 'night' && p.view === 'abbey' ? `url(#scan-edge-${p.view})` : undefined}
                     preserveAspectRatio="none"
                   />
 
@@ -541,16 +546,6 @@ export function PlanMap(p: Props) {
               title="Север наверх"
             >
               <Compass size={17} style={{ transform: `rotate(${-camera.yaw - 45}deg)` }} />
-            </button>
-            <button
-              type="button"
-              className="icon-btn"
-              onClick={() => turnTo(camera.tilt > 1 ? PLAN_CAMERA : MODEL_CAMERA, 800)}
-              aria-label={camera.tilt > 1 ? 'Вид сверху, как на плане' : 'Объёмный макет'}
-              aria-pressed={camera.tilt <= 1}
-              title={camera.tilt > 1 ? 'Вид сверху' : 'Макет'}
-            >
-              {camera.tilt > 1 ? <MapIcon size={16} /> : <Box size={16} />}
             </button>
           </>
         )}
